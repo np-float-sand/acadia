@@ -398,7 +398,7 @@ def daily_spread_summary(zone_lmp_df: pd.DataFrame) -> pd.DataFrame:
 
     hourly = df.groupby(level=0)["lmp"].agg(["max", "min", "mean"])
     hourly["spread"] = hourly["max"] - hourly["min"]
-    hourly["frac"] = hourly["spread"] / (hourly["mean"].abs() + 1e-6)
+    hourly["frac"] = (hourly["spread"] / (hourly["mean"].abs() + 1e-6)).clip(upper=10.0)
 
     daily_frac = hourly["frac"].resample("D").mean().rename("congestion_frac")
     daily_frac.index = pd.to_datetime(daily_frac.index)
@@ -417,6 +417,9 @@ def fill_congestion_from_spread(
     """
     if spread_df.empty or "congestion_frac" not in spread_df.columns:
         return daily_lmp
+    if "congestion_frac" not in daily_lmp.columns:
+        return daily_lmp
+    daily_lmp = daily_lmp.copy()
     mask = daily_lmp["congestion_frac"].isna()
     daily_lmp.loc[mask, "congestion_frac"] = (
         spread_df["congestion_frac"].reindex(daily_lmp.index[mask])
