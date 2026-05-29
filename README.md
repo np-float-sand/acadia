@@ -73,29 +73,27 @@ source .venv/bin/activate
 
 ### 2. Set API keys
 
-**ERCOT** ✅ Already configured
+**ERCOT** (required for any run):
 
-Credentials are stored in `.env` at the project root and auto-loaded whenever you activate the virtual environment (`source .venv/bin/activate`). Three variables are set:
-
-```
-ERCOT_USERNAME=sand.gh1902@gmail.com
-ERCOT_PASSWORD=<stored in .env>
-ERCOT_SUBSCRIPTION_KEY=<stored in .env>
-```
-
-The `ERCOT_API_KEY` bearer token is fetched automatically at runtime by `grid_resilience/data/ercot_auth.py` using these credentials — you do not need to set it manually. Credentials were obtained from [developer.ercot.com](https://developer.ercot.com) (free, no approval required).
-
-**EIA** ✅ Already configured
-
-Credentials are stored in `.env` at the project root:
+Register at [developer.ercot.com](https://developer.ercot.com) — free, no approval required. Set credentials in `.env`:
 
 ```
-EIA_API_KEY=<stored in .env>
+ERCOT_USERNAME=your-email@example.com
+ERCOT_PASSWORD=your-password
+ERCOT_SUBSCRIPTION_KEY=your-subscription-key
 ```
 
-Key was obtained from [eia.gov/opendata](https://www.eia.gov/opendata/register.php) — free, no approval required (key emailed immediately after filling in the short form).
+The bearer token is fetched automatically at runtime by `grid_resilience/data/ercot_auth.py` — you do not need to set `ERCOT_API_KEY` manually.
 
-**PJM Data Miner** ❌ Still needed (only required if running `--iso PJM`)
+**EIA** (required for renewable quality adjustment in factor scores):
+
+Register at [eia.gov/opendata](https://www.eia.gov/opendata/register.php) — key emailed immediately. Set in `.env`:
+
+```
+EIA_API_KEY=your-key
+```
+
+**PJM Data Miner** (only needed if running `--iso PJM`)
 
 Add to `.env`:
 ```
