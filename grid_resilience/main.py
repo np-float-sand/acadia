@@ -32,6 +32,7 @@ from grid_resilience.config import (
     BACKTEST_START, BACKTEST_END,
     SUPPORTED_ISOS, REBALANCE_FREQ,
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
+    CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
@@ -41,6 +42,7 @@ from grid_resilience.data.equity_prices import (
 )
 from grid_resilience.data.grid_data import (
     fetch_lmp, fetch_load, daily_lmp_summary, daily_load_summary,
+    daily_spread_summary, fill_congestion_from_spread,
 )
 from grid_resilience.signals.stress_events import build_full_event_calendar
 from grid_resilience.signals.grid_stress_index import build_multi_iso_gsi
@@ -98,7 +100,16 @@ def run(
         load_raw = fetch_load(iso, start, end)
 
         if not lmp_raw.empty:
-            daily_lmp_by_iso[iso]  = daily_lmp_summary(lmp_raw, iso)
+            daily_lmp = daily_lmp_summary(lmp_raw, iso)
+
+            if iso in CONGESTION_SPREAD_ISOS:
+                zone_loc = ISO_ZONE_LOCATION_TYPE.get(iso)
+                zone_raw = fetch_lmp(iso, start, end, location_type=zone_loc) if zone_loc else lmp_raw
+                if not zone_raw.empty:
+                    spread_df = daily_spread_summary(zone_raw)
+                    daily_lmp = fill_congestion_from_spread(daily_lmp, spread_df)
+
+            daily_lmp_by_iso[iso] = daily_lmp
         else:
             print(f"  [warn] No LMP data for {iso} — skipping.")
 
