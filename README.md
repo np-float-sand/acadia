@@ -14,7 +14,7 @@ The strategy builds a daily **Grid Stress Index (GSI)** for each ISO using real-
 
 **Portfolio:** 5 long / 5 short, equal-weighted within each book, rebalanced monthly.
 
-**Backtest window:** 2018–present (covers Uri, CA heat dome, multiple polar vortex events).
+**Backtest window:** 2018–2026-05-27.
 
 ---
 
@@ -37,6 +37,25 @@ The GSI blends four sub-signals: LMP z-score (40%), congestion fraction (25%), r
 
 ---
 
+## Caching
+
+All external data is cached to `grid_resilience/data/cache/` as parquet files.
+
+| Cache file | Source | Key |
+|---|---|---|
+| `equity_prices.parquet` | yfinance | single file for all tickers |
+| `{iso}_lmp_{loc_type}.parquet` | gridstatus | one file per ISO + location type |
+| `{iso}_load.parquet` | gridstatus | one file per ISO |
+| `{iso}_fuel_mix.parquet` | gridstatus | one file per ISO |
+| `ercot_lmp_zone.parquet` | gridstatus | ERCOT load-zone LMPs for inter-zonal spread (congestion signal) |
+
+**Gap-filling:** fetchers check what is already on disk and download only the missing date ranges. A new ticker or extended date range triggers a targeted fetch, not a full re-download.
+
+**`force_refresh=False` (default):** use the cache if the file exists; write it if it doesn't.  
+**`force_refresh=True`:** skip the cache, re-download the full requested range, overwrite.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -49,33 +68,47 @@ The GSI blends four sub-signals: LMP z-score (40%), congestion fraction (25%), r
 
 ```bash
 poetry install
+source .venv/bin/activate
 ```
 
 ### 2. Set API keys
 
-**ERCOT** (required for any run):
-```bash
-export ERCOT_API_TOKEN="your-token"
-```
-Register at [developer.ercot.com](https://developer.ercot.com) — click "Sign Up", verify your email, then generate a token under "My Profile". Free, no approval required.
+**ERCOT** ✅ Already configured
 
-**EIA** (required for renewable quality adjustment in factor scores):
-```bash
-export EIA_API_KEY="your-key"
-```
-Register at [eia.gov/opendata](https://www.eia.gov/opendata/register.php) — fill in the short form and your API key is emailed immediately. Free, no approval required.
+Credentials are stored in `.env` at the project root and auto-loaded whenever you activate the virtual environment (`source .venv/bin/activate`). Three variables are set:
 
-**PJM Data Miner** (only needed if running `--iso PJM`):
-```bash
-export PJM_API_KEY="your-subscription-key"
 ```
-PJM uses their **Data Miner API** portal, and non-members require a manual approval step:
+ERCOT_USERNAME=sand.gh1902@gmail.com
+ERCOT_PASSWORD=<stored in .env>
+ERCOT_SUBSCRIPTION_KEY=<stored in .env>
+```
+
+The `ERCOT_API_KEY` bearer token is fetched automatically at runtime by `grid_resilience/data/ercot_auth.py` using these credentials — you do not need to set it manually. Credentials were obtained from [developer.ercot.com](https://developer.ercot.com) (free, no approval required).
+
+**EIA** ✅ Already configured
+
+Credentials are stored in `.env` at the project root:
+
+```
+EIA_API_KEY=<stored in .env>
+```
+
+Key was obtained from [eia.gov/opendata](https://www.eia.gov/opendata/register.php) — free, no approval required (key emailed immediately after filling in the short form).
+
+**PJM Data Miner** ❌ Still needed (only required if running `--iso PJM`)
+
+Add to `.env`:
+```
+PJM_API_KEY=your-subscription-key
+```
+
+Note: basic DataMiner2 endpoints are publicly accessible without auth (used in the pitch scripts). The `grid_resilience` module passes the key to gridstatus for authenticated bulk pulls. Non-members require a manual approval step:
 
 1. Register for a PJM Tools account at [accountmanager.pjm.com](https://accountmanager.pjm.com/accountmanager/pages/public/new-user.jsf) — fill out the contact form and set a password within 4 hours of the confirmation email.
 2. Email **accountmanager@pjm.com** with the exact statement: *"I confirm that the PJM Data will be used for internal business purposes only."* Include your Account Manager username and the email address you registered with. PJM will provision your account for Data Miner non-member access.
-3. Once approved, log in to [apiportal.pjm.com](https://apiportal.pjm.com), go to **Profile**, and copy your **Primary Key** under Subscriptions. That is the value to export as `PJM_API_KEY`.
+3. Once approved, log in to [apiportal.pjm.com](https://apiportal.pjm.com), go to **Profile**, and copy your **Primary Key** under Subscriptions. That is the value to set as `PJM_API_KEY`.
 
-Note: approval is not instant — allow 1–2 business days. The key is passed as the `Ocp-Apim-Subscription-Key` header in API calls.
+Allow 1–2 business days for approval. The key is passed as the `Ocp-Apim-Subscription-Key` header.
 
 ### 3. Run
 
@@ -98,7 +131,7 @@ python -m grid_resilience.main
 ```
 --iso    ERCOT PJM MISO CAISO SPP   ISOs to include (default: all 5)
 --start  YYYY-MM-DD                 Backtest start (default: 2018-01-01)
---end    YYYY-MM-DD                 Backtest end (default: today)
+--end    YYYY-MM-DD                 Backtest end (default: 2026-05-27)
 --long   N                          Long book size (default: 5)
 --short  N                          Short book size (default: 5)
 --no-plot                           Skip matplotlib charts
@@ -167,6 +200,6 @@ The sub-groupings (Generators, Wires-Only, Integrated) mirror the distinctions u
 | Data | Source | Credentials |
 |---|---|---|
 | Equity prices | yfinance | None |
-| LMP + load (most ISOs) | [gridstatus](https://github.com/kmax12/gridstatus) | None (ERCOT needs token) |
-| EIA generation mix | EIA Open Data API | Free key required |
-| PJM grid data | PJM Data Miner API | Non-member email approval required |
+| LMP + load (most ISOs) | [gridstatus](https://github.com/kmax12/gridstatus) | None (ERCOT needs token — auto-fetched) |
+| EIA generation mix | EIA Open Data API | Free key required — add to `.env` |
+| PJM grid data | PJM Data Miner API | Non-member email approval required — add to `.env` |
