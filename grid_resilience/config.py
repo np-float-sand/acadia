@@ -4,7 +4,6 @@ All modules import from here to avoid scattered magic constants.
 """
 
 from pathlib import Path
-from datetime import date
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent
@@ -13,7 +12,7 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Backtest window ───────────────────────────────────────────────────────────
 BACKTEST_START = "2018-01-01"
-BACKTEST_END = date.today().strftime("%Y-%m-%d")
+BACKTEST_END = "2026-05-27"
 
 # ── Supported ISOs ────────────────────────────────────────────────────────────
 SUPPORTED_ISOS = ["ERCOT", "PJM", "MISO", "CAISO", "SPP"]
@@ -40,6 +39,15 @@ ISO_LOCATION_TYPE = {
     "SPP":    "hub",    # SPP uses get_lmp_day_ahead_hourly() instead
     "NYISO":  "zone",
     "ISO-NE": "hub",
+}
+
+# ISOs for which inter-zonal spread fills congestion_frac when component data absent
+CONGESTION_SPREAD_ISOS = {"ERCOT", "PJM"}
+
+# Location type used to fetch zone-level LMPs for spread computation.
+# PJM already uses "zone" in ISO_LOCATION_TYPE so needs no entry here.
+ISO_ZONE_LOCATION_TYPE = {
+    "ERCOT": "zone",   # LZ_NORTH, LZ_SOUTH, LZ_WEST, LZ_HOUSTON
 }
 
 # Primary hub/zone names to pull per ISO for the aggregate stress signal
