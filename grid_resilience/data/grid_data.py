@@ -4,7 +4,8 @@ from __future__ import annotations
 Unified grid data fetcher using the `gridstatus` library.
 
 Covers ERCOT, PJM, MISO, CAISO, and SPP with a consistent interface.
-Results are cached to parquet files keyed by (iso, dataset, start, end).
+Results are cached to parquet files keyed by (iso, dataset); gap-filling
+fetches only the date ranges not already on disk.
 
 Data sources (all publicly available, no key required for basic access):
   ERCOT  : https://api.ercot.com  (B2C token auth — set ERCOT_PASSWORD + ERCOT_SUBSCRIPTION_KEY)
@@ -23,7 +24,6 @@ can be downloaded from each ISO's market data portal and loaded via
 """
 
 import os
-import hashlib
 from pathlib import Path
 
 import pandas as pd
@@ -35,6 +35,7 @@ from grid_resilience.config import (
     ISO_BENCHMARK_NODES,
     LMP_SPIKE_THRESHOLD,
 )
+from grid_resilience.data.cache_utils import read_cached, compute_date_gaps, merge_and_save
 
 # Lazily instantiated gridstatus ISO objects (one per ISO, shared)
 _ISO_INSTANCES: dict = {}
@@ -87,144 +88,45 @@ def _inject_ercot_token() -> None:
         print(f"  [grid] ERCOT token fetch failed: {exc}")
 
 
-def _cache_path(iso: str, dataset: str, start: str, end: str) -> Path:
-    key = hashlib.md5(f"{iso}_{dataset}_{start}_{end}".encode()).hexdigest()[:10]
-    return CACHE_DIR / f"{iso.lower()}_{dataset}_{key}.parquet"
+def _cache_path(iso: str, dataset: str) -> Path:
+    return CACHE_DIR / f"{iso.lower()}_{dataset}.parquet"
 
 
-def fetch_lmp(
-    iso: str,
-    start: str,
-    end: str,
-    location_type: str | None = None,
-    locations: list[str] | None = None,
-    use_cache: bool = True,
-) -> pd.DataFrame:
-    """
-    Fetch hourly LMP data for an ISO over a date range.
+# ── Raw fetch helpers (no caching) ───────────────────────────────────────────
 
-    Returns a DataFrame with at minimum:
-        time        : UTC timestamp
-        location    : settlement point / zone / hub name
-        lmp         : total LMP ($/MWh)
-        energy      : energy component (where available)
-        congestion  : congestion component (where available)
-        loss        : loss component (where available)
-
-    Parameters
-    ----------
-    iso           : "ERCOT" | "PJM" | "MISO" | "CAISO" | "SPP"
-    start / end   : "YYYY-MM-DD" strings
-    location_type : overrides ISO default (e.g. "hub", "zone", "node")
-    locations     : filter to these location names after fetching
-    use_cache     : read/write parquet cache
-    """
-    loc_type = location_type or ISO_LOCATION_TYPE.get(iso, "hub")
-    cache_file = _cache_path(iso, f"lmp_{loc_type}", start, end)
-
-    if use_cache and cache_file.exists():
-        df = pd.read_parquet(cache_file)
-        if locations:
-            loc_col = _location_col(df)
-            df = df[df[loc_col].isin(locations)]
-        return df
-
-    iso_obj = _get_iso(iso)
+def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} LMP ({loc_type}) {start} → {end}…")
-
-    # SPP uses dedicated DA/RT methods instead of a generic get_lmp()
     if iso == "SPP":
-        return _fetch_spp_lmp(iso_obj, start, end, cache_file, use_cache)
-
+        return _fetch_spp_lmp_raw(iso_obj, start, end)
     try:
-        df = iso_obj.get_lmp(
-            date=start,
-            end=end,
-            location_type=loc_type,
-            verbose=False,
-        )
+        df = iso_obj.get_lmp(date=start, end=end, location_type=loc_type, verbose=False)
     except Exception as exc:
         print(f"  [grid] {iso} LMP fetch failed: {exc}")
         return pd.DataFrame()
-
-    df = _normalise_lmp_columns(df)
-
-    if use_cache and not df.empty:
-        df.to_parquet(cache_file, index=False)
-
-    if locations:
-        loc_col = _location_col(df)
-        df = df[df[loc_col].isin(locations)]
-
-    return df
+    return _normalise_lmp_columns(df)
 
 
-def fetch_load(
-    iso: str,
-    start: str,
-    end: str,
-    use_cache: bool = True,
-) -> pd.DataFrame:
-    """
-    Fetch hourly total load (demand) for an ISO.
-
-    Returns DataFrame with columns: time, load_mw
-    """
-    cache_file = _cache_path(iso, "load", start, end)
-    if use_cache and cache_file.exists():
-        return pd.read_parquet(cache_file)
-
-    iso_obj = _get_iso(iso)
+def _fetch_load_raw(iso_obj, iso: str, start: str, end: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} load {start} → {end}…")
     try:
         df = iso_obj.get_load(date=start, end=end, verbose=False)
     except Exception as exc:
         print(f"  [grid] {iso} load fetch failed: {exc}")
         return pd.DataFrame()
-
-    df = _normalise_load_columns(df)
-
-    if use_cache and not df.empty:
-        df.to_parquet(cache_file, index=False)
-    return df
+    return _normalise_load_columns(df)
 
 
-def fetch_fuel_mix(
-    iso: str,
-    start: str,
-    end: str,
-    use_cache: bool = True,
-) -> pd.DataFrame:
-    """
-    Fetch hourly generation fuel mix (MW by fuel type) for an ISO.
-    Used as input to the reserve-tightness sub-signal.
-    """
-    cache_file = _cache_path(iso, "fuel_mix", start, end)
-    if use_cache and cache_file.exists():
-        return pd.read_parquet(cache_file)
-
-    iso_obj = _get_iso(iso)
+def _fetch_fuel_mix_raw(iso_obj, iso: str, start: str, end: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} fuel mix {start} → {end}…")
     try:
         df = iso_obj.get_fuel_mix(date=start, end=end, verbose=False)
     except Exception as exc:
         print(f"  [grid] {iso} fuel mix fetch failed: {exc}")
         return pd.DataFrame()
-
-    if use_cache and not df.empty:
-        df.to_parquet(cache_file, index=False)
     return df
 
 
-# ── SPP LMP helper ────────────────────────────────────────────────────────────
-
-def _fetch_spp_lmp(
-    spp_obj,
-    start: str,
-    end: str,
-    cache_file: Path,
-    use_cache: bool,
-) -> pd.DataFrame:
+def _fetch_spp_lmp_raw(spp_obj, start: str, end: str) -> pd.DataFrame:
     """
     SPP does not implement a generic get_lmp().
     Use get_lmp_day_ahead_hourly() as the primary price signal.
@@ -252,11 +154,149 @@ def _fetch_spp_lmp(
         return pd.DataFrame()
 
     result = pd.concat(frames, ignore_index=True)
-    result = _normalise_lmp_columns(result)
+    return _normalise_lmp_columns(result)
 
-    if use_cache and not result.empty:
-        result.to_parquet(cache_file, index=False)
-    return result
+
+# ── Public fetch functions ────────────────────────────────────────────────────
+
+def fetch_lmp(
+    iso: str,
+    start: str,
+    end: str,
+    location_type: str | None = None,
+    locations: list[str] | None = None,
+    use_cache: bool = True,
+    force_refresh: bool = False,
+) -> pd.DataFrame:
+    """
+    Fetch hourly LMP data for an ISO over a date range.
+
+    Returns a DataFrame with at minimum:
+        time        : UTC timestamp
+        location    : settlement point / zone / hub name
+        lmp         : total LMP ($/MWh)
+        energy      : energy component (where available)
+        congestion  : congestion component (where available)
+        loss        : loss component (where available)
+
+    Parameters
+    ----------
+    iso           : "ERCOT" | "PJM" | "MISO" | "CAISO" | "SPP"
+    start / end   : "YYYY-MM-DD" strings
+    location_type : overrides ISO default (e.g. "hub", "zone", "node")
+    locations     : filter to these location names after fetching
+    use_cache     : read/write parquet cache
+    force_refresh : ignore cache and re-download the full range
+    """
+    loc_type = location_type or ISO_LOCATION_TYPE.get(iso, "hub")
+    cache_file = _cache_path(iso, f"lmp_{loc_type}")
+
+    if use_cache and not force_refresh:
+        cached = read_cached(cache_file)
+        gaps = compute_date_gaps(cached, "time", start, end)
+        if not gaps:
+            return _filter_locations(_filter_time(cached, start, end), locations)
+        iso_obj = _get_iso(iso)
+        new_frames = [_fetch_lmp_raw(iso_obj, iso, gs, ge, loc_type) for gs, ge in gaps]
+        non_empty = [f for f in new_frames if not f.empty]
+        if non_empty:
+            new_data = pd.concat(non_empty, ignore_index=True)
+            merged = merge_and_save(cached, new_data, "time", cache_file)
+        else:
+            merged = cached
+    else:
+        iso_obj = _get_iso(iso)
+        merged = _fetch_lmp_raw(iso_obj, iso, start, end, loc_type)
+        if use_cache and not merged.empty:
+            merged.to_parquet(cache_file, index=False)
+
+    return _filter_locations(_filter_time(merged, start, end), locations)
+
+
+def fetch_load(
+    iso: str,
+    start: str,
+    end: str,
+    use_cache: bool = True,
+    force_refresh: bool = False,
+) -> pd.DataFrame:
+    """
+    Fetch hourly total load (demand) for an ISO.
+
+    Returns DataFrame with columns: time, load_mw
+    """
+    cache_file = _cache_path(iso, "load")
+
+    if use_cache and not force_refresh:
+        cached = read_cached(cache_file)
+        gaps = compute_date_gaps(cached, "time", start, end)
+        if not gaps:
+            return _filter_time(cached, start, end)
+        iso_obj = _get_iso(iso)
+        new_frames = [_fetch_load_raw(iso_obj, iso, gs, ge) for gs, ge in gaps]
+        non_empty = [f for f in new_frames if not f.empty]
+        if non_empty:
+            merged = merge_and_save(cached, pd.concat(non_empty, ignore_index=True), "time", cache_file)
+        else:
+            merged = cached
+    else:
+        iso_obj = _get_iso(iso)
+        merged = _fetch_load_raw(iso_obj, iso, start, end)
+        if use_cache and not merged.empty:
+            merged.to_parquet(cache_file, index=False)
+
+    return _filter_time(merged, start, end)
+
+
+def fetch_fuel_mix(
+    iso: str,
+    start: str,
+    end: str,
+    use_cache: bool = True,
+    force_refresh: bool = False,
+) -> pd.DataFrame:
+    """
+    Fetch hourly generation fuel mix (MW by fuel type) for an ISO.
+    Used as input to the reserve-tightness sub-signal.
+    """
+    cache_file = _cache_path(iso, "fuel_mix")
+
+    if use_cache and not force_refresh:
+        cached = read_cached(cache_file)
+        gaps = compute_date_gaps(cached, "time", start, end)
+        if not gaps:
+            return _filter_time(cached, start, end)
+        iso_obj = _get_iso(iso)
+        new_frames = [_fetch_fuel_mix_raw(iso_obj, iso, gs, ge) for gs, ge in gaps]
+        non_empty = [f for f in new_frames if not f.empty]
+        if non_empty:
+            merged = merge_and_save(cached, pd.concat(non_empty, ignore_index=True), "time", cache_file)
+        else:
+            merged = cached
+    else:
+        iso_obj = _get_iso(iso)
+        merged = _fetch_fuel_mix_raw(iso_obj, iso, start, end)
+        if use_cache and not merged.empty:
+            merged.to_parquet(cache_file, index=False)
+
+    return _filter_time(merged, start, end)
+
+
+# ── Filter helpers ────────────────────────────────────────────────────────────
+
+def _filter_time(df: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
+    if df.empty:
+        return df
+    time_col = _time_col(df)
+    mask = pd.to_datetime(df[time_col]).between(start, end)
+    return df[mask].reset_index(drop=True)
+
+
+def _filter_locations(df: pd.DataFrame, locations: list[str] | None) -> pd.DataFrame:
+    if not locations or df.empty:
+        return df
+    loc_col = _location_col(df)
+    return df[df[loc_col].isin(locations)]
 
 
 # ── Daily aggregate helpers ───────────────────────────────────────────────────
@@ -338,7 +378,53 @@ def load_lmp_from_csv(path: str | Path, iso: str) -> pd.DataFrame:
     return df
 
 
-# ── Internal column normalisation ─────────────────────────────────────────────
+def daily_spread_summary(zone_lmp_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute daily inter-zonal price spread as a congestion_frac proxy.
+
+    Hourly spread = max_lmp - min_lmp across all locations.
+    Normalised as frac = spread / (|mean_lmp| + 1e-6).
+    Daily value = mean of hourly fracs.
+
+    Returns DataFrame indexed by date with column: congestion_frac
+    """
+    if zone_lmp_df.empty:
+        return pd.DataFrame(columns=["congestion_frac"])
+
+    time_col = _time_col(zone_lmp_df)
+    df = zone_lmp_df.copy()
+    df[time_col] = pd.to_datetime(df[time_col])
+    df = df.set_index(time_col)
+
+    hourly = df.groupby(level=0)["lmp"].agg(["max", "min", "mean"])
+    hourly["spread"] = hourly["max"] - hourly["min"]
+    hourly["frac"] = hourly["spread"] / (hourly["mean"].abs() + 1e-6)
+
+    daily_frac = hourly["frac"].resample("D").mean().rename("congestion_frac")
+    daily_frac.index = pd.to_datetime(daily_frac.index)
+    daily_frac.index.name = "date"
+    return daily_frac.to_frame()
+
+
+def fill_congestion_from_spread(
+    daily_lmp: pd.DataFrame,
+    spread_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Fill NaN congestion_frac rows in daily_lmp with spread-based values.
+    Component-based values (non-NaN) are preserved.
+    Returns the modified daily_lmp DataFrame.
+    """
+    if spread_df.empty or "congestion_frac" not in spread_df.columns:
+        return daily_lmp
+    mask = daily_lmp["congestion_frac"].isna()
+    daily_lmp.loc[mask, "congestion_frac"] = (
+        spread_df["congestion_frac"].reindex(daily_lmp.index[mask])
+    )
+    return daily_lmp
+
+
+# ── Internal column normalisation ────────────────────────────────────────────
 
 def _normalise_lmp_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Rename common ISO-specific column names to standard schema."""
