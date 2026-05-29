@@ -14,7 +14,7 @@ The strategy builds a daily **Grid Stress Index (GSI)** for each ISO using real-
 
 **Portfolio:** 5 long / 5 short, equal-weighted within each book, rebalanced monthly.
 
-**Backtest window:** 2018–2026-05-27.
+**Backtest window:** 2018-01-01 – 2026-05-27.
 
 ---
 

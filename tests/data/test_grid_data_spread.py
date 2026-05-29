@@ -101,3 +101,24 @@ def test_fill_returns_dataframe():
     spread_df = pd.DataFrame({"congestion_frac": [0.5]}, index=dates)
     result = fill_congestion_from_spread(daily_lmp, spread_df)
     assert isinstance(result, pd.DataFrame)
+
+
+def test_fill_does_not_mutate_input():
+    """Caller's DataFrame must be unchanged after fill."""
+    dates = pd.to_datetime(["2024-01-01"])
+    daily_lmp = pd.DataFrame({"congestion_frac": [np.nan]}, index=dates)
+    spread_df = pd.DataFrame({"congestion_frac": [0.5]}, index=dates)
+    fill_congestion_from_spread(daily_lmp, spread_df)
+    assert pd.isna(daily_lmp["congestion_frac"].iloc[0])
+
+
+def test_spread_clamps_extreme_frac():
+    """Symmetric positive/negative prices → near-zero mean → frac capped at 10.0."""
+    times = pd.date_range("2024-01-01", periods=24, freq="h")
+    df = pd.DataFrame({
+        "time": list(times) * 2,
+        "location": ["ZONE_A"] * 24 + ["ZONE_B"] * 24,
+        "lmp": [100.0] * 24 + [-100.0] * 24,  # mean=0, spread=200, raw_frac >> 10
+    })
+    result = daily_spread_summary(df)
+    assert result["congestion_frac"].iloc[0] == pytest.approx(10.0)
