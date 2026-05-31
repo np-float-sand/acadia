@@ -91,6 +91,8 @@ def run(
     tickers  = [t for t in tickers if t in returns.columns]
     returns  = returns[tickers]
 
+    sector_r = fetch_sector_return(tickers, start, end)
+
     # ── XLU hedge returns (fetched separately, not factor-scored) ────────────
     if xlu_hedge:
         xlu_prices = fetch_prices(["XLU"], start, end)
@@ -99,8 +101,6 @@ def run(
             xlu_ret.name = "XLU"
             returns = returns.join(xlu_ret, how="left")
             tickers = list(returns.columns)
-
-    sector_r = fetch_sector_return(tickers, start, end)
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
 
