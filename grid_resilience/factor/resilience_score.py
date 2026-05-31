@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from grid_resilience.config import WINSOR_LIMITS
+from grid_resilience.data.universe import GENERATORS
 from grid_resilience.factor.neutralize import winsorize, cross_section_zscore
 
 
@@ -57,10 +58,17 @@ def build_factor(
 
     scores = pd.DataFrame(index=stress_betas.index)
 
-    # Component 1: negative stress beta (resilient = low beta)
-    scores["neg_stress_beta"] = -stress_betas["stress_beta"]
-    scores["neg_stress_beta"] = cross_section_zscore(
-        winsorize(scores["neg_stress_beta"], WINSOR_LIMITS)
+    # Component 1: signed stress beta
+    # Generators (NRG, VST, ETR, NEE) profit from high absolute stress_beta
+    # (larger moves during grid stress) → use +|stress_beta|.
+    # T&D and integrated utilities are hurt by high absolute stress_beta
+    # (larger losses during grid stress) → use -|stress_beta|.
+    beta_sign = pd.Series(
+        {t: 1.0 if t in GENERATORS else -1.0 for t in stress_betas.index}
+    )
+    scores["signed_stress_beta"] = beta_sign * np.abs(stress_betas["stress_beta"])
+    scores["signed_stress_beta"] = cross_section_zscore(
+        winsorize(scores["signed_stress_beta"], WINSOR_LIMITS)
     )
 
     # Component 2: renewable quality (optional)
@@ -69,9 +77,9 @@ def build_factor(
         scores["renewable_quality"] = cross_section_zscore(
             winsorize(renew_aligned, WINSOR_LIMITS)
         )
-        factor = _W_BETA * scores["neg_stress_beta"] + _W_RENEW * scores["renewable_quality"]
+        factor = _W_BETA * scores["signed_stress_beta"] + _W_RENEW * scores["renewable_quality"]
     else:
-        factor = scores["neg_stress_beta"]
+        factor = scores["signed_stress_beta"]
 
     # Final cross-sectional normalisation
     factor = cross_section_zscore(winsorize(factor, WINSOR_LIMITS))
