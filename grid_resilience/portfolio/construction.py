@@ -15,40 +15,41 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 
-from grid_resilience.config import PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N, REBALANCE_FREQ
+from grid_resilience.config import PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N, REBALANCE_FREQ, XLU_HEDGE
 
 
 def build_weights(
     factor_scores: pd.Series,
-    n_long:  int = PORTFOLIO_LONG_N,
-    n_short: int = PORTFOLIO_SHORT_N,
+    n_long:    int  = PORTFOLIO_LONG_N,
+    n_short:   int  = PORTFOLIO_SHORT_N,
+    xlu_hedge: bool = XLU_HEDGE,
 ) -> pd.Series:
     """
     Construct dollar-neutral long/short weights from a factor score vector.
 
-    Parameters
-    ----------
-    factor_scores : Series indexed by ticker (higher = more resilient = long)
-    n_long        : number of names in the long book
-    n_short       : number of names in the short book
+    When xlu_hedge=True (default), the short book is replaced by a single
+    -0.5 position in XLU (SPDR Utilities ETF) to avoid idiosyncratic short risk.
+    When xlu_hedge=False, the bottom n_short names are shorted as before.
 
-    Returns
-    -------
-    Series of portfolio weights indexed by ticker.
-    Longs sum to +0.5, shorts sum to -0.5 → portfolio is dollar-neutral.
+    XLU is always excluded from ranking even if it appears in factor_scores.
     """
-    scores = factor_scores.dropna().sort_values(ascending=False)
+    scores = factor_scores.drop("XLU", errors="ignore").dropna().sort_values(ascending=False)
 
-    if len(scores) < n_long + n_short:
+    if not xlu_hedge and len(scores) < n_long + n_short:
         n_long  = max(1, len(scores) // 2)
         n_short = max(1, len(scores) - n_long)
+    elif xlu_hedge and len(scores) < n_long:
+        n_long = max(1, len(scores))
 
-    long_tickers  = scores.iloc[:n_long].index
-    short_tickers = scores.iloc[-n_short:].index
-
+    long_tickers = scores.iloc[:n_long].index
     weights = pd.Series(0.0, index=scores.index)
-    weights[long_tickers]  =  0.5 / n_long
-    weights[short_tickers] = -0.5 / n_short
+    weights[long_tickers] = 0.5 / n_long
+
+    if xlu_hedge:
+        weights["XLU"] = -0.5
+    else:
+        short_tickers = scores.iloc[-n_short:].index
+        weights[short_tickers] = -0.5 / n_short
 
     return weights
 
@@ -56,8 +57,9 @@ def build_weights(
 def build_rolling_weights(
     rolling_factors: pd.DataFrame,
     rebalance_dates: pd.DatetimeIndex | None = None,
-    n_long:  int = PORTFOLIO_LONG_N,
-    n_short: int = PORTFOLIO_SHORT_N,
+    n_long:    int  = PORTFOLIO_LONG_N,
+    n_short:   int  = PORTFOLIO_SHORT_N,
+    xlu_hedge: bool = XLU_HEDGE,
 ) -> pd.DataFrame:
     """
     Build a time series of portfolio weights, one set per rebalance date.
@@ -68,6 +70,7 @@ def build_rolling_weights(
                       from factor.resilience_score.build_rolling_factor()
     rebalance_dates : if None, uses all unique dates in rolling_factors
     n_long / n_short: book sizes
+    xlu_hedge       : if True, replace short book with -0.5 XLU position
 
     Returns
     -------
@@ -82,7 +85,7 @@ def build_rolling_weights(
         if day_factors.empty:
             continue
         scores  = day_factors.set_index("ticker")["factor_score"]
-        weights = build_weights(scores, n_long=n_long, n_short=n_short)
+        weights = build_weights(scores, n_long=n_long, n_short=n_short, xlu_hedge=xlu_hedge)
         for ticker, w in weights.items():
             if w != 0.0:
                 rows.append({"date": date, "ticker": ticker, "weight": w})

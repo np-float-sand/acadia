@@ -85,6 +85,10 @@ PORTFOLIO_LONG_N = 5  # number of names to go long
 PORTFOLIO_SHORT_N = 5  # number of names to go short
 REBALANCE_FREQ = "ME"  # pandas offset alias: month-end
 
+# Replace short book with XLU sector-ETF hedge (default on)
+# Set to False to restore original long/short individual-name construction
+XLU_HEDGE: bool = True
+
 # ── Conditional beta estimation ───────────────────────────────────────────────
 # Event window (trading days) around each stress event for the event study
 EVENT_WINDOW_PRE = 5

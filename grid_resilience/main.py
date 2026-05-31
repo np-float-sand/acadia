@@ -27,6 +27,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from grid_resilience.config import (
@@ -34,6 +35,7 @@ from grid_resilience.config import (
     SUPPORTED_ISOS, REBALANCE_FREQ,
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
     CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
+    XLU_HEDGE,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
@@ -62,13 +64,14 @@ from grid_resilience.portfolio.backtest import (
 
 
 def run(
-    isos:    list[str] = SUPPORTED_ISOS,
-    start:   str       = BACKTEST_START,
-    end:     str       = BACKTEST_END,
-    n_long:  int       = PORTFOLIO_LONG_N,
-    n_short: int       = PORTFOLIO_SHORT_N,
-    plot:    bool      = True,
-    save_dir: str      = "output",
+    isos:      list[str] = SUPPORTED_ISOS,
+    start:     str       = BACKTEST_START,
+    end:       str       = BACKTEST_END,
+    n_long:    int       = PORTFOLIO_LONG_N,
+    n_short:   int       = PORTFOLIO_SHORT_N,
+    xlu_hedge: bool      = XLU_HEDGE,
+    plot:      bool      = True,
+    save_dir:  str       = "output",
 ) -> dict:
     """
     Execute the full Grid Resilience pipeline.
@@ -87,6 +90,16 @@ def run(
     # Restrict to tickers that actually downloaded
     tickers  = [t for t in tickers if t in returns.columns]
     returns  = returns[tickers]
+
+    # ── XLU hedge returns (fetched separately, not factor-scored) ────────────
+    if xlu_hedge:
+        xlu_prices = fetch_prices(["XLU"], start, end)
+        if not xlu_prices.empty and "XLU" in xlu_prices.columns:
+            xlu_ret = np.log(xlu_prices["XLU"] / xlu_prices["XLU"].shift(1)).dropna()
+            xlu_ret.name = "XLU"
+            returns = returns.join(xlu_ret, how="left")
+            tickers = list(returns.columns)
+
     sector_r = fetch_sector_return(tickers, start, end)
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
@@ -195,9 +208,10 @@ def run(
         rebalance_dates=pd.DatetimeIndex(rolling_factors["date"].unique()),
         n_long=n_long,
         n_short=n_short,
+        xlu_hedge=xlu_hedge,
     )
 
-    weights_matrix = weights_to_matrix(weights_df, returns.index, tickers)
+    weights_matrix = weights_to_matrix(weights_df, returns.index, list(returns.columns))
     pnl, metrics   = run_backtest(weights_matrix, returns, events_df)
 
     pnl.to_csv(output_dir / "pnl.csv")
@@ -228,6 +242,12 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--end",    default=BACKTEST_END,   help="End date YYYY-MM-DD")
     p.add_argument("--long",   type=int, default=PORTFOLIO_LONG_N,  help="Long book size")
     p.add_argument("--short",  type=int, default=PORTFOLIO_SHORT_N, help="Short book size")
+    p.add_argument(
+        "--xlu-hedge", dest="xlu_hedge",
+        action=argparse.BooleanOptionalAction,
+        default=XLU_HEDGE,
+        help="Replace short book with -0.5 XLU hedge (default: on)",
+    )
     p.add_argument("--no-plot", action="store_true", help="Skip matplotlib charts")
     p.add_argument("--output", default="output", help="Output directory")
     return p.parse_args()
@@ -236,11 +256,12 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
     run(
-        isos     = args.iso,
-        start    = args.start,
-        end      = args.end,
-        n_long   = args.long,
-        n_short  = args.short,
-        plot     = not args.no_plot,
-        save_dir = args.output,
+        isos      = args.iso,
+        start     = args.start,
+        end       = args.end,
+        n_long    = args.long,
+        n_short   = args.short,
+        xlu_hedge = args.xlu_hedge,
+        plot      = not args.no_plot,
+        save_dir  = args.output,
     )
