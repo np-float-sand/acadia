@@ -28,11 +28,12 @@ def test_ercot_passes_location_type():
     assert "market" not in call_kwargs
 
 
-def test_miso_omits_location_type():
+def test_miso_passes_market_param():
     iso_obj = _make_iso_obj(["date", "end", "market", "locations", "verbose"])
     _fetch_lmp_raw(iso_obj, "MISO", "2024-01-01", "2024-01-31", "LMP")
     call_kwargs = iso_obj.get_lmp.call_args.kwargs
     assert "location_type" not in call_kwargs
+    assert call_kwargs.get("market") == "LMP"
 
 
 def test_caiso_omits_location_type():
@@ -40,6 +41,7 @@ def test_caiso_omits_location_type():
     _fetch_lmp_raw(iso_obj, "CAISO", "2024-01-01", "2024-01-31", "trading_hub")
     call_kwargs = iso_obj.get_lmp.call_args.kwargs
     assert "location_type" not in call_kwargs
+    assert call_kwargs.get("market") == "trading_hub"
 
 
 def test_empty_return_on_exception():

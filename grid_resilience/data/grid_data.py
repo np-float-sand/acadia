@@ -100,13 +100,15 @@ def _cache_path(iso: str, dataset: str) -> Path:
 # ── Raw fetch helpers (no caching) ───────────────────────────────────────────
 
 def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd.DataFrame:
-    print(f"[grid] Fetching {iso} LMP {start} → {end}…")
+    print(f"[grid] Fetching {iso} LMP ({loc_type}) {start} → {end}…")
     if iso == "SPP":
         return _fetch_spp_lmp_raw(iso_obj, start, end)
+    params = inspect.signature(iso_obj.get_lmp).parameters
     try:
-        params = inspect.signature(iso_obj.get_lmp).parameters
         if "location_type" in params:
             df = iso_obj.get_lmp(date=start, end=end, location_type=loc_type, verbose=False)
+        elif "market" in params:
+            df = iso_obj.get_lmp(date=start, end=end, market=loc_type, verbose=False)
         else:
             df = iso_obj.get_lmp(date=start, end=end, verbose=False)
     except Exception as exc:
