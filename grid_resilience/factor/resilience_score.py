@@ -5,8 +5,11 @@ The factor score for each utility is assembled from two components:
 
   1. Stress beta (primary, ~80% weight)
      Source: conditional_beta.compute_stress_betas()
-     Higher stress beta = more sensitive to grid stress = worse score.
-     We use the *negative* stress beta so high scores = resilient.
+     Higher stress beta = more resilient (generators profit from LMP spikes;
+     positive = long candidate). More negative stress beta = more hurt by grid
+     stress (T&D names; negative = short candidate). The raw stress beta is used
+     directly — no sign flip — because the OLS regression already encodes
+     the correct direction.
 
   2. Renewable quality adjustment (secondary, ~20% weight)
      Source: eia_data.compute_renewable_share()
@@ -20,11 +23,9 @@ and rescaled to [-1, +1] for portfolio use.
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from grid_resilience.config import WINSOR_LIMITS
-from grid_resilience.data.universe import GENERATORS
 from grid_resilience.factor.neutralize import winsorize, cross_section_zscore
 
 
@@ -59,15 +60,10 @@ def build_factor(
     scores = pd.DataFrame(index=stress_betas.index)
 
     # Component 1: signed stress beta
-    # Generators (NRG, VST, ETR, NEE) profit from positive stress_beta
-    # (larger moves during grid stress) → use +stress_beta.
-    # T&D and integrated utilities are hurt by positive stress_beta
-    # (larger losses during grid stress) → use -stress_beta.
-    # Note: Direct sign flip (no absolute value) preserves the sign of the beta.
-    beta_sign = pd.Series(
-        {t: 1.0 if t in GENERATORS else -1.0 for t in stress_betas.index}
-    )
-    scores["signed_stress_beta"] = beta_sign * stress_betas["stress_beta"]
+    # Positive beta = stock benefits from grid stress (generators profiting from high LMPs).
+    # Negative beta = stock is hurt by grid stress (T&D facing higher costs).
+    # Using the raw beta directly preserves this semantics for all ticker types.
+    scores["signed_stress_beta"] = stress_betas["stress_beta"]
     scores["signed_stress_beta"] = cross_section_zscore(
         winsorize(scores["signed_stress_beta"], WINSOR_LIMITS)
     )
