@@ -23,6 +23,7 @@ can be downloaded from each ISO's market data portal and loaded via
 `load_lmp_from_csv()` below.
 """
 
+import inspect
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -99,11 +100,15 @@ def _cache_path(iso: str, dataset: str) -> Path:
 # ── Raw fetch helpers (no caching) ───────────────────────────────────────────
 
 def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd.DataFrame:
-    print(f"[grid] Fetching {iso} LMP ({loc_type}) {start} → {end}…")
+    print(f"[grid] Fetching {iso} LMP {start} → {end}…")
     if iso == "SPP":
         return _fetch_spp_lmp_raw(iso_obj, start, end)
     try:
-        df = iso_obj.get_lmp(date=start, end=end, location_type=loc_type, verbose=False)
+        params = inspect.signature(iso_obj.get_lmp).parameters
+        if "location_type" in params:
+            df = iso_obj.get_lmp(date=start, end=end, location_type=loc_type, verbose=False)
+        else:
+            df = iso_obj.get_lmp(date=start, end=end, verbose=False)
     except Exception as exc:
         print(f"  [grid] {iso} LMP fetch failed: {exc}")
         return pd.DataFrame()

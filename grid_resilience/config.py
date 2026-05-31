@@ -95,7 +95,7 @@ EVENT_WINDOW_PRE = 5
 EVENT_WINDOW_POST = 10
 
 # Minimum number of stress observations required to estimate a reliable beta
-MIN_STRESS_OBS = 20
+MIN_STRESS_OBS = 10  # SPP has ~12 stress days/year; PJM requires PJM_API_KEY (pjm.com/api)
 
 # ── Factor neutralization ─────────────────────────────────────────────────────
 WINSOR_LIMITS = (0.025, 0.975)  # clip factor scores at these percentiles
