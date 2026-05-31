@@ -101,6 +101,9 @@ def run(
             xlu_ret.name = "XLU"
             returns = returns.join(xlu_ret, how="left")
             tickers = list(returns.columns)
+        else:
+            print("  [warn] XLU price data unavailable — disabling xlu_hedge for this run")
+            xlu_hedge = False
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
 

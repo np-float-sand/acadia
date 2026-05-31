@@ -46,3 +46,11 @@ def test_xlu_is_excluded_from_ranking():
     assert weights.get("XLU", 0.0) == pytest.approx(-0.5)
     # VST should still be long (highest score among non-XLU names)
     assert weights.get("VST", 0.0) > 0
+
+
+def test_all_nan_scores_returns_empty():
+    """All-NaN factor scores must return empty Series — no naked short."""
+    import numpy as np
+    scores = pd.Series({"VST": np.nan, "NRG": np.nan, "CNP": np.nan})
+    weights = build_weights(scores, xlu_hedge=True)
+    assert weights.empty

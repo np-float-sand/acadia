@@ -3,7 +3,8 @@ Sector-neutral long/short portfolio construction.
 
 Given a cross-section of Grid Resilience factor scores, this module:
   1. Ranks tickers by score
-  2. Selects top-N for the long book, bottom-N for the short book
+  2. Selects top-N for the long book; either shorts bottom-N individual names
+     (xlu_hedge=False) or takes a -0.5 position in XLU (xlu_hedge=True, default)
   3. Assigns equal weights within each book
   4. Ensures dollar-neutrality (long weights sum = 0.5, short = -0.5)
 
@@ -21,7 +22,7 @@ from grid_resilience.config import PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N, REBALANC
 def build_weights(
     factor_scores: pd.Series,
     n_long:    int  = PORTFOLIO_LONG_N,
-    n_short:   int  = PORTFOLIO_SHORT_N,
+    n_short:   int  = PORTFOLIO_SHORT_N,  # ignored when xlu_hedge=True
     xlu_hedge: bool = XLU_HEDGE,
 ) -> pd.Series:
     """
@@ -34,6 +35,9 @@ def build_weights(
     XLU is always excluded from ranking even if it appears in factor_scores.
     """
     scores = factor_scores.drop("XLU", errors="ignore").dropna().sort_values(ascending=False)
+
+    if len(scores) == 0:
+        return pd.Series(dtype=float)  # no data → no position
 
     if not xlu_hedge and len(scores) < n_long + n_short:
         n_long  = max(1, len(scores) // 2)
