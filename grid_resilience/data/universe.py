@@ -26,7 +26,7 @@ OUTAGE_MAPPED: list[str] = [t for t, v in TICKER_NODE_MAP.items() if not v["node
 # (all are electric utilities; sub-group by generation vs. wires)
 GENERATORS = ["NRG", "VST", "ETR", "NEE"]          # primary generation exposure
 WIRES_ONLY  = ["CNP", "EXC", "PPL", "FE", "ES", "ED"]  # T&D focused
-INTEGRATED  = ["AEP", "WEC", "DTE", "CMS", "XEL", "PCG", "EIX", "SO"]  # gen + wires
+INTEGRATED  = ["AEP", "WEC", "DTE", "CMS", "XEL", "PCG", "EIX", "SO", "D", "AEE", "EVRG", "DUK"]  # gen + wires
 
 
 def get_iso_tickers(iso: str) -> list[str]:

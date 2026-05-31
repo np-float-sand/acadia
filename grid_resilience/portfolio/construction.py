@@ -105,6 +105,14 @@ def weights_to_matrix(
         .pivot(index="date", columns="ticker", values="weight")
         .reindex(columns=all_tickers, fill_value=0.0)
     )
+    # pandas 2.x/3.x: date_range produces datetime64[us] while yfinance returns
+    # datetime64[ms]; reindex requires matching units so we normalise the pivot
+    # index to match all_dates before reindexing.
+    if not pivot.empty:
+        try:
+            pivot.index = pivot.index.as_unit(all_dates.unit)
+        except AttributeError:
+            pass  # pandas < 2.0 — no unit attribute, no mismatch issue
     pivot = pivot.reindex(all_dates).ffill().fillna(0.0)
     return pivot
 

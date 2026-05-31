@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 """
-Equity price fetcher using yfinance, with local parquet caching.
+Equity price fetcher using yfinance, with monthly-chunked local parquet caching.
+
+Each calendar month is stored in its own parquet file
+(e.g. equity_prices_2020-01.parquet) so partial progress survives interruptions
+and only missing months need to be fetched on re-runs.
 
 Usage:
     from grid_resilience.data.equity_prices import fetch_prices, fetch_returns
@@ -11,17 +15,43 @@ Usage:
 """
 
 import warnings
-from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
 import yfinance as yf
 
 from grid_resilience.config import CACHE_DIR
+from grid_resilience.data.cache_utils import (
+    find_missing_months_wide,
+    read_monthly_cache_wide,
+    save_monthly_chunks_wide,
+    month_bounds,
+)
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-_PRICE_CACHE = CACHE_DIR / "equity_prices.parquet"
+# Base path — actual files are <stem>_YYYY-MM<suffix>
+_PRICE_CACHE_BASE = CACHE_DIR / "equity_prices.parquet"
+
+
+def _download(tickers: list[str], start: str, end: str) -> pd.DataFrame:
+    # yfinance `end` is exclusive; advance by one day so the requested end date is included
+    end_exc = (pd.Timestamp(end) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    raw = yf.download(
+        tickers,
+        start=start,
+        end=end_exc,
+        auto_adjust=True,
+        group_by="column",
+        progress=False,
+        threads=True,
+    )
+    if isinstance(raw.columns, pd.MultiIndex):
+        prices = raw.xs("Close", axis=1, level=0)
+    else:
+        prices = raw[["Close"]] if "Close" in raw.columns else raw
+    return prices.ffill(limit=5).dropna(how="all")
 
 
 def fetch_prices(
@@ -36,43 +66,37 @@ def fetch_prices(
 
     Columns = tickers, index = date (business days).
     Missing dates are forward-filled up to 5 days then dropped.
+    Monthly parquet chunks are written as each month completes so
+    interrupted runs resume from where they left off.
 
     Data source: Yahoo Finance via yfinance (free, no API key).
     """
     tickers = sorted(set(tickers))
 
-    if use_cache and not force_refresh and _PRICE_CACHE.exists():
-        cached = pd.read_parquet(_PRICE_CACHE)
-        cached_tickers = set(cached.columns)
-        date_ok = (
-            not cached.empty
-            and str(cached.index.min().date()) <= start
-            and str(cached.index.max().date()) >= end
-        )
-        if cached_tickers >= set(tickers) and date_ok:
-            return cached[tickers].loc[start:end]
+    if use_cache and not force_refresh:
+        missing = find_missing_months_wide(_PRICE_CACHE_BASE, start, end, tickers)
+
+        if missing:
+            def _fetch_month(ym: tuple[int, int]) -> None:
+                ms, me = month_bounds(*ym)
+                print(f"[equity] Downloading {len(tickers)} tickers {ms[:7]}…")
+                frame = _download(tickers, ms, me)
+                if not frame.empty:
+                    save_monthly_chunks_wide(frame, _PRICE_CACHE_BASE)
+
+            with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+                list(ex.map(_fetch_month, missing))
+
+        cached = read_monthly_cache_wide(_PRICE_CACHE_BASE, start, end)
+        if cached.empty:
+            return pd.DataFrame()
+        available = [t for t in tickers if t in cached.columns]
+        return cached[available].loc[start:end]
 
     print(f"[equity] Downloading prices for {len(tickers)} tickers ({start} → {end})…")
-    raw = yf.download(
-        tickers,
-        start=start,
-        end=end,
-        auto_adjust=True,
-        group_by="column",
-        progress=False,
-        threads=True,
-    )
-
-    if isinstance(raw.columns, pd.MultiIndex):
-        prices = raw.xs("Close", axis=1, level=0)
-    else:
-        prices = raw[["Close"]] if "Close" in raw.columns else raw
-
-    prices = prices.ffill(limit=5).dropna(how="all")
-
-    if use_cache:
-        prices.to_parquet(_PRICE_CACHE)
-
+    prices = _download(tickers, start, end)
+    if use_cache and not prices.empty:
+        save_monthly_chunks_wide(prices, _PRICE_CACHE_BASE)
     return prices[tickers] if set(tickers) <= set(prices.columns) else prices
 
 

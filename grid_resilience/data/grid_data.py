@@ -24,6 +24,8 @@ can be downloaded from each ISO's market data portal and loaded via
 """
 
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pandas as pd
@@ -35,39 +37,41 @@ from grid_resilience.config import (
     ISO_BENCHMARK_NODES,
     LMP_SPIKE_THRESHOLD,
 )
-from grid_resilience.data.cache_utils import read_cached, compute_date_gaps, merge_and_save
+from grid_resilience.data.cache_utils import (
+    read_cached, compute_date_gaps, merge_and_save,
+    find_missing_months, read_monthly_cache, save_monthly_chunks, month_bounds,
+)
 
 # Lazily instantiated gridstatus ISO objects (one per ISO, shared)
 _ISO_INSTANCES: dict = {}
+_ISO_INIT_LOCK = threading.Lock()  # guards concurrent ISO instantiation
 
 
 def _get_iso(iso: str):
     if iso not in _ISO_INSTANCES:
-        try:
-            import gridstatus
-        except ImportError:
-            raise ImportError("gridstatus is not installed. Run: pip install gridstatus")
-        cls_name = ISO_CLASS_MAP.get(iso)
-        if not cls_name:
-            raise ValueError(f"Unsupported ISO: {iso}. Choose from {list(ISO_CLASS_MAP)}")
+        with _ISO_INIT_LOCK:
+            if iso not in _ISO_INSTANCES:  # re-check after acquiring lock
+                try:
+                    import gridstatus
+                except ImportError:
+                    raise ImportError("gridstatus is not installed. Run: pip install gridstatus")
+                cls_name = ISO_CLASS_MAP.get(iso)
+                if not cls_name:
+                    raise ValueError(f"Unsupported ISO: {iso}. Choose from {list(ISO_CLASS_MAP)}")
 
-        if iso == "ERCOT":
-            # B2C token auth — see ercot_auth.py
-            _inject_ercot_token()
-            _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)()
-        elif iso == "PJM":
-            # PJM requires a free API key: register at pjm.com/api
-            # Set env var: PJM_API_KEY=your_key
-            api_key = os.environ.get("PJM_API_KEY")
-            if not api_key:
-                raise EnvironmentError(
-                    "PJM_API_KEY not set. Register free at pjm.com/api "
-                    "then: export PJM_API_KEY=your_key"
-                )
-            _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)(api_key=api_key)
-        else:
-            # MISO, CAISO, SPP, NYISO, ISO-NE — no credentials needed
-            _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)()
+                if iso == "ERCOT":
+                    _inject_ercot_token()
+                    _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)()
+                elif iso == "PJM":
+                    api_key = os.environ.get("PJM_API_KEY")
+                    if not api_key:
+                        raise EnvironmentError(
+                            "PJM_API_KEY not set. Register free at pjm.com/api "
+                            "then: export PJM_API_KEY=your_key"
+                        )
+                    _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)(api_key=api_key)
+                else:
+                    _ISO_INSTANCES[iso] = getattr(gridstatus, cls_name)()
 
     return _ISO_INSTANCES[iso]
 
@@ -109,7 +113,23 @@ def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd
 def _fetch_load_raw(iso_obj, iso: str, start: str, end: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} load {start} → {end}…")
     try:
-        df = iso_obj.get_load(date=start, end=end, verbose=False)
+        if iso == "CAISO":
+            # get_load() uses the outlook/history endpoint which only keeps ~2-3 years.
+            # get_load_hourly() uses CAISO OASIS and has full historical depth.
+            df = iso_obj.get_load_hourly(date=start, end=end, verbose=False)
+        elif iso == "SPP":
+            # SPP.get_load() does not accept an `end` parameter — fetch day-by-day.
+            frames = []
+            for d in pd.date_range(start, end, freq="D"):
+                try:
+                    day = iso_obj.get_load(date=d.strftime("%Y-%m-%d"), verbose=False)
+                    if not day.empty:
+                        frames.append(day)
+                except Exception:
+                    pass
+            df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        else:
+            df = iso_obj.get_load(date=start, end=end, verbose=False)
     except Exception as exc:
         print(f"  [grid] {iso} load fetch failed: {exc}")
         return pd.DataFrame()
@@ -185,32 +205,75 @@ def fetch_lmp(
     start / end   : "YYYY-MM-DD" strings
     location_type : overrides ISO default (e.g. "hub", "zone", "node")
     locations     : filter to these location names after fetching
-    use_cache     : read/write parquet cache
+    use_cache     : read/write parquet cache (monthly chunks)
     force_refresh : ignore cache and re-download the full range
     """
     loc_type = location_type or ISO_LOCATION_TYPE.get(iso, "hub")
-    cache_file = _cache_path(iso, f"lmp_{loc_type}")
+    cache_base = _cache_path(iso, f"lmp_{loc_type}")
 
     if use_cache and not force_refresh:
-        cached = read_cached(cache_file)
-        gaps = compute_date_gaps(cached, "time", start, end)
-        if not gaps:
-            return _filter_locations(_filter_time(cached, start, end), locations)
-        iso_obj = _get_iso(iso)
-        new_frames = [_fetch_lmp_raw(iso_obj, iso, gs, ge, loc_type) for gs, ge in gaps]
-        non_empty = [f for f in new_frames if not f.empty]
-        if non_empty:
-            new_data = pd.concat(non_empty, ignore_index=True)
-            merged = merge_and_save(cached, new_data, "time", cache_file)
-        else:
-            merged = cached
+        missing = find_missing_months(cache_base, start, end)
+        if missing:
+            if iso == "ERCOT":
+                _fill_ercot_lmp_cache(missing, cache_base, loc_type)
+            else:
+                iso_obj = _get_iso(iso)
+
+                def _fetch_month(ym: tuple[int, int]) -> None:
+                    ms, me = month_bounds(*ym)
+                    df = _fetch_lmp_raw(iso_obj, iso, ms, me, loc_type)
+                    if not df.empty:
+                        save_monthly_chunks(df, cache_base, "time")
+
+                with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+                    list(ex.map(_fetch_month, missing))
+
+        merged = read_monthly_cache(cache_base, start, end)
     else:
         iso_obj = _get_iso(iso)
         merged = _fetch_lmp_raw(iso_obj, iso, start, end, loc_type)
         if use_cache and not merged.empty:
-            merged.to_parquet(cache_file, index=False)
+            save_monthly_chunks(merged, cache_base, "time")
 
     return _filter_locations(_filter_time(merged, start, end), locations)
+
+
+def _fill_ercot_lmp_cache(
+    missing: list[tuple[int, int]],
+    cache_base: Path,
+    loc_type: str,
+) -> None:
+    """
+    Route ERCOT missing months to the right downloader.
+
+    Historical months (> 90 days ago): annual bulk archive via ercot_bulk.
+    The CDR API is public — no B2C auth is needed for these calls.
+    One Excel file per year covers all 12 months efficiently.
+
+    Recent months (within live API window): parallel month-by-month via
+    gridstatus live API (B2C auth only triggered if recent months exist).
+    """
+    from grid_resilience.data.ercot_bulk import backfill_lmp, is_historical
+
+    hist = [(y, m) for y, m in missing if is_historical(f"{y}-{m:02d}-01")]
+    recent = [(y, m) for y, m in missing if not is_historical(f"{y}-{m:02d}-01")]
+
+    if hist:
+        h_start = f"{min(y for y, _ in hist)}-01-01"
+        h_end = f"{max(y for y, _ in hist)}-12-31"
+        backfill_lmp(h_start, h_end, cache_base)  # creates its own Ercot(), no auth
+
+    if recent:
+        iso_obj = _get_iso("ERCOT")  # B2C auth only triggered when live API needed
+
+        def _fetch_month(ym: tuple[int, int]) -> None:
+            ms, me = month_bounds(*ym)
+            df = _fetch_lmp_raw(iso_obj, "ERCOT", ms, me, loc_type)
+            if not df.empty:
+                save_monthly_chunks(df, cache_base, "time")
+
+        with ThreadPoolExecutor(max_workers=min(len(recent), 4)) as ex:
+            list(ex.map(_fetch_month, recent))
 
 
 def fetch_load(
@@ -225,25 +288,28 @@ def fetch_load(
 
     Returns DataFrame with columns: time, load_mw
     """
-    cache_file = _cache_path(iso, "load")
+    cache_base = _cache_path(iso, "load")
 
     if use_cache and not force_refresh:
-        cached = read_cached(cache_file)
-        gaps = compute_date_gaps(cached, "time", start, end)
-        if not gaps:
-            return _filter_time(cached, start, end)
-        iso_obj = _get_iso(iso)
-        new_frames = [_fetch_load_raw(iso_obj, iso, gs, ge) for gs, ge in gaps]
-        non_empty = [f for f in new_frames if not f.empty]
-        if non_empty:
-            merged = merge_and_save(cached, pd.concat(non_empty, ignore_index=True), "time", cache_file)
-        else:
-            merged = cached
+        missing = find_missing_months(cache_base, start, end)
+        if missing:
+            iso_obj = _get_iso(iso)
+
+            def _fetch_month(ym: tuple[int, int]) -> None:
+                ms, me = month_bounds(*ym)
+                df = _fetch_load_raw(iso_obj, iso, ms, me)
+                if not df.empty:
+                    save_monthly_chunks(df, cache_base, "time")
+
+            with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+                list(ex.map(_fetch_month, missing))
+
+        merged = read_monthly_cache(cache_base, start, end)
     else:
         iso_obj = _get_iso(iso)
         merged = _fetch_load_raw(iso_obj, iso, start, end)
         if use_cache and not merged.empty:
-            merged.to_parquet(cache_file, index=False)
+            save_monthly_chunks(merged, cache_base, "time")
 
     return _filter_time(merged, start, end)
 
@@ -259,25 +325,28 @@ def fetch_fuel_mix(
     Fetch hourly generation fuel mix (MW by fuel type) for an ISO.
     Used as input to the reserve-tightness sub-signal.
     """
-    cache_file = _cache_path(iso, "fuel_mix")
+    cache_base = _cache_path(iso, "fuel_mix")
 
     if use_cache and not force_refresh:
-        cached = read_cached(cache_file)
-        gaps = compute_date_gaps(cached, "time", start, end)
-        if not gaps:
-            return _filter_time(cached, start, end)
-        iso_obj = _get_iso(iso)
-        new_frames = [_fetch_fuel_mix_raw(iso_obj, iso, gs, ge) for gs, ge in gaps]
-        non_empty = [f for f in new_frames if not f.empty]
-        if non_empty:
-            merged = merge_and_save(cached, pd.concat(non_empty, ignore_index=True), "time", cache_file)
-        else:
-            merged = cached
+        missing = find_missing_months(cache_base, start, end)
+        if missing:
+            iso_obj = _get_iso(iso)
+
+            def _fetch_month(ym: tuple[int, int]) -> None:
+                ms, me = month_bounds(*ym)
+                df = _fetch_fuel_mix_raw(iso_obj, iso, ms, me)
+                if not df.empty:
+                    save_monthly_chunks(df, cache_base, "time")
+
+            with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+                list(ex.map(_fetch_month, missing))
+
+        merged = read_monthly_cache(cache_base, start, end)
     else:
         iso_obj = _get_iso(iso)
         merged = _fetch_fuel_mix_raw(iso_obj, iso, start, end)
         if use_cache and not merged.empty:
-            merged.to_parquet(cache_file, index=False)
+            save_monthly_chunks(merged, cache_base, "time")
 
     return _filter_time(merged, start, end)
 
@@ -485,7 +554,7 @@ def _normalise_load_columns(df: pd.DataFrame) -> pd.DataFrame:
     rename: dict[str, str] = {}
     for c in df.columns:
         cl = c.lower()
-        if cl in ("time", "datetime", "interval_ending", "timestamp"):
+        if cl in ("time", "datetime", "interval_ending", "timestamp", "interval start"):
             rename[c] = "time"
             break
     for c in df.columns:

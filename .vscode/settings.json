@@ -1,0 +1,7 @@
+{
+    "github.copilot.enable": {
+        "python": true
+    },
+    "markdown.preview.openMarkdownLinks": "inEditor",
+    "workbench.editor.enablePreview": false
+}

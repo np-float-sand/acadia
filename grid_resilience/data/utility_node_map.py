@@ -148,7 +148,44 @@ TICKER_NODE_MAP = {
         "service_territory": "NYC + Westchester T&D",
         "notes": "NYISO Zone J (NYC). LMP spikes sharply on heat/cold days.",
     },
+    # ── PJM (additional) ──────────────────────────────────────────────────────
+    "D": {
+        "name": "Dominion Energy",
+        "iso": "PJM",
+        "nodes": ["EASTERN HUB"],
+        "load_zones": ["DOM"],
+        "service_territory": "Virginia, North Carolina T&D + generation",
+        "notes": "PJM DOM zone. EASTERN HUB is the closest benchmark proxy. ~20% of capacity is in SERC-regulated NC territory.",
+    },
+    # ── MISO (additional) ─────────────────────────────────────────────────────
+    "AEE": {
+        "name": "Ameren",
+        "iso": "MISO",
+        "nodes": ["ILLINOIS HUB"],
+        "load_zones": ["AMIL", "AMMO"],
+        "service_territory": "Illinois and Missouri T&D + generation",
+        "notes": "MISO Central. ILLINOIS HUB captures Illinois operations (larger segment). Missouri ops are on the MISO/SPP seam.",
+    },
+    # ── SPP (additional) ──────────────────────────────────────────────────────
+    "EVRG": {
+        "name": "Evergy",
+        "iso": "SPP",
+        "nodes": ["SPPNORTH_HUB", "SPPSOUTH_HUB"],
+        "load_zones": ["KCPL", "WESTAR"],
+        "service_territory": "Kansas and Missouri T&D + generation",
+        "notes": "SPP. Kansas City Power & Light + Westar Energy merger. Similar Uri exposure to XEL.",
+    },
     # ── SERC / FRCC (no centralized LMP — use EIA-417 outage data) ────────────
+    "DUK": {
+        "name": "Duke Energy",
+        "iso": "SERC",
+        "nodes": [],
+        "load_zones": [],
+        "service_territory": "NC, SC, FL, IN, OH T&D + generation",
+        "secondary_iso": "MISO",
+        "secondary_nodes": ["ILLINOIS HUB"],
+        "notes": "~62% of capacity in SERC/FRCC (no LMP). Duke Energy Indiana is MISO; Duke Energy Ohio is PJM. Use EIA-417 for primary stress signal.",
+    },
     "SO": {
         "name": "Southern Company",
         "iso": "SERC",

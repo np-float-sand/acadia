@@ -59,14 +59,15 @@ def build_factor(
     scores = pd.DataFrame(index=stress_betas.index)
 
     # Component 1: signed stress beta
-    # Generators (NRG, VST, ETR, NEE) profit from high absolute stress_beta
-    # (larger moves during grid stress) → use +|stress_beta|.
-    # T&D and integrated utilities are hurt by high absolute stress_beta
-    # (larger losses during grid stress) → use -|stress_beta|.
+    # Generators (NRG, VST, ETR, NEE) profit from positive stress_beta
+    # (larger moves during grid stress) → use +stress_beta.
+    # T&D and integrated utilities are hurt by positive stress_beta
+    # (larger losses during grid stress) → use -stress_beta.
+    # Note: Direct sign flip (no absolute value) preserves the sign of the beta.
     beta_sign = pd.Series(
         {t: 1.0 if t in GENERATORS else -1.0 for t in stress_betas.index}
     )
-    scores["signed_stress_beta"] = beta_sign * np.abs(stress_betas["stress_beta"])
+    scores["signed_stress_beta"] = beta_sign * stress_betas["stress_beta"]
     scores["signed_stress_beta"] = cross_section_zscore(
         winsorize(scores["signed_stress_beta"], WINSOR_LIMITS)
     )

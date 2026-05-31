@@ -24,6 +24,7 @@ Environment variables (set before running):
 
 import argparse
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
@@ -95,26 +96,36 @@ def run(
     daily_lmp_by_iso:  dict[str, pd.DataFrame] = {}
     daily_load_by_iso: dict[str, pd.DataFrame] = {}
 
-    for iso in isos:
+    def _fetch_iso_data(iso: str) -> tuple[str, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         lmp_raw  = fetch_lmp(iso, start, end)
         load_raw = fetch_load(iso, start, end)
+        zone_raw = pd.DataFrame()
+        if iso in CONGESTION_SPREAD_ISOS:
+            zone_loc = ISO_ZONE_LOCATION_TYPE.get(iso)
+            zone_raw = fetch_lmp(iso, start, end, location_type=zone_loc) if zone_loc else lmp_raw
+        return iso, lmp_raw, load_raw, zone_raw
 
-        if not lmp_raw.empty:
-            daily_lmp = daily_lmp_summary(lmp_raw, iso)
+    with ThreadPoolExecutor(max_workers=len(isos)) as ex:
+        futures = {ex.submit(_fetch_iso_data, iso): iso for iso in isos}
+        for future in as_completed(futures):
+            iso = futures[future]
+            try:
+                _, lmp_raw, load_raw, zone_raw = future.result()
+            except Exception as exc:
+                print(f"  [warn] {iso} data fetch failed: {exc}")
+                continue
 
-            if iso in CONGESTION_SPREAD_ISOS:
-                zone_loc = ISO_ZONE_LOCATION_TYPE.get(iso)
-                zone_raw = fetch_lmp(iso, start, end, location_type=zone_loc) if zone_loc else lmp_raw
-                if not zone_raw.empty:
+            if not lmp_raw.empty:
+                daily_lmp = daily_lmp_summary(lmp_raw, iso)
+                if iso in CONGESTION_SPREAD_ISOS and not zone_raw.empty:
                     spread_df = daily_spread_summary(zone_raw)
                     daily_lmp = fill_congestion_from_spread(daily_lmp, spread_df)
+                daily_lmp_by_iso[iso] = daily_lmp
+            else:
+                print(f"  [warn] No LMP data for {iso} — skipping.")
 
-            daily_lmp_by_iso[iso] = daily_lmp
-        else:
-            print(f"  [warn] No LMP data for {iso} — skipping.")
-
-        if not load_raw.empty:
-            daily_load_by_iso[iso] = daily_load_summary(load_raw)
+            if not load_raw.empty:
+                daily_load_by_iso[iso] = daily_load_summary(load_raw)
 
     if not daily_lmp_by_iso:
         print("[ERROR] No grid data retrieved.  Check gridstatus installation and ISO connectivity.")
@@ -140,8 +151,16 @@ def run(
     # ── 5. Stress betas ───────────────────────────────────────────────────────
     print("\n[5/7] Estimating stress betas…")
     rebalance_dates = pd.date_range(start, end, freq=REBALANCE_FREQ)
-    rebalance_dates = pd.DatetimeIndex([d for d in rebalance_dates if d in returns.index
-                                        or returns.index[returns.index.searchsorted(d) - 1]])
+    # Snap each calendar month-end to the nearest prior trading day so that
+    # non-trading-day month-ends (e.g. Sat/Sun) still produce valid weights.
+    def _snap(d):
+        if d in returns.index:
+            return d
+        pos = returns.index.searchsorted(d, side="right") - 1
+        return returns.index[pos] if pos >= 0 else None
+    rebalance_dates = pd.DatetimeIndex(
+        [_snap(d) for d in rebalance_dates if _snap(d) is not None]
+    ).unique()
 
     rolling_betas = rolling_stress_betas(
         returns          = returns,
