@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from scipy import stats
 
 from grid_resilience.signals.stress_events import event_date_mask
 
@@ -79,6 +80,7 @@ def run_backtest(
         **_compute_metrics(strategy_ret, risk_free_rate, label="full"),
         **_compute_metrics(stress_ret,   risk_free_rate, label="stress"),
         **_compute_metrics(calm_ret,     risk_free_rate, label="calm"),
+        **_significance_tests(stress_ret, calm_ret),
         "stress_days": int(stress_mask.sum()),
         "total_days":  len(common_dates),
     }
@@ -121,12 +123,49 @@ def _compute_metrics(ret: pd.Series, rf_annual: float, label: str) -> dict:
     }
 
 
+def _significance_tests(stress_ret: pd.Series, calm_ret: pd.Series) -> dict:
+    """
+    Compare stress-period vs calm-period daily returns with three tests:
+      - Welch t-test       : mean daily return different? (unequal-variance)
+      - Levene test        : variance (volatility) different?
+      - Mann-Whitney U     : non-parametric, distribution-free comparison
+
+    Returns p-values and a star annotation (* p<0.10, ** p<0.05, *** p<0.01).
+    """
+    out: dict = {}
+    if len(stress_ret) < 5 or len(calm_ret) < 5:
+        for k in ("sig_mean_pval", "sig_vol_pval", "sig_mw_pval"):
+            out[k] = np.nan
+        return out
+
+    s = stress_ret.dropna().values
+    c = calm_ret.dropna().values
+
+    _, mean_p = stats.ttest_ind(s, c, equal_var=False)
+    _, vol_p  = stats.levene(s, c)
+    _, mw_p   = stats.mannwhitneyu(s, c, alternative="two-sided")
+
+    out["sig_mean_pval"] = round(float(mean_p), 4)
+    out["sig_vol_pval"]  = round(float(vol_p),  4)
+    out["sig_mw_pval"]   = round(float(mw_p),   4)
+    return out
+
+
+def _stars(p: float) -> str:
+    if np.isnan(p):  return "   "
+    if p < 0.01:     return "***"
+    if p < 0.05:     return " **"
+    if p < 0.10:     return "  *"
+    return "   "
+
+
 # ── Performance charting ──────────────────────────────────────────────────────
 
 def plot_performance(
     pnl: pd.DataFrame,
     events_df: pd.DataFrame,
     metrics: dict | None = None,
+    benchmark_returns: pd.Series | None = None,
     save_path: str | Path | None = None,
 ) -> None:
     """
@@ -152,6 +191,10 @@ def plot_performance(
     ax.plot(dates, cum_strat * 100, color="#1a3a5c", linewidth=2.0, label="Strategy (L/S)")
     ax.plot(dates, cum_long  * 100, color="#2e8b57", linewidth=1.2, linestyle="--", label="Long book")
     ax.plot(dates, cum_short * 100, color="#8b0000", linewidth=1.2, linestyle="--", label="Short book")
+    if benchmark_returns is not None:
+        bench = benchmark_returns.reindex(dates).fillna(0)
+        cum_bench = np.exp(bench.cumsum()) - 1
+        ax.plot(dates, cum_bench * 100, color="#888888", linewidth=1.0, linestyle=":", label="Long XLU")
     ax.axhline(0, color="black", linewidth=0.5)
     ax.set_ylabel("Cumulative Return (%)")
     ax.legend(loc="upper left", fontsize=9)
@@ -218,6 +261,22 @@ def print_metrics(metrics: dict) -> None:
     stress_days = metrics.get("stress_days", 0)
     total_days  = metrics.get("total_days", 0)
     print(f"\n  Stress days: {stress_days} / {total_days} ({stress_days/max(total_days,1)*100:.1f}%)")
+
+    # ── Significance tests: stress vs calm ────────────────────────────────────
+    mean_p = metrics.get("sig_mean_pval", np.nan)
+    vol_p  = metrics.get("sig_vol_pval",  np.nan)
+    mw_p   = metrics.get("sig_mw_pval",   np.nan)
+    print(f"\n  Stress vs Calm — significance tests:")
+    print(f"    {'Test':<26}  {'p-value':>8}  Sig")
+    print(f"    {'-'*26}  {'-'*8}  ---")
+
+    def _fmt(p):
+        return f"{p:8.4f}" if not np.isnan(p) else "      —"
+
+    print(f"    {'Welch t (mean return)':<26}  {_fmt(mean_p)}  {_stars(mean_p)}")
+    print(f"    {'Levene  (volatility)':<26}  {_fmt(vol_p)}   {_stars(vol_p)}")
+    print(f"    {'Mann-Whitney U (distrib)':<26}  {_fmt(mw_p)}   {_stars(mw_p)}")
+    print(f"    Significance: * p<0.10  ** p<0.05  *** p<0.01")
     print("=" * 55 + "\n")
 
 

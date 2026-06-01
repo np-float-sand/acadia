@@ -27,7 +27,6 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from grid_resilience.config import (
@@ -40,9 +39,7 @@ from grid_resilience.config import (
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
 )
-from grid_resilience.data.equity_prices import (
-    fetch_prices, fetch_returns, fetch_sector_return,
-)
+from grid_resilience.data.equity_prices import fetch_returns
 from grid_resilience.data.grid_data import (
     fetch_lmp, fetch_load, daily_lmp_summary, daily_load_summary,
     daily_spread_summary, fill_congestion_from_spread,
@@ -83,27 +80,36 @@ def run(
 
     # ── 1. Equity prices ──────────────────────────────────────────────────────
     print("\n[1/7] Fetching equity prices…")
-    tickers = [t for t in UNIVERSE if get_ticker_iso(t) in isos or get_ticker_iso(t) is not None]
-    prices  = fetch_prices(tickers, start, end)
-    returns = fetch_returns(tickers, start, end)
+    universe_tickers = [t for t in UNIVERSE if get_ticker_iso(t) in isos or get_ticker_iso(t) is not None]
+    # XLU is included in the batch so it lands in the same monthly parquet as the
+    # universe — avoids the NaN gaps that arise from narrow single-ticker downloads.
+    fetch_tickers = list(dict.fromkeys(universe_tickers + ["XLU"]))
+    all_returns = fetch_returns(fetch_tickers, start, end)
 
-    # Restrict to tickers that actually downloaded
-    tickers  = [t for t in tickers if t in returns.columns]
-    returns  = returns[tickers]
+    # Factor universe: restrict to universe tickers that downloaded; XLU excluded
+    # from scoring (build_weights already drops it, but keep returns separate here)
+    tickers = [t for t in universe_tickers if t in all_returns.columns]
+    returns = all_returns[tickers]
 
-    sector_r = fetch_sector_return(tickers, start, end)
+    # ── XLU: extract from the already-fetched batch ──────────────────────────
+    xlu_ret: pd.Series | None = None
+    if "XLU" in all_returns.columns and not all_returns["XLU"].isna().all():
+        xlu_ret = all_returns["XLU"].dropna()
+        xlu_ret.name = "XLU"
+        returns = returns.join(xlu_ret, how="left")
+        tickers = list(returns.columns)
+    else:
+        print("  [warn] XLU price data unavailable — disabling xlu_hedge for this run")
+        xlu_hedge = False
 
-    # ── XLU hedge returns (fetched separately, not factor-scored) ────────────
-    if xlu_hedge:
-        xlu_prices = fetch_prices(["XLU"], start, end)
-        if not xlu_prices.empty and "XLU" in xlu_prices.columns:
-            xlu_ret = np.log(xlu_prices["XLU"] / xlu_prices["XLU"].shift(1)).dropna()
-            xlu_ret.name = "XLU"
-            returns = returns.join(xlu_ret, how="left")
-            tickers = list(returns.columns)
-        else:
-            print("  [warn] XLU price data unavailable — disabling xlu_hedge for this run")
-            xlu_hedge = False
+    # Sector benchmark: XLU is a more stable proxy for the utilities sector than
+    # equal-weighting 3–5 universe names (small N makes excess returns circular).
+    # Fall back to equal-weight if XLU is unavailable.
+    sector_r = (
+        xlu_ret.rename("sector_return")
+        if xlu_ret is not None
+        else all_returns[tickers].mean(axis=1).rename("sector_return")
+    )
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
 
@@ -223,6 +229,7 @@ def run(
     if plot:
         plot_performance(
             pnl, events_df, metrics,
+            benchmark_returns=xlu_ret,
             save_path=output_dir / "backtest_performance.png",
         )
 

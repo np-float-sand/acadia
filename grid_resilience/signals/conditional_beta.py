@@ -196,6 +196,10 @@ def compute_stress_betas(
         if len(er_stress) < MIN_STRESS_OBS:
             continue
 
+        # Cap extreme GSI values so one catastrophic event (e.g. Uri) doesn't
+        # dominate the slope estimate across 252 trading days.
+        gsi_stress = gsi_stress.clip(upper=gsi_stress.quantile(0.95))
+
         # OLS: excess_return ~ GSI
         if _HAS_SM:
             X = sm.add_constant(gsi_stress.values)

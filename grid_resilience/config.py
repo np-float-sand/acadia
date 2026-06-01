@@ -33,9 +33,9 @@ ISO_CLASS_MAP = {
 # SPP uses separate DA/RT methods so this field is ignored for SPP
 ISO_LOCATION_TYPE = {
     "ERCOT": "settlement point",  # gridstatus ≥0.35 dropped "hub"; HB_* are settlement points
-    "PJM": "zone",
-    "MISO": "LMP",
-    "CAISO": "trading_hub",
+    "PJM": "DAY_AHEAD_HOURLY",
+    "MISO": "DAY_AHEAD_HOURLY",
+    "CAISO": "DAY_AHEAD_HOURLY",
     "SPP": "hub",  # SPP uses get_lmp_day_ahead_hourly() instead
     "NYISO": "zone",
     "ISO-NE": "hub",
@@ -87,7 +87,7 @@ REBALANCE_FREQ = "ME"  # pandas offset alias: month-end
 
 # Replace short book with XLU sector-ETF hedge (default on)
 # Set to False to restore original long/short individual-name construction
-XLU_HEDGE: bool = True
+XLU_HEDGE: bool = False  # True
 
 # ── Conditional beta estimation ───────────────────────────────────────────────
 # Event window (trading days) around each stress event for the event study
@@ -95,7 +95,9 @@ EVENT_WINDOW_PRE = 5
 EVENT_WINDOW_POST = 10
 
 # Minimum number of stress observations required to estimate a reliable beta
-MIN_STRESS_OBS = 10  # SPP has ~12 stress days/year; PJM requires PJM_API_KEY (pjm.com/api)
+MIN_STRESS_OBS = (
+    10  # SPP has ~12 stress days/year; PJM requires PJM_API_KEY (pjm.com/api)
+)
 
 # ── Factor neutralization ─────────────────────────────────────────────────────
 WINSOR_LIMITS = (0.025, 0.975)  # clip factor scores at these percentiles

@@ -295,6 +295,12 @@ def fetch_load(
 
     Returns DataFrame with columns: time, load_mw
     """
+    # SPP's get_load() calls the real-time chart API unconditionally before
+    # checking the date, then raises NotSupported for any historical date.
+    # Short-circuit here to avoid 31 wasted HTTP requests per missing month.
+    if iso == "SPP":
+        return pd.DataFrame()
+
     cache_base = _cache_path(iso, "load")
 
     if use_cache and not force_refresh:
@@ -513,7 +519,8 @@ def _normalise_lmp_columns(df: pd.DataFrame) -> pd.DataFrame:
     for c in df.columns:
         cl = c.lower()
         if cl in ("time", "datetime", "interval_ending", "delivery_date",
-                  "operatingday", "mktintervalstart", "timestamp"):
+                  "operatingday", "mktintervalstart", "timestamp",
+                  "interval start", "interval_start"):
             rename[c] = "time"
             break
 
