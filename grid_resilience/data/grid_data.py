@@ -26,6 +26,7 @@ can be downloaded from each ISO's market data portal and loaded via
 import inspect
 import os
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -100,13 +101,129 @@ def _cache_path(iso: str, dataset: str) -> Path:
 
 # ── Raw fetch helpers (no caching) ───────────────────────────────────────────
 
+def _pjm_get(url: str, params: dict, api_key: str, retries: int = 6) -> dict:
+    """GET a PJM DataMiner 2 endpoint with exponential-backoff retry on 429."""
+    import requests
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    delay = 15
+    for attempt in range(retries):
+        resp = requests.get(url, params=params, headers=headers, timeout=30)
+        if resp.status_code == 429:
+            print(f"  [grid] PJM 429 — retrying in {delay}s (attempt {attempt + 1}/{retries})")
+            time.sleep(delay)
+            delay *= 2
+            continue
+        resp.raise_for_status()
+        return resp.json()
+    resp.raise_for_status()
+    return {}
+
+
+def _fetch_pjm_lmp_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Fetch PJM DA hourly LMPs directly from DataMiner 2, hub nodes only.
+
+    Bypasses gridstatus to avoid its client-side location filtering, which
+    downloads all 337k nodes per day before filtering — exhausting the rate
+    limit across multiple pages.  Filtering server-side with type=HUB reduces
+    each monthly pull to ~9k rows (1 page).
+    """
+    start_ept = pd.Timestamp(start).strftime("%m/%d/%Y %H:%M")
+    end_ept   = pd.Timestamp(end).strftime("%m/%d/%Y %H:%M")
+    url       = "https://api.pjm.com/api/v1/da_hrl_lmps"
+    row_count = 50000
+    start_row = 1
+    all_items: list = []
+
+    while True:
+        params = {
+            "row_is_current": "TRUE",
+            "startRow":       start_row,
+            "rowCount":       row_count,
+            "type":           "HUB",
+            "datetime_beginning_ept": f"{start_ept}to{end_ept}",
+        }
+        data  = _pjm_get(url, params, api_key)
+        items = data.get("items", [])
+        all_items.extend(items)
+        total = data.get("totalRows", 0)
+        if start_row + row_count - 1 >= total or not items:
+            break
+        start_row += row_count
+        time.sleep(1)
+
+    if not all_items:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(all_items).rename(columns={
+        "datetime_beginning_utc": "time",
+        "pnode_name":             "location",
+        "total_lmp_da":           "lmp",
+        "congestion_price_da":    "congestion",
+        "system_energy_price_da": "energy",
+        "marginal_loss_price_da": "loss",
+    })
+    return df
+
+
+def _fetch_pjm_load_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Fetch PJM metered hourly load directly from DataMiner 2 (hrl_load_metered).
+
+    inst_load has no historical depth; hrl_load_metered has full history.
+    Aggregates all load areas to total system MW per hour.
+    """
+    start_ept = pd.Timestamp(start).strftime("%m/%d/%Y %H:%M")
+    end_ept   = pd.Timestamp(end).strftime("%m/%d/%Y %H:%M")
+    url       = "https://api.pjm.com/api/v1/hrl_load_metered"
+    row_count = 50000
+    start_row = 1
+    all_items: list = []
+
+    while True:
+        params = {
+            "startRow":  start_row,
+            "rowCount":  row_count,
+            "datetime_beginning_ept": f"{start_ept}to{end_ept}",
+        }
+        data  = _pjm_get(url, params, api_key)
+        items = data.get("items", [])
+        all_items.extend(items)
+        total = data.get("totalRows", 0)
+        if start_row + row_count - 1 >= total or not items:
+            break
+        start_row += row_count
+        time.sleep(1)
+
+    if not all_items:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(all_items)
+    df["time"] = pd.to_datetime(df["datetime_beginning_utc"])
+    total_load = df.groupby("time")["mw"].sum().rename("load_mw").reset_index()
+    return total_load
+
+
 def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} LMP ({loc_type}) {start} → {end}…")
     if iso == "SPP":
         return _fetch_spp_lmp_raw(iso_obj, start, end)
+    if iso == "PJM":
+        api_key = os.environ.get("PJM_API_KEY", "")
+        try:
+            return _fetch_pjm_lmp_direct(api_key, start, end)
+        except Exception as exc:
+            print(f"  [grid] PJM LMP fetch failed: {exc}")
+            return pd.DataFrame()
     params = inspect.signature(iso_obj.get_lmp).parameters
+    market_required = (
+        "market" in params
+        and params["market"].default is inspect.Parameter.empty
+    )
     try:
-        if "location_type" in params:
+        if market_required:
+            df = iso_obj.get_lmp(date=start, end=end, market=loc_type, verbose=False)
+        elif "location_type" in params:
             df = iso_obj.get_lmp(date=start, end=end, location_type=loc_type, verbose=False)
         elif "market" in params:
             df = iso_obj.get_lmp(date=start, end=end, market=loc_type, verbose=False)
@@ -120,6 +237,13 @@ def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd
 
 def _fetch_load_raw(iso_obj, iso: str, start: str, end: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} load {start} → {end}…")
+    if iso == "PJM":
+        api_key = os.environ.get("PJM_API_KEY", "")
+        try:
+            return _fetch_pjm_load_direct(api_key, start, end)
+        except Exception as exc:
+            print(f"  [grid] PJM load fetch failed: {exc}")
+            return pd.DataFrame()
     try:
         if iso == "CAISO":
             # get_load() uses the outlook/history endpoint which only keeps ~2-3 years.
@@ -228,16 +352,22 @@ def fetch_lmp(
                 iso_obj = _get_iso(iso)
 
                 def _fetch_month(ym: tuple[int, int]) -> None:
+                    if iso == "PJM":
+                        time.sleep(12)
                     ms, me = month_bounds(*ym)
                     df = _fetch_lmp_raw(iso_obj, iso, ms, me, loc_type)
                     if not df.empty:
                         save_monthly_chunks(df, cache_base, "time")
-                    else:
+                    elif iso != "PJM":
+                        # Only write empty placeholder for non-PJM ISOs so that
+                        # PJM 429 failures are always retried on the next run.
                         p = chunk_path(cache_base, *ym)
                         if not p.exists():
                             pd.DataFrame().to_parquet(p, index=False)
 
-                with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+                # PJM has a strict rate limit; serialize its requests to avoid 429s
+                workers = 1 if iso == "PJM" else min(len(missing), 4)
+                with ThreadPoolExecutor(max_workers=workers) as ex:
                     list(ex.map(_fetch_month, missing))
 
         merged = read_monthly_cache(cache_base, start, end)
@@ -318,16 +448,22 @@ def fetch_load(
             iso_obj = _get_iso(iso)
 
             def _fetch_month(ym: tuple[int, int]) -> None:
+                if iso == "PJM":
+                    time.sleep(12)
                 ms, me = month_bounds(*ym)
                 df = _fetch_load_raw(iso_obj, iso, ms, me)
                 if not df.empty:
                     save_monthly_chunks(df, cache_base, "time")
-                else:
+                elif iso != "PJM":
+                    # Only write empty placeholder for non-PJM ISOs so that
+                    # PJM 429 failures are always retried on the next run.
                     p = chunk_path(cache_base, *ym)
                     if not p.exists():
                         pd.DataFrame().to_parquet(p, index=False)
 
-            with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
+            # PJM has a strict rate limit; serialize its requests to avoid 429s
+            workers = 1 if iso == "PJM" else min(len(missing), 4)
+            with ThreadPoolExecutor(max_workers=workers) as ex:
                 list(ex.map(_fetch_month, missing))
 
         merged = read_monthly_cache(cache_base, start, end)
