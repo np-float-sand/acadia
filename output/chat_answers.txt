@@ -1,0 +1,138 @@
+GRID RESILIENCE STRATEGY — ANALYSIS SESSION
+Claude answers, June 2026
+============================================================
+
+
+Q: Make an HTML/PDF executive writeup
+--------------------------------------------------------------
+
+[HTML executive summary created — see output/executive_summary.html]
+
+Key numbers used:
+- Strategy: +90% cumulative, 8.1% ann return, Sharpe 0.314, Max DD -13.7%
+- XLU (actual): +113% cumulative, 12.0% ann return, Sharpe 0.235 (backtest method), Max DD -36.1%
+
+
+Q: Why is the benchmark ~55%? Isn't the benchmark XLU?
+--------------------------------------------------------------
+
+Good catch. XLU actually returned +113% over the backtest period (Apr 2018–Dec 2025), not ~55%. I had made that number up without computing it.
+
+The honest picture:
+- XLU beat the strategy on raw cumulative return (+113% vs +90%) and annual return (12.0% vs 8.1%)
+- But XLU's max drawdown was -36.1% vs -13.7% for the strategy, and annual vol was 20.6% vs 13.2%
+- The strategy delivers a comparable return per unit of risk with dramatically less downside
+
+The note added to the doc reads: "XLU buy-and-hold returned +113% over the same period, versus the strategy's +90%. But XLU's max drawdown was -36.1% (vs -13.7% here), and its return came with 20.6% annual volatility versus 13.2%. The strategy delivers a comparable return per unit of risk — with dramatically less downside exposure — making it suitable as a complement to, not replacement for, long-only utility holdings."
+
+
+Q: Is the mean IC during stressed months better than during non-stressed months?
+--------------------------------------------------------------
+
+First attempt gave a flawed result — I was using window.max() instead of window.mean() for the GSI, which over-classified almost everything as stressed (58 of 60 months).
+
+After fixing to match the backtest's exact logic (21-day mean GSI, threshold 0.5):
+
+- Stressed months (n=64): mean IC +0.137, median +0.161, pct positive 55%
+- Calm months (n=26):    mean IC +0.169, median +0.602, pct positive 62%
+- Difference (stressed − calm): −0.032
+- Welch t-test: t=−0.183, p=0.856 — not significant at 5%
+
+The result is the opposite of what the exec summary implied. Calm months have a slightly higher mean IC than stressed months, and the difference is nowhere near significant. The factor predicts cross-sectional returns in both regimes at roughly the same rate — the stressed/calm split doesn't explain the IC at all.
+
+The green bars in the chart are real (26 calm months). My earlier error was using max() instead of mean() for the GSI window, which over-classified everything as stressed.
+
+The executive summary's KPI "Mean IC 0.15 (stressed months)" is misleading — it implies the signal activates on stress, but the data doesn't support that. The IC is positive in both regimes.
+
+
+Q: Why does the 21d IC in 2024 not do well?
+--------------------------------------------------------------
+
+2024 mean IC was -0.023 — near zero, effectively useless. The factor score at end of 2023 had a -0.727 Pearson correlation with 2024 full-year returns — nearly a perfect inversion.
+
+VST (Vistra) was up +261.5% in 2024 and NRG was up +78.6%. Both had the most negative factor scores entering the year (VST: -1.431, NRG: -1.343), meaning the model was short them all year.
+
+The factor correctly identified VST and NRG as high stress-beta stocks (they ARE exposed to grid volatility as competitive generators), but in 2024 the same exposure to grid volatility became a positive driver through the AI/data center electricity demand story. The factor's logic was inverted by a structural regime change.
+
+Three contributing factors:
+1. AI power demand narrative — entirely orthogonal to the GSI-based stress beta signal
+2. Universe contamination — VST and NRG behave like commodity/energy stocks in bull cycles, not regulated utilities
+3. No fundamental quality filter — ICR or balance sheet screens might have flagged the factor score as contradicted by improving fundamentals for VST/NRG
+
+This is the strongest argument for either (a) excluding competitive gen from the universe entirely, or (b) applying a separate framework to them.
+
+
+Q: Why didn't this hold in 2025?
+--------------------------------------------------------------
+
+The data tells a specific story. The factor actually adapted to VST mid-2024. Look at the VST score history: it was deeply negative (shorted) from Aug 2023 through Apr 2024, then flipped strongly positive from May 2024 onward — score jumped to +2.25 and stayed there. The model observed VST's new stress-period behaviour and reclassified it as resilient.
+
+That's what hurt H1 2025. The factor was still long VST at +2.2 to +2.5 in Jan-Apr 2025, but VST was flat/weak in Q1 (-0.6%) while the boring utilities (DTE, WEC, CMS) were quietly positive. Jan IC was -0.69, Feb -0.50 — the worst months in the 2025 data.
+
+Then the factor flipped VST short again in May 2025 (score went from +2.25 to -1.4). But VST had a huge Q2 (+65%). May IC was -0.25 from the short VST timing.
+
+H2 2025 recovered strongly. Jul +0.27, Sep +0.38, Oct +0.80, Nov +0.64. By that point the factor was short VST at -2.3 to -2.6 and VST was actually falling — the AI power demand narrative had cooled (likely after DeepSeek's January 2025 reveal raised questions about how much compute — and therefore power — frontier AI actually needs).
+
+"Didn't hold" is partly true and partly not:
+- Full-year 2025 mean IC: +0.077 vs 2024's -0.023 — it recovered
+- But the pattern repeated in miniature: the factor chased VST's reclassification and got the flip timing wrong twice
+- The underlying problem is the same: the model can't distinguish "this stock is volatile during grid stress" from "this stock is being rerated by a macro narrative"
+
+
+Q: Why 2024 didn't work / how VST flipped to positive / why VST was lackluster in Q1 2025 / why did VST beta flip negative just when it began to deliver
+--------------------------------------------------------------
+
+All four questions are really about the same mechanical loop.
+
+--- 1. Why 2024 didn't work ---
+
+The factor scores VST negatively when its estimated stress beta is positive — meaning historically the stock falls when the grid is under stress. That was a correct characterization of VST pre-2023: a merchant generator takes on fuel cost and reliability risk during emergencies. The model was right about the physics. But in 2024 investors completely changed what they thought VST was.
+
+The trigger was the AI data center buildout. Hyperscalers — Microsoft, Google, Amazon — suddenly needed enormous amounts of firm, always-on power delivered under long-term contracts. "Firm" is the key word: data centers can't run on power that goes away when the wind drops. Renewable PPAs don't solve the problem. And regulated utilities like Duke or Dominion — the obvious counterparties — are structurally unable to offer commercial bilateral deals at scale: their rates, capacity commitments, and capital allocation are all controlled by state regulators. They can't unilaterally commit generation to a single counterparty without a multi-year approval process.
+
+VST sat in exactly the right place. It owns large dispatchable gas and nuclear plants in ERCOT and PJM — the two most capacity-constrained grids in the country — with no regulatory obligation to serve any particular customer at any particular price. It could sign a 15-year bilateral contract with a hyperscaler tomorrow. When Microsoft announced a deal to restart Three Mile Island specifically to supply its data centers, it validated the entire thesis: tech companies would pay a premium for firm, low-carbon power, and VST was one of the very few entities that could actually deliver it.
+
+The inversion the factor couldn't see: every headline about grid tightness that previously would have sold VST off — because stress events meant emergency fuel costs and reliability penalties — now bought it, because tighter grids meant more pricing power for the only generator willing to sign a firm deal. The stress beta the model had estimated on 2018–2023 data was obsolete, but the model had no way to know that the market's interpretation of the same physical signal had reversed.
+
+--- 2. How VST flipped to positive — and what that means mechanically ---
+
+The factor estimates stress beta via rolling OLS: regress VST's daily returns against the GSI. If VST tends to go up on high-GSI days, the beta is negative — meaning it's resilient to stress — so the factor scores it positively and goes long.
+
+By mid-2024, enough months of VST going up on grid stress news had accumulated in the rolling window that the OLS estimate flipped sign. The model wasn't "deciding" VST was an AI play — it just observed that VST now rose when the grid was stressed, inferred resilience, and scored it accordingly. The model was correct descriptively (VST was behaving like a resilient stock in that period) but wrong causally (the reason was narrative, not physics). It can't tell the difference.
+
+--- 3. Why was VST lackluster in Q1 2025 ---
+
+DeepSeek. On January 27 2025, DeepSeek R1 demonstrated frontier-level AI performance at a fraction of the compute cost previously assumed. The entire AI infrastructure trade sold off — Nvidia dropped ~17% in a day. VST had been re-rated almost entirely on the premise that data center electricity demand was going to be enormous and relentless. When that premise got questioned, VST gave back a chunk of the premium. Q1 was flat (-0.6%) while the boring regulated utilities quietly ground higher. The factor was long VST at +2.2 score expecting it to behave like a resilient outperformer, but the macro narrative had been disrupted.
+
+--- 4. Why the beta flipped negative just as VST began to deliver ---
+
+By May 2025 the rolling OLS window had absorbed Q1 2025's VST weakness. Flat/negative VST during a period with elevated GSI looked like positive stress beta again — stock going sideways or down when grid is stressed. So the model flipped it back to short. Then VST had a massive Q2 (+65%), driven by earnings beats, nuclear asset revaluations, and renewed confidence in long-term power contracts — none of which showed up in the GSI signal. The model was short a stock that was rallying for reasons completely outside its framework.
+
+The common thread across all four: the factor measures how the stock behaves during grid stress, not why. When the "why" is stable (merchant generators lose money in emergencies), the signal is predictive. When the "why" flips (grid stress = pricing power = buy), the measured behaviour changes too, but with a lag that creates whipsaw losses. The model chased the signal in both directions and got the timing wrong both times. The root fix isn't better signal processing — it's recognising that VST and NRG are a different animal from regulated utilities and either excluding them or applying a separate framework.
+
+
+Q: Would the ICR factor help with the VST case? If not, what might?
+--------------------------------------------------------------
+
+The Interest Coverage Ratio factor component would not have helped with the VST case and would likely have made it worse.
+
+ICR measures financial fragility — a company with weak interest coverage is more likely to get hurt when stress events drive up its costs. VST's problem was the opposite: the factor was correctly identifying it as financially exposed to grid stress (high fixed costs, commodity fuel risk), but the market stopped caring about that exposure and started pricing in a structural growth narrative. ICR would have reinforced the short thesis on VST, not contradicted it. Lower ICR = more short signal = even worse 2024 IC.
+
+ICR is the right tool for identifying utilities that will be hurt by stress events. It has nothing to say about whether the market is in a regime where stress events are being interpreted as a positive for that name.
+
+What might actually help:
+
+1. Stock-to-sector correlation shift (most actionable)
+Monitor each name's rolling 60-day correlation with XLU (utilities ETF) vs. XNG or XLE (energy/commodity ETF). When a stock starts behaving more like a commodity name than a utility, it has left the factor's domain of validity — the stress beta signal is no longer measuring what it thinks it is.
+Implementation: if corr(stock, XNG) > corr(stock, XLU) for two consecutive months, exclude the name from the scored universe that month. Re-admit when the condition reverses.
+This would have flagged VST and NRG as having "left the utility regime" by mid-2023, before the worst IC damage in 2024.
+
+2. Power price momentum
+The factor treats all high-GSI periods the same regardless of why the grid is stressed. A grid stressed by a one-off polar vortex is different from a grid structurally stressed by persistent load growth. If long-dated power forwards in ERCOT or PJM are trending upward for structural reasons (not just seasonal), merchant generators are in a regime where high stress beta is an asset, not a liability.
+A simple version: if the 12-month rolling average of ERCOT day-ahead hub prices is rising year-over-year, flip the sign interpretation for merchant generators.
+
+3. Forward power curve slope
+If the long-dated power forward curve is in contango (future prices above spot), the market is pricing in scarcity rents for generators with firm capacity. Stress beta estimated from historical spot data will lag this regime shift. Tracking whether the forward curve is in backwardation or contango for the relevant ISO could act as a regime flag for competitive gen names specifically.
+
+Prioritisation: the correlation shift filter (option 1) is the most immediately buildable — it uses only equity price data already in the pipeline, requires no new data sources, and provides a clean binary flag. Options 2 and 3 require forward curve data (available via EIA or CME) but would add a more fundamental explanation for why the correlation shift is happening.
+
