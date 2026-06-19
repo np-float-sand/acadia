@@ -33,6 +33,8 @@ def run_backtest(
     returns: pd.DataFrame,
     events_df: pd.DataFrame,
     risk_free_rate: float = 0.04,
+    benchmark_returns: pd.Series | None = None,
+    ew_returns: pd.Series | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     """
     Compute daily strategy P&L and summary performance metrics.
@@ -84,6 +86,14 @@ def run_backtest(
         "stress_days": int(stress_mask.sum()),
         "total_days":  len(common_dates),
     }
+
+    if benchmark_returns is not None:
+        bench = benchmark_returns.reindex(common_dates).fillna(0)
+        metrics.update(_compute_metrics(bench, risk_free_rate, label="bench"))
+
+    if ew_returns is not None:
+        ew = ew_returns.reindex(common_dates).fillna(0)
+        metrics.update(_compute_metrics(ew, risk_free_rate, label="ew"))
 
     return pnl, metrics
 
@@ -159,6 +169,132 @@ def _stars(p: float) -> str:
     return "   "
 
 
+# ── Information Coefficient ───────────────────────────────────────────────────
+
+def compute_ic(
+    factor_scores: pd.DataFrame,
+    returns: pd.DataFrame,
+    horizons: list[int] | None = None,
+    gsi_by_iso: dict | None = None,
+    gsi_threshold: float = 0.5,
+) -> tuple[dict[int, pd.Series], dict]:
+    """
+    Cross-sectional IC: Pearson correlation between factor score and N-day
+    forward cumulative return, computed at each rebalance date.
+
+    Parameters
+    ----------
+    factor_scores  : DataFrame with columns [date, ticker, factor_score]
+    returns        : (date × ticker) daily log-return DataFrame
+    horizons       : forward-return windows in trading days (default [5, 10, 21, 63])
+    gsi_by_iso     : {iso: gsi_df} from build_multi_iso_gsi — enables conditional IC
+    gsi_threshold  : GSI level separating stressed from calm regimes (default 0.5)
+
+    Returns
+    -------
+    ic_series : {horizon: pd.Series(date → IC)}
+    ic_metrics: {horizon: {mean_ic, std_ic, t_stat, pct_pos, n_periods,
+                            stressed_mean_ic, stressed_t_stat, stressed_n,
+                            calm_mean_ic, calm_t_stat, calm_n}}
+                plus ic_metrics["stress_dates"] = set of stressed rebalance dates
+    """
+    if horizons is None:
+        horizons = [5, 10, 21, 63]
+
+    ic_raw: dict[int, dict] = {h: {} for h in horizons}
+
+    # Build max-GSI series across all ISOs (stressed if ANY ISO is stressed)
+    max_gsi: pd.Series | None = None
+    if gsi_by_iso:
+        frames = [df["gsi"] for df in gsi_by_iso.values()
+                  if isinstance(df, pd.DataFrame) and "gsi" in df.columns and not df.empty]
+        if frames:
+            max_gsi = pd.concat(frames, axis=1).max(axis=1).sort_index()
+
+    date_gsi: dict = {}
+
+    for date_val in sorted(factor_scores["date"].unique()):
+        scores_at = (
+            factor_scores[factor_scores["date"] == date_val]
+            .set_index("ticker")["factor_score"]
+        )
+        tickers = [t for t in scores_at.index if t in returns.columns]
+        if len(tickers) < 3:
+            continue
+
+        date_ts = pd.Timestamp(date_val)
+        # first trading day strictly after the score date
+        idx = returns.index.searchsorted(date_ts, side="right")
+
+        # GSI level: average over the 21 trading days ending on the score date
+        if max_gsi is not None:
+            pos = max_gsi.index.searchsorted(date_ts, side="right")
+            window = max_gsi.iloc[max(0, pos - 21): pos]
+            if not window.empty:
+                date_gsi[date_ts] = float(window.mean())
+
+        for h in horizons:
+            end_idx = idx + h
+            if end_idx > len(returns):
+                continue
+            fwd_ret = returns.iloc[idx:end_idx][tickers].sum()
+            aligned = pd.DataFrame(
+                {"score": scores_at[tickers], "fwd_ret": fwd_ret}
+            ).dropna()
+            if len(aligned) < 3:
+                continue
+            ic_raw[h][date_ts] = aligned["score"].corr(aligned["fwd_ret"])
+
+    ic_series = {h: pd.Series(v).sort_index() for h, v in ic_raw.items()}
+    print(f"[ic] dates: {len(sorted(factor_scores['date'].unique()))}  |  "
+          + "  |  ".join(f"{h}d: {len(s)} pts" for h, s in ic_series.items()))
+
+    gsi_at_dates = pd.Series(date_gsi).sort_index() if date_gsi else pd.Series(dtype=float)
+    stress_dates: set = set(gsi_at_dates.index[gsi_at_dates >= gsi_threshold]) if not gsi_at_dates.empty else set()
+
+    ic_metrics: dict = {}
+    for h, series in ic_series.items():
+        if series.empty:
+            continue
+        mean_ic = series.mean()
+        std_ic  = series.std()
+        n       = len(series)
+        t_stat  = mean_ic / std_ic * np.sqrt(n) if std_ic > 0 else np.nan
+        entry: dict = {
+            "mean_ic":   round(float(mean_ic), 4),
+            "std_ic":    round(float(std_ic),  4),
+            "t_stat":    round(float(t_stat),  3) if not np.isnan(t_stat) else np.nan,
+            "pct_pos":   round(float((series > 0).mean()), 3),
+            "n_periods": n,
+        }
+
+        # Conditional IC
+        if stress_dates:
+            for regime, mask in [
+                ("stressed", series.index.isin(stress_dates)),
+                ("calm",     ~series.index.isin(stress_dates)),
+            ]:
+                sub = series[mask]
+                if len(sub) >= 3:
+                    m = float(sub.mean())
+                    s = float(sub.std())
+                    t = m / s * np.sqrt(len(sub)) if s > 0 else np.nan
+                    entry[f"{regime}_mean_ic"] = round(m, 4)
+                    entry[f"{regime}_t_stat"]  = round(t, 3) if not np.isnan(t) else np.nan
+                    entry[f"{regime}_n"]       = len(sub)
+                else:
+                    entry[f"{regime}_mean_ic"] = np.nan
+                    entry[f"{regime}_t_stat"]  = np.nan
+                    entry[f"{regime}_n"]       = len(sub)
+
+        ic_metrics[h] = entry
+
+    if stress_dates:
+        ic_metrics["stress_dates"] = stress_dates
+
+    return ic_series, ic_metrics
+
+
 # ── Performance charting ──────────────────────────────────────────────────────
 
 def plot_performance(
@@ -166,18 +302,29 @@ def plot_performance(
     events_df: pd.DataFrame,
     metrics: dict | None = None,
     benchmark_returns: pd.Series | None = None,
+    ew_returns: pd.Series | None = None,
+    ic_series: dict | None = None,
+    ic_metrics: dict | None = None,
     save_path: str | Path | None = None,
 ) -> None:
     """
     Plot cumulative strategy P&L with stress event shading.
 
-    Three-panel layout:
+    Three-panel layout (four if IC data provided):
       Top    : cumulative return of strategy vs. long book vs. short book
-      Middle : rolling 63-day Sharpe
-      Bottom : drawdown
+      Middle : rolling 63-day Sharpe (strategy + benchmark)
+      3rd    : drawdown
+      Bottom : cross-sectional IC (10d forward returns) — if ic_series provided
     """
-    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True,
-                              gridspec_kw={"height_ratios": [3, 1.5, 1.5]})
+    has_ic = ic_series is not None and any(
+        h in ic_series and not ic_series[h].empty for h in [21, 10]
+    )
+    n_panels      = 4 if has_ic else 3
+    height_ratios = [3, 1.5, 1.5, 1.5][:n_panels]
+    fig_height    = 13 if has_ic else 10
+
+    fig, axes = plt.subplots(n_panels, 1, figsize=(14, fig_height), sharex=True,
+                              gridspec_kw={"height_ratios": height_ratios})
     fig.suptitle("Grid Resilience Strategy — Backtest Performance", fontsize=14, fontweight="bold")
 
     dates = pnl.index
@@ -195,6 +342,10 @@ def plot_performance(
         bench = benchmark_returns.reindex(dates).fillna(0)
         cum_bench = np.exp(bench.cumsum()) - 1
         ax.plot(dates, cum_bench * 100, color="#888888", linewidth=1.0, linestyle=":", label="Long XLU")
+    if ew_returns is not None:
+        ew = ew_returns.reindex(dates).fillna(0)
+        cum_ew = np.exp(ew.cumsum()) - 1
+        ax.plot(dates, cum_ew * 100, color="#cc8800", linewidth=1.0, linestyle="-.", label="EW Universe")
     ax.axhline(0, color="black", linewidth=0.5)
     ax.set_ylabel("Cumulative Return (%)")
     ax.legend(loc="upper left", fontsize=9)
@@ -202,9 +353,12 @@ def plot_performance(
     _shade_events(ax, dates, events_df)
 
     if metrics:
+        bench_sharpe = metrics.get("bench_sharpe")
+        bench_str = f"  |  Bench Sharpe: {bench_sharpe}" if bench_sharpe is not None else ""
         info = (f"Sharpe: {metrics.get('full_sharpe', '—')}  |  "
                 f"Ann. Ret: {metrics.get('full_ann_return', 0)*100:.1f}%  |  "
-                f"Max DD: {metrics.get('full_max_dd', 0)*100:.1f}%")
+                f"Max DD: {metrics.get('full_max_dd', 0)*100:.1f}%"
+                + bench_str)
         ax.set_title(info, fontsize=9, color="#555555", loc="right")
 
     # ── Panel 2: Rolling Sharpe ────────────────────────────────────────────────
@@ -214,7 +368,17 @@ def plot_performance(
         / pnl["strategy"].rolling(63).std()
         * np.sqrt(252)
     )
-    ax2.plot(dates, roll_sharpe, color="#1a3a5c", linewidth=1.0)
+    ax2.plot(dates, roll_sharpe, color="#1a3a5c", linewidth=1.0, label="Strategy")
+    if benchmark_returns is not None:
+        bench_aligned = benchmark_returns.reindex(dates).fillna(0)
+        roll_bench = (
+            bench_aligned.rolling(63).mean()
+            / bench_aligned.rolling(63).std()
+            * np.sqrt(252)
+        )
+        ax2.plot(dates, roll_bench, color="#888888", linewidth=0.8,
+                 linestyle=":", label="Benchmark (XLU)")
+        ax2.legend(loc="upper left", fontsize=8)
     ax2.axhline(0, color="black", linewidth=0.5)
     ax2.axhline(1, color="grey", linewidth=0.5, linestyle=":")
     ax2.set_ylabel("Rolling Sharpe\n(63d)", fontsize=9)
@@ -228,6 +392,44 @@ def plot_performance(
     ax3.set_ylabel("Drawdown (%)", fontsize=9)
     ax3.set_xlabel("Date")
     _shade_events(ax3, dates, events_df)
+
+    # ── Panel 4: Cross-sectional IC (21d) ────────────────────────────────────
+    ic_horizon = 21 if (ic_series and 21 in ic_series and not ic_series[21].empty) else 10
+    has_ic_panel = ic_series is not None and ic_horizon in ic_series and not ic_series[ic_horizon].empty
+    if has_ic_panel:
+        ax4 = axes[3]
+        ic_s = ic_series[ic_horizon]
+        stress_dates = (ic_metrics or {}).get("stress_dates", set())
+        bar_colors = []
+        for d, v in zip(ic_s.index, ic_s.values):
+            is_stressed = d in stress_dates
+            if is_stressed:
+                bar_colors.append("#cc4400")   # dark orange = stressed (pos & neg)
+            else:
+                bar_colors.append("#2e8b57")   # green = calm (pos & neg)
+        alphas = [0.75 if v >= 0 else 0.45 for v in ic_s.values]
+        for xi, (d, v, c, a) in enumerate(zip(ic_s.index, ic_s.values, bar_colors, alphas)):
+            ax4.bar(d, v, color=c, alpha=a, width=20)
+        ax4.axhline(0, color="black", linewidth=0.5)
+        mean_ic = ic_s.mean()
+        ax4.axhline(mean_ic, color="#1a3a5c", linewidth=1.2, linestyle="--",
+                    label=f"Mean IC: {mean_ic:.3f}")
+        if stress_dates:
+            legend_patches = [
+                mpatches.Patch(color="#cc4400", alpha=0.75, label="Stressed regime (+)"),
+                mpatches.Patch(color="#cc4400", alpha=0.45, label="Stressed regime (−)"),
+                mpatches.Patch(color="#2e8b57", alpha=0.75, label="Calm regime (+)"),
+                mpatches.Patch(color="#2e8b57", alpha=0.45, label="Calm regime (−)"),
+            ]
+            ax4.legend(handles=legend_patches + [
+                plt.Line2D([0], [0], color="#1a3a5c", linestyle="--",
+                           label=f"Mean IC: {mean_ic:.3f}")
+            ], loc="upper right", fontsize=8)
+        else:
+            ax4.legend(loc="upper right", fontsize=8)
+        ax4.set_ylabel(f"IC ({ic_horizon}d fwd)", fontsize=9)
+        ax4.set_xlabel("Date")
+        _shade_events(ax4, dates, events_df)
 
     plt.tight_layout()
 
@@ -244,7 +446,13 @@ def print_metrics(metrics: dict) -> None:
     print("\n" + "=" * 55)
     print("  GRID RESILIENCE STRATEGY — PERFORMANCE SUMMARY")
     print("=" * 55)
-    labels = [("full", "Full Period"), ("stress", "Stress Periods"), ("calm", "Calm Periods")]
+    labels = [
+        ("full",   "Full Period"),
+        ("bench",  "Benchmark (XLU)"),
+        ("ew",     "EW Universe"),
+        ("stress", "Stress Periods"),
+        ("calm",   "Calm Periods"),
+    ]
     for key, label in labels:
         print(f"\n  {label}:")
         for stat in ["ann_return", "ann_vol", "sharpe", "sortino", "max_dd", "hit_rate"]:
@@ -278,6 +486,74 @@ def print_metrics(metrics: dict) -> None:
     print(f"    {'Mann-Whitney U (distrib)':<26}  {_fmt(mw_p)}   {_stars(mw_p)}")
     print(f"    Significance: * p<0.10  ** p<0.05  *** p<0.01")
     print("=" * 55 + "\n")
+
+
+def print_ic_metrics(ic_metrics: dict, perf_metrics: dict | None = None) -> None:
+    """
+    Pretty-print IC summary (overall + conditional) and a signal comparison
+    table showing IC vs Sharpe for the factor, EW basket, and benchmark.
+    """
+    horizon_keys = sorted(k for k in ic_metrics if isinstance(k, int))
+    if not horizon_keys:
+        return
+
+    def _t(v) -> str:
+        return f"{v:8.3f}" if isinstance(v, float) and not np.isnan(v) else "      —"
+    def _ic(v) -> str:
+        return f"{v:8.4f}" if isinstance(v, float) and not np.isnan(v) else "      —"
+    def _pct(v) -> str:
+        return f"{v*100:7.2f}%" if isinstance(v, float) and not np.isnan(v) else "      —"
+
+    print("\n" + "=" * 62)
+    print("  FACTOR SCORE IC (vs. Forward Returns)")
+    print("=" * 62)
+    print(f"  {'Horizon':<10} {'Mean IC':>8} {'Std IC':>8} {'t-stat':>8} {'% Pos':>7} {'N':>5}")
+    print(f"  {'-'*10} {'-'*8} {'-'*8} {'-'*8} {'-'*7} {'-'*5}")
+    for h in horizon_keys:
+        m = ic_metrics[h]
+        print(f"  {f'{h}d':<10} {_ic(m['mean_ic'])} {_ic(m['std_ic'])}"
+              f" {_t(m['t_stat'])} {m['pct_pos']:>7.1%} {m['n_periods']:>5}")
+
+    has_cond = any("stressed_mean_ic" in ic_metrics[h] for h in horizon_keys)
+    if has_cond:
+        print(f"\n  Conditional IC by GSI regime:")
+        print(f"  {'Horizon':<10} {'Regime':<10} {'Mean IC':>8} {'t-stat':>8} {'N':>5}")
+        print(f"  {'-'*10} {'-'*10} {'-'*8} {'-'*8} {'-'*5}")
+        for h in horizon_keys:
+            m = ic_metrics[h]
+            for regime in ("stressed", "calm"):
+                key_ic = f"{regime}_mean_ic"
+                key_t  = f"{regime}_t_stat"
+                key_n  = f"{regime}_n"
+                if key_ic in m:
+                    print(f"  {f'{h}d':<10} {regime:<10} {_ic(m[key_ic])} {_t(m[key_t])} {m[key_n]:>5}")
+
+    # ── Signal comparison: IC + Sharpe + Ann Return across signals ────────────
+    if perf_metrics:
+        cmp_h = next((h for h in [21, 10, 63, 5] if h in ic_metrics), None)
+        print(f"\n  Signal comparison (IC @ {cmp_h}d fwd  |  EW/Bench IC = 0 by construction):")
+        print(f"  {'Signal':<22} {'IC':>8} {'t-stat':>8} {'Sharpe':>8} {'Ann Ret':>9} {'Max DD':>8}")
+        print(f"  {'-'*22} {'-'*8} {'-'*8} {'-'*8} {'-'*9} {'-'*8}")
+        rows = [
+            ("Factor (L/S)",   ic_metrics.get(cmp_h, {}), "full"),
+            ("Benchmark (XLU)", None,                      "bench"),
+            ("EW Universe",    None,                       "ew"),
+        ]
+        for label, ic_m, pfx in rows:
+            if ic_m is not None:
+                ic_val = _ic(ic_m.get("mean_ic"))
+                t_val  = _t(ic_m.get("t_stat"))
+            else:
+                ic_val, t_val = "   0.0000", "      —"
+            sharpe  = perf_metrics.get(f"{pfx}_sharpe",     np.nan)
+            ann_ret = perf_metrics.get(f"{pfx}_ann_return", np.nan)
+            max_dd  = perf_metrics.get(f"{pfx}_max_dd",     np.nan)
+            s_str  = f"{sharpe:8.3f}"  if isinstance(sharpe,  float) and not np.isnan(sharpe)  else "      —"
+            r_str  = _pct(ann_ret)
+            d_str  = _pct(max_dd)
+            print(f"  {label:<22} {ic_val} {t_val} {s_str} {r_str} {d_str}")
+
+    print("=" * 62 + "\n")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

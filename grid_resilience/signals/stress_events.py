@@ -17,6 +17,10 @@ import numpy as np
 import pandas as pd
 
 from grid_resilience.data.utility_node_map import STRESS_EVENTS
+from grid_resilience.config import (
+    STRESS_SPIKE_PCT, STRESS_SPIKE_MIN_DAYS, STRESS_SPIKE_MERGE_GAP,
+    STRESS_CONG_THRESHOLD, STRESS_CONG_MIN_DAYS,
+)
 
 
 # ── Named event helpers ───────────────────────────────────────────────────────
@@ -70,9 +74,9 @@ def event_date_mask(
 def detect_lmp_spike_events(
     daily_lmp: pd.DataFrame,
     iso: str,
-    spike_pct: float = 0.95,
-    min_duration_days: int = 1,
-    merge_gap_days: int = 2,
+    spike_pct: float = 0.99,
+    min_duration_days: int = 3,
+    merge_gap_days: int = 1,
 ) -> pd.DataFrame:
     """
     Identify stress windows where LMP exceeded the `spike_pct` percentile
@@ -82,8 +86,11 @@ def detect_lmp_spike_events(
     ----------
     daily_lmp       : output of grid_data.daily_lmp_summary() — indexed by date
     iso             : ISO label (used for metadata)
-    spike_pct       : percentile threshold (0–1) above which a day is a spike day
-    min_duration_days : minimum consecutive spike days to qualify as an event
+    spike_pct       : percentile threshold (0–1) above which a day is a spike day.
+                      99th pct (default) targets genuine grid emergencies rather
+                      than routine peak-demand days.
+    min_duration_days : minimum consecutive spike days to qualify as an event.
+                      3-day minimum eliminates one-off data outliers.
     merge_gap_days  : merge events separated by fewer than this many days
 
     Returns DataFrame with same schema as get_named_events().
@@ -121,8 +128,8 @@ def detect_lmp_spike_events(
 def detect_congestion_events(
     daily_lmp: pd.DataFrame,
     iso: str,
-    congestion_threshold: float = 0.30,
-    min_duration_days: int = 3,
+    congestion_threshold: float = 0.50,
+    min_duration_days: int = 10,
 ) -> pd.DataFrame:
     """
     Identify periods of persistent high congestion (congestion_frac above threshold).
@@ -130,6 +137,10 @@ def detect_congestion_events(
 
     Requires that daily_lmp contains a 'congestion_frac' column (available for
     ERCOT and PJM where LMP components are published; NaN for MISO/CAISO/SPP).
+
+    Thresholds are intentionally high (50% fraction, 10 consecutive days) to
+    target genuine transmission crises rather than routine congestion — the
+    goal is a rare, discriminating signal, not a near-constant overlay.
     """
     if daily_lmp.empty or "congestion_frac" not in daily_lmp.columns:
         return pd.DataFrame()
@@ -179,8 +190,17 @@ def build_full_event_calendar(
     for iso, df in daily_lmp_by_iso.items():
         if isos and iso not in isos:
             continue
-        frames.append(detect_lmp_spike_events(df, iso))
-        frames.append(detect_congestion_events(df, iso))
+        frames.append(detect_lmp_spike_events(
+            df, iso,
+            spike_pct=STRESS_SPIKE_PCT,
+            min_duration_days=STRESS_SPIKE_MIN_DAYS,
+            merge_gap_days=STRESS_SPIKE_MERGE_GAP,
+        ))
+        frames.append(detect_congestion_events(
+            df, iso,
+            congestion_threshold=STRESS_CONG_THRESHOLD,
+            min_duration_days=STRESS_CONG_MIN_DAYS,
+        ))
 
     calendar = pd.concat([f for f in frames if not f.empty], ignore_index=True)
     calendar = calendar.sort_values("window_start").reset_index(drop=True)

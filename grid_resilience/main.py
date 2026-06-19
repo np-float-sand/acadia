@@ -23,23 +23,79 @@ Environment variables (set before running):
 """
 
 import argparse
+import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
 
+
+class _Tee:
+    """Write to both an underlying stream and a log file simultaneously."""
+    def __init__(self, stream, log_file):
+        self._stream = stream
+        self._log = log_file
+
+    def write(self, data):
+        self._stream.write(data)
+        self._log.write(data)
+        self._log.flush()
+
+    def flush(self):
+        self._stream.flush()
+        self._log.flush()
+
+    def isatty(self):
+        return self._stream.isatty()
+
+
+def _setup_logging(output_dir: Path) -> None:
+    """Clear run.log and wire up stdout/stderr + root logger to write into it."""
+    log_path = output_dir / "run.log"
+    log_file = open(log_path, "w", buffering=1)   # 'w' clears the file each run
+
+    # Tee stdout/stderr so all print() calls land in both terminal and the log
+    sys.stdout = _Tee(sys.__stdout__, log_file)
+    sys.stderr = _Tee(sys.__stderr__, log_file)
+
+    # Root logger: drop any handlers already registered (e.g. from gridstatus
+    # import-time basicConfig), then add a file handler + a console handler.
+    root = logging.getLogger()
+    for h in list(root.handlers):
+        root.removeHandler(h)
+    root.setLevel(logging.DEBUG)
+
+    fmt = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    fh = logging.FileHandler(log_path, mode="a")  # 'a': file already opened with 'w' above
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fmt)
+    root.addHandler(fh)
+
+    # Console handler writes to the real stderr (before Tee) to avoid double-
+    # printing library logging lines in the terminal.
+    sh = logging.StreamHandler(sys.__stderr__)
+    sh.setLevel(logging.DEBUG)
+    sh.setFormatter(fmt)
+    root.addHandler(sh)
+
+    print(f"[log] Run log → {log_path.resolve()}")
+
 from grid_resilience.config import (
     BACKTEST_START, BACKTEST_END,
     SUPPORTED_ISOS, REBALANCE_FREQ,
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
     CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
-    XLU_HEDGE,
+    XLU_HEDGE, USE_ICR,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
 )
-from grid_resilience.data.equity_prices import fetch_returns
+from grid_resilience.data.equity_prices import fetch_returns, fetch_icr
 from grid_resilience.data.grid_data import (
     fetch_lmp, fetch_load, daily_lmp_summary, daily_load_summary,
     daily_spread_summary, fill_congestion_from_spread,
@@ -57,6 +113,7 @@ from grid_resilience.portfolio.construction import (
 )
 from grid_resilience.portfolio.backtest import (
     run_backtest, plot_performance, print_metrics,
+    compute_ic, print_ic_metrics,
 )
 
 
@@ -67,6 +124,7 @@ def run(
     n_long:    int       = PORTFOLIO_LONG_N,
     n_short:   int       = PORTFOLIO_SHORT_N,
     xlu_hedge: bool      = XLU_HEDGE,
+    use_icr:   bool      = USE_ICR,
     plot:      bool      = True,
     save_dir:  str       = "output",
 ) -> dict:
@@ -77,6 +135,7 @@ def run(
     """
     output_dir = Path(save_dir)
     output_dir.mkdir(exist_ok=True)
+    _setup_logging(output_dir)
 
     # ── 1. Equity prices ──────────────────────────────────────────────────────
     print("\n[1/7] Fetching equity prices…")
@@ -110,6 +169,10 @@ def run(
         if xlu_ret is not None
         else all_returns[tickers].mean(axis=1).rename("sector_return")
     )
+
+    # Equal-weight universe basket (excludes XLU so it's pure stock selection)
+    universe_in_returns = [t for t in universe_tickers if t in all_returns.columns]
+    ew_ret = all_returns[universe_in_returns].mean(axis=1).rename("ew_universe")
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
 
@@ -199,7 +262,16 @@ def run(
 
     # ── 6. Factor scores ──────────────────────────────────────────────────────
     print("\n[6/7] Building Grid Resilience factor scores…")
-    rolling_factors = build_rolling_factor(rolling_betas)
+    icr_history = None
+    if use_icr:
+        print("  Fetching interest coverage ratios…")
+        icr_history = fetch_icr(universe_tickers)
+        if not icr_history.empty:
+            print(f"  ICR data: {len(icr_history)} quarters, {icr_history.notna().any().sum()} tickers")
+        else:
+            print("  [warn] ICR data unavailable — factor will use beta + renewables only")
+
+    rolling_factors = build_rolling_factor(rolling_betas, icr_history=icr_history)
     rolling_factors.to_csv(output_dir / "factor_scores.csv", index=False)
 
     if not rolling_factors.empty:
@@ -221,15 +293,25 @@ def run(
     )
 
     weights_matrix = weights_to_matrix(weights_df, returns.index, list(returns.columns))
-    pnl, metrics   = run_backtest(weights_matrix, returns, events_df)
+    pnl, metrics   = run_backtest(
+        weights_matrix, returns, events_df,
+        benchmark_returns=xlu_ret,
+        ew_returns=ew_ret,
+    )
+
+    ic_series, ic_metrics = compute_ic(rolling_factors, returns, gsi_by_iso=gsi_by_iso)
 
     pnl.to_csv(output_dir / "pnl.csv")
     print_metrics(metrics)
+    print_ic_metrics(ic_metrics, perf_metrics=metrics)
 
     if plot:
         plot_performance(
             pnl, events_df, metrics,
             benchmark_returns=xlu_ret,
+            ew_returns=ew_ret,
+            ic_series=ic_series,
+            ic_metrics=ic_metrics,
             save_path=output_dir / "backtest_performance.png",
         )
 
@@ -239,6 +321,7 @@ def run(
         "factor_scores":  rolling_factors,
         "event_calendar": events_df,
         "gsi":            gsi_by_iso,
+        "ic_metrics":     ic_metrics,
     }
 
 
@@ -258,6 +341,12 @@ def _parse_args() -> argparse.Namespace:
         default=XLU_HEDGE,
         help="Replace short book with -0.5 XLU hedge (default: on)",
     )
+    p.add_argument(
+        "--icr", dest="use_icr",
+        action=argparse.BooleanOptionalAction,
+        default=USE_ICR,
+        help="Include interest coverage ratio as a factor component (default: off)",
+    )
     p.add_argument("--no-plot", action="store_true", help="Skip matplotlib charts")
     p.add_argument("--output", default="output", help="Output directory")
     return p.parse_args()
@@ -272,6 +361,7 @@ if __name__ == "__main__":
         n_long    = args.long,
         n_short   = args.short,
         xlu_hedge = args.xlu_hedge,
+        use_icr   = args.use_icr,
         plot      = not args.no_plot,
         save_dir  = args.output,
     )

@@ -12,7 +12,7 @@ The strategy builds a daily **Grid Stress Index (GSI)** for each ISO using real-
 
 **Universe:** 18 U.S. utility tickers across ERCOT, PJM, MISO, CAISO, SPP, ISO-NE, and NYISO.
 
-**Portfolio:** 5 long / 5 short, equal-weighted within each book, rebalanced monthly.
+**Portfolio:** 3 long / 5 short, equal-weighted within each book, rebalanced monthly.
 
 **Backtest window:** 2018-01-01 – 2026-05-27.
 
@@ -130,7 +130,7 @@ python -m grid_resilience.main
 --iso    ERCOT PJM MISO CAISO SPP   ISOs to include (default: all 5)
 --start  YYYY-MM-DD                 Backtest start (default: 2018-01-01)
 --end    YYYY-MM-DD                 Backtest end (default: 2026-05-27)
---long   N                          Long book size (default: 5)
+--long   N                          Long book size (default: 3)
 --short  N                          Short book size (default: 5)
 --no-plot                           Skip matplotlib charts
 --output PATH                       Output directory (default: ./output)

@@ -41,6 +41,7 @@ from grid_resilience.config import (
 from grid_resilience.data.cache_utils import (
     read_cached, compute_date_gaps, merge_and_save,
     find_missing_months, read_monthly_cache, save_monthly_chunks, month_bounds,
+    chunk_path,
 )
 
 # Lazily instantiated gridstatus ISO objects (one per ISO, shared)
@@ -231,6 +232,10 @@ def fetch_lmp(
                     df = _fetch_lmp_raw(iso_obj, iso, ms, me, loc_type)
                     if not df.empty:
                         save_monthly_chunks(df, cache_base, "time")
+                    else:
+                        p = chunk_path(cache_base, *ym)
+                        if not p.exists():
+                            pd.DataFrame().to_parquet(p, index=False)
 
                 with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
                     list(ex.map(_fetch_month, missing))
@@ -278,6 +283,10 @@ def _fill_ercot_lmp_cache(
             df = _fetch_lmp_raw(iso_obj, "ERCOT", ms, me, loc_type)
             if not df.empty:
                 save_monthly_chunks(df, cache_base, "time")
+            else:
+                p = chunk_path(cache_base, *ym)
+                if not p.exists():
+                    pd.DataFrame().to_parquet(p, index=False)
 
         with ThreadPoolExecutor(max_workers=min(len(recent), 4)) as ex:
             list(ex.map(_fetch_month, recent))
@@ -313,6 +322,10 @@ def fetch_load(
                 df = _fetch_load_raw(iso_obj, iso, ms, me)
                 if not df.empty:
                     save_monthly_chunks(df, cache_base, "time")
+                else:
+                    p = chunk_path(cache_base, *ym)
+                    if not p.exists():
+                        pd.DataFrame().to_parquet(p, index=False)
 
             with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
                 list(ex.map(_fetch_month, missing))
@@ -350,6 +363,10 @@ def fetch_fuel_mix(
                 df = _fetch_fuel_mix_raw(iso_obj, iso, ms, me)
                 if not df.empty:
                     save_monthly_chunks(df, cache_base, "time")
+                else:
+                    p = chunk_path(cache_base, *ym)
+                    if not p.exists():
+                        pd.DataFrame().to_parquet(p, index=False)
 
             with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
                 list(ex.map(_fetch_month, missing))

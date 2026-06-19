@@ -72,6 +72,18 @@ LMP_SPIKE_THRESHOLD = {
 # Rolling window (calendar days) for computing LMP z-score baseline
 LMP_ZSCORE_WINDOW = 90
 
+# ── Stress event detection thresholds ────────────────────────────────────────
+# LMP spike events: target genuine grid emergencies (99th pct, 3+ days)
+STRESS_SPIKE_PCT = 0.97   # percentile of lmp_max to qualify as a spike day
+STRESS_SPIKE_MIN_DAYS = 3  # min consecutive spike days to form an event
+STRESS_SPIKE_MERGE_GAP = 1  # merge events separated by fewer days
+
+# Congestion events: requires 30%+ congestion fraction for 10+ consecutive days.
+# Grid-search optimised (2026-06-17): cong_threshold=0.30 + min_days=10 gives
+# the best Sharpe — the duration filter does the heavy lifting against noise.
+STRESS_CONG_THRESHOLD = 0.30  # congestion_frac must exceed this level
+STRESS_CONG_MIN_DAYS = 10     # min consecutive high-congestion days
+
 # ── Grid Stress Index weights (sum to 1) ──────────────────────────────────────
 GSI_WEIGHTS = {
     "lmp_zscore": 0.40,  # normalized daily-max LMP vs rolling history
@@ -81,13 +93,16 @@ GSI_WEIGHTS = {
 }
 
 # ── Portfolio construction ────────────────────────────────────────────────────
-PORTFOLIO_LONG_N = 5  # number of names to go long
+PORTFOLIO_LONG_N = 3  # number of names to go long  (grid-search optimised 2026-06-17)
 PORTFOLIO_SHORT_N = 5  # number of names to go short
 REBALANCE_FREQ = "ME"  # pandas offset alias: month-end
 
 # Replace short book with XLU sector-ETF hedge (default on)
 # Set to False to restore original long/short individual-name construction
 XLU_HEDGE: bool = False  # True
+
+# Enable interest coverage ratio as a factor component (default off — see CLAUDE.md)
+USE_ICR: bool = False
 
 # ── Conditional beta estimation ───────────────────────────────────────────────
 # Event window (trading days) around each stress event for the event study
