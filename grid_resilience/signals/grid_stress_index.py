@@ -112,29 +112,11 @@ def build_gsi(
     })
     result.index.name = "date"
 
-    # Track which rows existed before reindex (for distinguishing gaps vs warmup NaNs)
-    original_index = result.index
-
     # Fill short gaps (≤ 10 days) so missing API months don't punch hard holes
     # in the GSI index that fall out of beta-estimation intersections.
     # Gaps > 10 days remain NaN and drop out of the common index naturally.
     full_daily = pd.date_range(result.index.min(), result.index.max(), freq="D", name="date")
     result = result.reindex(full_daily).ffill(limit=10)
-
-    # Backward-fill initial NaNs from rolling window warmup (before first real value)
-    # in ORIGINAL index data only (don't fill gaps that were added by reindex).
-    # Use a larger limit for warmup to fill rolling window initialization (typically ~20 days).
-    first_valid = result["gsi"].first_valid_index()
-    if first_valid is not None and first_valid != result.index[0]:
-        # Only fill within original data rows
-        original_rows = result[result.index.isin(original_index)]
-        original_rows_filled = original_rows.bfill(limit=20)
-        result.loc[original_rows.index] = original_rows_filled
-
-    # Drop only NaN rows that came from reindex gaps (i.e., rows that weren't in the original data).
-    # Keep all rows that were in the original data.
-    mask = (result.index.isin(original_index)) | (result["gsi"].notna())
-    result = result[mask]
 
     return result
 
