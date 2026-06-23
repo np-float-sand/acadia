@@ -13,13 +13,11 @@
 
 ## Background
 
-The Consultant has proposed a quantitative long/short equity strategy that trades U.S. utility stocks
-based on their measured sensitivity to electricity grid stress events. The strategy intends to construct a daily
-Grid Stress Index (GSI), the sensitivity of individual companies to that index to propose a trading strategy that rewards responsible grid investment.
+The Consultant has proposed a quantitative strategy that trades stocks/options
+based on their measured sensitivity to electricity grid stress events. 
 
 
-The Client will provide access to Axioma risk model data. The Consultant will source all other required
-data from public and commercially available sources as described herein.
+The Client will provide access to risk model data. The Consultant will source all other required data from public and commercially available sources as described herein. 
 
 ---
 
@@ -30,39 +28,27 @@ data from public and commercially available sources as described herein.
 
 The Consultant will:
 
-1. **Establish and validate the data pipeline** — integrate public grid data (GridStatus, EIA API),
-   equity price and fundamental data (yfinance), and short interest history (FINRA) into a
+1. **Establish and validate the data pipeline** — integrate public grid data,
+   equity price, fundamental data, and short interest history into a
    reproducible research environment.
 
-2. **Integrate augmenting data sources** — source forward power price data (CME DataMine electricity
-   futures or Henry Hub gas futures as a validated free proxy) and wire into the signal layer. Source
-   FINRA short interest history (free, twice-monthly publication) for the full universe.
+2. **Integrate augmenting data sources** — source forward power price data and wire into the signal layer. 
 
-3. **Develop enhanced signal components** — build and validate the following additional factor inputs
-   alongside the existing stress beta:
-   - Forward power price sensitivity (two-variable OLS: GSI + ΔForward Power Price)
-   - Short interest momentum signal (3-month change in short interest as % of float)
-   - Analyst revision momentum (3-month change in buy/sell ratio from recommendations data)
+3. **Integrate Client-provided risk data** — align risk factor exposures to the universe and confirm data format compatibility.
 
-4. **Integrate Client-provided Axioma data** — align Axioma risk factor exposures to the universe and
-   confirm data format compatibility.
+4. **Develop enhanced signal components** — build and validate stress beta
 
-*Deliverable: working data pipeline, documented signal layer, initial factor scores with and without
-enhanced components.*
+*Deliverable: working data pipeline, documented signal layer.*
 
 ---
 
-### Phase 2 — Backtest, Validation & Attribution
+### Phase 2 — Backtest &  Validation 
 *Estimated: 40–60 hours*
 
 The Consultant will:
-
-1. **Run full rolling backtest** — extend the existing backtest framework to incorporate all active
-   signal components; produce P&L, performance stats (Sharpe, maximum drawdown, etc), and monthly return series.
-
-2. **Produce written findings report** — summarize performance results, signal construction,
-   known limitations, and recommended configuration.
-
+1. **Create Strategy** - mapping of signal into portfolio weights over time.
+2. **Run rolling backtest** — produce P&L output, performance stats (Sharpe, maximum drawdown, etc).
+2. **Produce written findings report** — summarize performance results, signal construction, known limitations, and recommended configuration.
 
 *Deliverable: backtest results (code + output files),  written findings
 report.*
@@ -115,7 +101,7 @@ exceeding $100.
 
 ## Data Responsibilities
 
-The Client will provide data from Axioma risk model.
+The Client will provide data from commercial risk model.
 All data sourced by the Consultant is drawn from public or commercially available sources. The
 Consultant will not use any material non-public information in the course of this work.
 
@@ -128,8 +114,7 @@ and interest in the work product produced under that phase, including source cod
 backtest output, and written findings. The Client will own all deliverables outright and may use,
 modify, and extend them without restriction.
 
-The Consultant retains no rights to the deliverables and will not use Client-provided data (including
-Barra) for any purpose outside this engagement.
+The Consultant retains no rights to the deliverables and will not use Client-provided data for any purpose outside this engagement.
 
 ---
 
@@ -162,18 +147,25 @@ notice period, and the Consultant will deliver all work product completed to tha
 
 **Consultant**
 
-Signature: ___________________________
-Name: [Your Name]
-Date: ________________________________
+Signature:
+
+Name: Sandhya Persad
+
+Date: 
+
+---
 
 **Client**
 
-Signature: ___________________________
-Name: ________________________________
-Title: ________________________________
-Date: ________________________________
+Signature: 
+
+Name: 
+
+Title: 
+
+Date: 
 
 ---
 
 *This document is a draft scope of work and does not constitute a binding agreement until signed by
-both parties. Both parties should have counsel review prior to execution.*
+both parties.*
