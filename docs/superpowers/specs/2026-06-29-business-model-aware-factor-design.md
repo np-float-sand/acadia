@@ -130,20 +130,20 @@ Both inputs are z-scored cross-sectionally across all tickers before blending.
 
 ### Logic
 
-Same blend formula as Architecture 2, but the two signal tracks are z-scored independently within their own populations before combining:
+Same blend formula as Architecture 2, but each signal is z-scored within its natural peer group rather than across all 18 tickers together:
 
-1. Compute `stress_beta` for all tickers
-2. Z-score `stress_beta` **within the merchant+mixed subgroup** (tickers where `pass_through >= 0.1`)
-3. Compute `icr_score` for all tickers
-4. Z-score `icr_score` **within the regulated+mixed subgroup** (tickers where `pass_through <= 0.9`)
-5. Blend: `score_i = z_merchant(stress_beta_i) × pass_through_i + z_regulated(icr_score_i) × (1 - pass_through_i)`
+1. Compute `stress_beta` for all tickers; z-score it **within the merchant+mixed group** (`pass_through > 0`)
+2. Compute `icr_score` for all tickers; z-score it **within the regulated+mixed group** (`pass_through < 1`)
+3. Blend: `score_i = z_merchant(stress_beta_i) × pass_through_i + z_regulated(icr_score_i) × (1 - pass_through_i)`
+
+The difference from Architecture 2: in arch 2, VST's stress beta is z-scored against all 18 tickers — including the 14 regulated utilities with near-zero stress betas — which inflates VST's relative rank. In arch 3, VST's beta is ranked only against other generators. Each signal is more meaningful within its own population. Exact subgroup boundary (the pass_through cutoff) is an implementation decision.
 
 ### Trade-offs
 
-- Prevents the higher-variance merchant signal (stress beta range ~±2) from drowning the lower-variance regulated signal (ICR range narrower)
+- Cross-sectional ranks are more meaningful within peer groups
 - Most statistically defensible for cross-asset blending
 - Adds one normalisation step; slightly harder to debug
-- Mixed tickers appear in both normalisation groups, which is correct — they are compared against both populations
+- Mixed tickers appear in both normalisation groups, which is correct
 
 ---
 
