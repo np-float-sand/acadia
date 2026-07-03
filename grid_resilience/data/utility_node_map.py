@@ -18,6 +18,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["NORTH", "HOUSTON"],
         "service_territory": "Texas retail/gen + national gen portfolio",
         "notes": "Large ERCOT gen fleet; HB_NORTH and HB_HOUSTON most relevant.",
+        "business_model": "merchant",
+        "pass_through": 0.85,
     },
     "VST": {
         "name": "Vistra Energy",
@@ -26,6 +28,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["NORTH", "WEST", "SOUTH"],
         "service_territory": "Texas (primary) + IL, OH, PA gen assets",
         "notes": "Largest ERCOT generator by capacity. Comanche Peak nuclear near HB_NORTH.",
+        "business_model": "merchant",
+        "pass_through": 1.00,
     },
     "CNP": {
         "name": "CenterPoint Energy",
@@ -34,6 +38,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["HOUSTON"],
         "service_territory": "Houston metro T&D (wires-only, no generation)",
         "notes": "Pure wires play in ERCOT. Stress signal reflects distribution resilience.",
+        "business_model": "mixed",
+        "pass_through": 0.15,
     },
     # ── PJM ───────────────────────────────────────────────────────────────────
     "AEP": {
@@ -45,6 +51,8 @@ TICKER_NODE_MAP = {
         "secondary_nodes": ["AEPC.WFEC", "SPS"],
         "service_territory": "OH, WV, TX, OK, LA, AR T&D + generation",
         "notes": "Spans PJM and SPP. AEP Texas is an ERCOT TDU.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     "EXC": {
         "name": "Exelon",
@@ -53,6 +61,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["PECO", "BGE", "PEPCO", "COMED"],
         "service_territory": "IL, PA, MD, DC, NJ, DE T&D",
         "notes": "Wires-focused after Constellation spinoff.",
+        "business_model": "mixed",
+        "pass_through": 0.10,
     },
     "PPL": {
         "name": "PPL Corporation",
@@ -61,6 +71,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["PPL"],
         "service_territory": "PA, KY T&D",
         "notes": "PPL zone in PJM. Kentucky ops in MISO East.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     "FE": {
         "name": "FirstEnergy",
@@ -69,6 +81,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["ATSI", "JCPL"],
         "service_territory": "OH, PA, NJ, WV, MD T&D",
         "notes": "ATSI zone most material. Known seam congestion with MISO.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── MISO ──────────────────────────────────────────────────────────────────
     "ETR": {
@@ -78,6 +92,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["ENTERGY"],
         "service_territory": "AR, LA, MS, TX T&D + generation",
         "notes": "MISO South. High hurricane/tropical storm exposure.",
+        "business_model": "mixed",
+        "pass_through": 0.35,
     },
     "WEC": {
         "name": "WEC Energy Group",
@@ -86,6 +102,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["CENTRAL"],
         "service_territory": "WI, IL, MI, MN T&D + generation",
         "notes": "MISO Central. Polar vortex events most material.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     "DTE": {
         "name": "DTE Energy",
@@ -94,6 +112,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["CENTRAL"],
         "service_territory": "Southeast Michigan T&D + generation",
         "notes": "MISO Central/East. Ice storms and polar vortex.",
+        "business_model": "mixed",
+        "pass_through": 0.15,
     },
     "CMS": {
         "name": "CMS Energy / Consumers Energy",
@@ -102,6 +122,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["CENTRAL"],
         "service_territory": "Lower Michigan T&D + generation",
         "notes": "MISO Central. Similar stress profile to DTE.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── CAISO ─────────────────────────────────────────────────────────────────
     "PCG": {
@@ -111,6 +133,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["NP15"],
         "service_territory": "Northern/Central California T&D + generation",
         "notes": "CAISO NP15. Wildfire risk dominates. Use PSPS event days as stress dates.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     "EIX": {
         "name": "Edison International / SCE",
@@ -119,6 +143,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["SP15"],
         "service_territory": "Southern California T&D",
         "notes": "CAISO SP15. Sep 2022 heat wave most relevant. Also PSPS wildfire events.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── SPP ───────────────────────────────────────────────────────────────────
     "XEL": {
@@ -129,6 +155,8 @@ TICKER_NODE_MAP = {
         "secondary_iso": "WECC",
         "service_territory": "MN, CO, TX, NM T&D + generation",
         "notes": "SPS zone (TX/NM) was stressed during Winter Storm Uri.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── ISO-NE ────────────────────────────────────────────────────────────────
     "ES": {
@@ -138,6 +166,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["CT", "NEMA"],
         "service_territory": "CT, MA, NH T&D",
         "notes": "ISO-NE. Nor'easters and ice storms primary risk.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── NYISO ─────────────────────────────────────────────────────────────────
     "ED": {
@@ -147,15 +177,29 @@ TICKER_NODE_MAP = {
         "load_zones": ["NYC"],
         "service_territory": "NYC + Westchester T&D",
         "notes": "NYISO Zone J (NYC). LMP spikes sharply on heat/cold days.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── PJM (additional) ──────────────────────────────────────────────────────
     "D": {
         "name": "Dominion Energy",
         "iso": "PJM",
-        "nodes": ["EASTERN HUB"],
+        "nodes": ["DOM"],
         "load_zones": ["DOM"],
         "service_territory": "Virginia, North Carolina T&D + generation",
-        "notes": "PJM DOM zone. EASTERN HUB is the closest benchmark proxy. ~20% of capacity is in SERC-regulated NC territory.",
+        "notes": "PJM DOM zone. ~20% of capacity is in SERC-regulated NC territory.",
+        "business_model": "regulated",
+        "pass_through": 0.10,
+    },
+    "PEG": {
+        "name": "Public Service Enterprise Group",
+        "iso": "PJM",
+        "nodes": ["PSEG"],
+        "load_zones": ["PSEG"],
+        "service_territory": "New Jersey T&D + nuclear generation",
+        "notes": "PJM PSEG zone. Mix of T&D and nuclear gen. Sensitive to NJ/NYC corridor congestion.",
+        "business_model": "mixed",
+        "pass_through": 0.25,
     },
     # ── MISO (additional) ─────────────────────────────────────────────────────
     "AEE": {
@@ -165,6 +209,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["AMIL", "AMMO"],
         "service_territory": "Illinois and Missouri T&D + generation",
         "notes": "MISO Central. ILLINOIS HUB captures Illinois operations (larger segment). Missouri ops are on the MISO/SPP seam.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── SPP (additional) ──────────────────────────────────────────────────────
     "EVRG": {
@@ -174,6 +220,8 @@ TICKER_NODE_MAP = {
         "load_zones": ["KCPL", "WESTAR"],
         "service_territory": "Kansas and Missouri T&D + generation",
         "notes": "SPP. Kansas City Power & Light + Westar Energy merger. Similar Uri exposure to XEL.",
+        "business_model": "regulated",
+        "pass_through": 0.05,
     },
     # ── SERC / FRCC (no centralized LMP — use EIA-417 outage data) ────────────
     "DUK": {
@@ -185,6 +233,8 @@ TICKER_NODE_MAP = {
         "secondary_iso": "MISO",
         "secondary_nodes": ["ILLINOIS HUB"],
         "notes": "~62% of capacity in SERC/FRCC (no LMP). Duke Energy Indiana is MISO; Duke Energy Ohio is PJM. Use EIA-417 for primary stress signal.",
+        "business_model": "mixed",
+        "pass_through": 0.20,
     },
     "SO": {
         "name": "Southern Company",
@@ -193,6 +243,8 @@ TICKER_NODE_MAP = {
         "load_zones": [],
         "service_territory": "GA, AL, MS, FL T&D + generation",
         "notes": "SERC does not publish granular nodal LMPs. Use EIA-417 outage data.",
+        "business_model": "mixed",
+        "pass_through": 0.20,
     },
     "NEE": {
         "name": "NextEra Energy",
@@ -201,6 +253,8 @@ TICKER_NODE_MAP = {
         "load_zones": [],
         "service_territory": "Florida T&D + national renewables generation",
         "notes": "FRCC. Use hurricane track data as resilience signal.",
+        "business_model": "mixed",
+        "pass_through": 0.40,
     },
 }
 

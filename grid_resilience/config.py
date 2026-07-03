@@ -104,6 +104,10 @@ XLU_HEDGE: bool = False  # True
 # Enable interest coverage ratio as a factor component (default off — see CLAUDE.md)
 USE_ICR: bool = False
 
+# Business-model-aware signal architecture (Task 1 of spec 2026-06-29).
+# None = original behaviour. Set via --arch CLI flag.
+BUSINESS_MODEL_ARCH: str | None = None
+
 # ── Conditional beta estimation ───────────────────────────────────────────────
 # Event window (trading days) around each stress event for the event study
 EVENT_WINDOW_PRE = 5
