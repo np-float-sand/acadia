@@ -60,3 +60,58 @@ def test_hard_switch_no_pass_through_is_backward_compatible():
     original = build_factor(betas)
     with_arch = build_factor(betas, arch="hard_switch", pass_through=None)
     pd.testing.assert_series_equal(original, with_arch)
+
+
+# ── Revenue mix ────────────────────────────────────────────────────────────────
+
+def test_revenue_mix_pure_merchant_equals_beta_only():
+    """Ticker with pass_through=1.0 gets pure beta score regardless of ICR."""
+    betas  = _betas(["VST", "VST2"], [1.5, -1.5])
+    icr    = pd.Series({"VST": 0.1, "VST2": 99.0})   # ICR would flip ranking
+    pt     = _pt(["VST", "VST2"], [1.0, 1.0])
+    scores = build_factor(betas, icr=icr, arch="revenue_mix", pass_through=pt)
+    assert scores["VST"] > scores["VST2"]
+
+
+def test_revenue_mix_pure_regulated_equals_icr_only():
+    """Ticker with pass_through=0.0 gets pure ICR score regardless of beta."""
+    betas  = _betas(["PPL", "FE"], [-0.5, -0.5])      # equal betas
+    icr    = pd.Series({"PPL": 8.0, "FE": 1.0})
+    pt     = _pt(["PPL", "FE"], [0.0, 0.0])
+    scores = build_factor(betas, icr=icr, arch="revenue_mix", pass_through=pt)
+    assert scores["PPL"] > scores["FE"]
+
+
+def test_revenue_mix_midpoint_blends_both():
+    """Ticker with pass_through=0.5 is intermediate between pure beta and pure ICR."""
+    betas  = _betas(["A", "B", "C"], [1.0, 1.0, 1.0])
+    icr    = pd.Series({"A": 1.0, "B": 5.0, "C": 10.0})
+    pt     = _pt(["A", "B", "C"], [0.5, 0.5, 0.5])
+    scores = build_factor(betas, icr=icr, arch="revenue_mix", pass_through=pt)
+    # Equal betas + higher ICR → higher score
+    assert scores["C"] > scores["B"] > scores["A"]
+
+
+# ── Dual-track ─────────────────────────────────────────────────────────────────
+
+def test_dual_track_merchant_ranked_within_merchant_group():
+    """
+    VST with moderate beta outranks NRG with low beta when both are in merchant group,
+    even if the regulated tickers have extreme betas that would distort global z-scoring.
+    """
+    # Regulated tickers with huge betas that would dominate a global z-score
+    betas = _betas(["VST", "NRG", "PPL", "FE"], [0.6, 0.3, 5.0, -5.0])
+    icr   = pd.Series({"VST": 2.0, "NRG": 2.0, "PPL": 5.0, "FE": 1.0})
+    pt    = _pt(["VST", "NRG", "PPL", "FE"], [1.0, 0.85, 0.05, 0.05])
+    scores = build_factor(betas, icr=icr, arch="dual_track", pass_through=pt)
+    # VST (higher beta among merchants) should still outrank NRG
+    assert scores["VST"] > scores["NRG"]
+
+
+def test_dual_track_regulated_ranked_within_regulated_group():
+    """PPL (high ICR) outranks FE (low ICR) within the regulated group."""
+    betas = _betas(["VST", "PPL", "FE"], [1.0, -0.5, -0.5])
+    icr   = pd.Series({"VST": 2.0, "PPL": 8.0, "FE": 1.0})
+    pt    = _pt(["VST", "PPL", "FE"], [1.0, 0.05, 0.05])
+    scores = build_factor(betas, icr=icr, arch="dual_track", pass_through=pt)
+    assert scores["PPL"] > scores["FE"]
