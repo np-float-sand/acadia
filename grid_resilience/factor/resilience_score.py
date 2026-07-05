@@ -42,6 +42,8 @@ def build_factor(
     stress_betas: pd.DataFrame,
     renewable_share: pd.Series | None = None,
     icr: pd.Series | None = None,
+    arch: str = "hard_switch",
+    pass_through: pd.Series | None = None,
 ) -> pd.Series:
     """
     Construct a single cross-sectional Grid Resilience factor score.
@@ -52,7 +54,13 @@ def build_factor(
                       Must have index = ticker and column 'stress_beta'.
     renewable_share : optional Series keyed by ticker of renewable gen share (0–1).
     icr             : optional Series keyed by ticker of interest coverage ratio.
-                      High ICR = less leveraged = more resilient during rate stress.
+    arch            : blending architecture when pass_through is provided.
+                      One of "hard_switch", "revenue_mix", "dual_track".
+                      Ignored when pass_through is None.
+    pass_through    : optional Series keyed by ticker (0.0–1.0) — fraction of
+                      revenue exposed to merchant/spot prices. When provided,
+                      the specified arch is used to blend the beta and ICR signals.
+                      When None, the original weight-based blending is used.
 
     Returns
     -------
@@ -65,7 +73,7 @@ def build_factor(
 
     scores = pd.DataFrame(index=stress_betas.index)
 
-    # Component 1: signed stress beta
+    # Component 1: signed stress beta (always computed — needed for all archs)
     scores["signed_stress_beta"] = stress_betas["stress_beta"]
     scores["signed_stress_beta"] = cross_section_zscore(
         winsorize(scores["signed_stress_beta"], WINSOR_LIMITS)
@@ -74,7 +82,64 @@ def build_factor(
     has_renew = renewable_share is not None and not renewable_share.empty
     has_icr   = icr is not None and not icr.empty
 
-    # Distribute beta weight to fill for absent optional components
+    # ── Business-model-aware architectures ───────────────────────────────────
+    if pass_through is not None:
+        pt = pass_through.reindex(scores.index).fillna(1.0)  # unknown → treat as merchant
+
+        # Pre-compute ICR z-score (used by all three archs)
+        icr_z = pd.Series(0.0, index=scores.index)
+        if has_icr:
+            icr_raw = icr.reindex(scores.index)
+            icr_raw = icr_raw.fillna(icr_raw.mean())        # fill gaps with cross-section mean
+            icr_z = cross_section_zscore(winsorize(icr_raw, WINSOR_LIMITS))
+
+        beta_z = scores["signed_stress_beta"]                # already z-scored above
+
+        if arch == "hard_switch":
+            is_regulated = pt < 0.5
+            arch_score = beta_z.copy()
+            if has_icr:
+                arch_score[is_regulated] = icr_z[is_regulated]
+
+        elif arch == "revenue_mix":
+            arch_score = beta_z * pt + icr_z * (1 - pt)
+
+        elif arch == "dual_track":
+            merchant_mask  = pt > 0.05
+            regulated_mask = pt < 1.0
+
+            # Z-score beta within the merchant subgroup
+            beta_zd = pd.Series(0.0, index=scores.index)
+            if merchant_mask.sum() > 1:
+                raw_beta = winsorize(stress_betas["stress_beta"][merchant_mask], WINSOR_LIMITS)
+                beta_zd[merchant_mask] = cross_section_zscore(raw_beta)
+            else:
+                beta_zd = beta_z
+
+            # Z-score ICR within the regulated subgroup
+            icr_zd = pd.Series(0.0, index=scores.index)
+            if has_icr and regulated_mask.sum() > 1:
+                icr_raw_d = icr.reindex(scores.index).fillna(icr.mean())
+                icr_zd[regulated_mask] = cross_section_zscore(
+                    winsorize(icr_raw_d[regulated_mask], WINSOR_LIMITS)
+                )
+
+            arch_score = beta_zd * pt + icr_zd * (1 - pt)
+
+        else:
+            arch_score = beta_z  # unknown arch → fall back to pure beta
+
+        # Renewable quality: 15% addon for all tickers regardless of arch
+        factor = 0.85 * arch_score
+        if has_renew:
+            renew_aligned = renewable_share.reindex(scores.index).fillna(0.0)
+            renew_z = cross_section_zscore(winsorize(renew_aligned, WINSOR_LIMITS))
+            factor = 0.85 * arch_score + 0.15 * renew_z
+
+        factor = cross_section_zscore(winsorize(factor, WINSOR_LIMITS))
+        return factor.rename("grid_resilience_factor")
+
+    # ── Original weight-based blending (pass_through=None, backward-compatible) ──
     w_beta  = _W_BETA  + (0 if has_renew else _W_RENEW) + (0 if has_icr else _W_ICR)
     w_renew = _W_RENEW if has_renew else 0.0
     w_icr   = _W_ICR   if has_icr   else 0.0
@@ -103,6 +168,8 @@ def build_rolling_factor(
     rolling_betas: pd.DataFrame,
     renewable_share_by_period: pd.DataFrame | None = None,
     icr_history: pd.DataFrame | None = None,
+    arch: str = "hard_switch",
+    pass_through: pd.Series | None = None,
 ) -> pd.DataFrame:
     """
     Build time-varying factor scores from rolling_stress_betas output.
@@ -111,11 +178,13 @@ def build_rolling_factor(
     ----------
     rolling_betas              : MultiIndex (date, ticker) DataFrame from
                                  conditional_beta.rolling_stress_betas()
-    renewable_share_by_period  : Optional DataFrame indexed by (period, ticker)
-                                 with 'renewable_share' column.
+    renewable_share_by_period  : Optional DataFrame indexed by (period, ticker).
     icr_history                : Optional DataFrame indexed by quarter-end date
                                  with ticker columns (output of fetch_icr).
                                  A 45-day reporting lag is applied automatically.
+    arch                       : blending architecture — passed to build_factor().
+    pass_through               : Series keyed by ticker (0.0–1.0) — passed to
+                                 build_factor(). None = original behaviour.
 
     Returns
     -------
@@ -138,7 +207,13 @@ def build_rolling_factor(
 
         icr = _icr_at_date(icr_history, date)
 
-        scores = build_factor(betas_at_date, renewable_share=renew, icr=icr)
+        scores = build_factor(
+            betas_at_date,
+            renewable_share=renew,
+            icr=icr,
+            arch=arch,
+            pass_through=pass_through,
+        )
         for ticker, score in scores.items():
             rows.append({"date": date, "ticker": ticker, "factor_score": score})
 
