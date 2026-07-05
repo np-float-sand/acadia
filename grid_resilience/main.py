@@ -90,11 +90,12 @@ from grid_resilience.config import (
     SUPPORTED_ISOS, REBALANCE_FREQ,
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
     CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
-    XLU_HEDGE, USE_ICR,
+    XLU_HEDGE, USE_ICR, BUSINESS_MODEL_ARCH,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
 )
+from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
 from grid_resilience.data.equity_prices import fetch_returns, fetch_icr
 from grid_resilience.data.grid_data import (
     fetch_lmp, fetch_load, daily_lmp_summary, daily_load_summary,
@@ -118,15 +119,17 @@ from grid_resilience.portfolio.backtest import (
 
 
 def run(
-    isos:      list[str] = SUPPORTED_ISOS,
-    start:     str       = BACKTEST_START,
-    end:       str       = BACKTEST_END,
-    n_long:    int       = PORTFOLIO_LONG_N,
-    n_short:   int       = PORTFOLIO_SHORT_N,
-    xlu_hedge: bool      = XLU_HEDGE,
-    use_icr:   bool      = USE_ICR,
-    plot:      bool      = True,
-    save_dir:  str       = "output",
+    isos:         list[str] = SUPPORTED_ISOS,
+    start:        str       = BACKTEST_START,
+    end:          str       = BACKTEST_END,
+    n_long:       int       = PORTFOLIO_LONG_N,
+    n_short:      int       = PORTFOLIO_SHORT_N,
+    xlu_hedge:    bool      = XLU_HEDGE,
+    use_icr:      bool      = USE_ICR,
+    arch:         str | None = BUSINESS_MODEL_ARCH,
+    zone_gsi:     bool      = True,
+    plot:         bool      = True,
+    save_dir:     str       = "output",
 ) -> dict:
     """
     Execute the full Grid Resilience pipeline.
@@ -176,6 +179,17 @@ def run(
 
     ticker_iso_map = {t: get_ticker_iso(t) for t in tickers}
 
+    # ── Business-model pass_through map ──────────────────────────────────────
+    pass_through: pd.Series | None = None
+    if arch is not None:
+        pass_through = pd.Series({
+            t: TICKER_NODE_MAP[t].get("pass_through", 1.0)
+            for t in tickers
+            if t in TICKER_NODE_MAP
+        })
+        use_icr = True   # regulated path requires ICR; override caller setting
+        print(f"\n  [arch] Business-model arch: {arch!r} — ICR auto-enabled for regulated path")
+
     # ── 2. Grid data ──────────────────────────────────────────────────────────
     print("\n[2/7] Fetching grid LMP and load data…")
     daily_lmp_by_iso:  dict[str, pd.DataFrame] = {}
@@ -215,6 +229,31 @@ def run(
     if not daily_lmp_by_iso:
         print("[ERROR] No grid data retrieved.  Check gridstatus installation and ISO connectivity.")
         sys.exit(1)
+
+    # ── PJM per-ticker zone GSI ───────────────────────────────────────────────
+    # Fetch zone-level LMPs (type=ZONE) and build a separate GSI per ticker so
+    # each company is scored against its home territory rather than the shared
+    # system hub signal, which clusters betas and kills cross-sectional dispersion.
+    if zone_gsi and "PJM" in daily_lmp_by_iso:
+        print("\n  [grid] Fetching PJM zone LMPs for per-ticker GSI…")
+        pjm_zone_raw = fetch_lmp("PJM", start, end, location_type="ZONE")
+        if not pjm_zone_raw.empty:
+            loc_col = next((c for c in pjm_zone_raw.columns if c == "location"), None)
+            if loc_col:
+                for ticker, info in TICKER_NODE_MAP.items():
+                    if info.get("iso") != "PJM":
+                        continue
+                    zones = info.get("nodes", [])
+                    if not zones:
+                        continue
+                    ticker_raw = pjm_zone_raw[pjm_zone_raw[loc_col].isin(zones)]
+                    if not ticker_raw.empty:
+                        daily_lmp_by_iso[f"PJM:{ticker}"] = daily_lmp_summary(ticker_raw, "PJM")
+                        print(f"    [grid] PJM:{ticker} zone GSI data built from {zones}")
+                    else:
+                        print(f"    [grid] PJM:{ticker} — no zone data matched {zones}, using system hub GSI")
+        else:
+            print("  [warn] PJM zone LMP fetch returned empty — all PJM tickers use system hub GSI")
 
     # ── 3. Stress events ──────────────────────────────────────────────────────
     print("\n[3/7] Building stress event calendar…")
@@ -271,7 +310,12 @@ def run(
         else:
             print("  [warn] ICR data unavailable — factor will use beta + renewables only")
 
-    rolling_factors = build_rolling_factor(rolling_betas, icr_history=icr_history)
+    rolling_factors = build_rolling_factor(
+        rolling_betas,
+        icr_history=icr_history,
+        arch=arch or "hard_switch",
+        pass_through=pass_through,
+    )
     rolling_factors.to_csv(output_dir / "factor_scores.csv", index=False)
 
     if not rolling_factors.empty:
@@ -347,6 +391,19 @@ def _parse_args() -> argparse.Namespace:
         default=USE_ICR,
         help="Include interest coverage ratio as a factor component (default: off)",
     )
+    p.add_argument(
+        "--zone-gsi", dest="zone_gsi",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use per-ticker PJM zone GSI (default: on)",
+    )
+    p.add_argument(
+        "--arch",
+        default=None,
+        choices=["hard-switch", "revenue-mix", "dual-track"],
+        help="Business-model signal architecture. When set, ICR is auto-enabled. "
+             "Default: None (original stress-beta-only behaviour).",
+    )
     p.add_argument("--no-plot", action="store_true", help="Skip matplotlib charts")
     p.add_argument("--output", default="output", help="Output directory")
     return p.parse_args()
@@ -362,6 +419,8 @@ if __name__ == "__main__":
         n_short   = args.short,
         xlu_hedge = args.xlu_hedge,
         use_icr   = args.use_icr,
+        arch      = args.arch.replace("-", "_") if args.arch else None,
+        zone_gsi  = args.zone_gsi,
         plot      = not args.no_plot,
         save_dir  = args.output,
     )
