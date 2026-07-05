@@ -95,11 +95,15 @@ def build_factor(
 
         beta_z = scores["signed_stress_beta"]                # already z-scored above
 
-        if arch == "hard_switch":
+        # When ICR is unavailable, all arch variants fall back to pure beta
+        # (revenue_mix/dual_track would otherwise collapse regulated scores to ~0)
+        if not has_icr:
+            arch_score = beta_z
+
+        elif arch == "hard_switch":
             is_regulated = pt < 0.5
             arch_score = beta_z.copy()
-            if has_icr:
-                arch_score[is_regulated] = icr_z[is_regulated]
+            arch_score[is_regulated] = icr_z[is_regulated]
 
         elif arch == "revenue_mix":
             arch_score = beta_z * pt + icr_z * (1 - pt)
@@ -118,7 +122,7 @@ def build_factor(
 
             # Z-score ICR within the regulated subgroup
             icr_zd = pd.Series(0.0, index=scores.index)
-            if has_icr and regulated_mask.sum() > 1:
+            if regulated_mask.sum() > 1:
                 icr_raw_d = icr.reindex(scores.index).fillna(icr.mean())
                 icr_zd[regulated_mask] = cross_section_zscore(
                     winsorize(icr_raw_d[regulated_mask], WINSOR_LIMITS)
@@ -134,7 +138,7 @@ def build_factor(
         if has_renew:
             renew_aligned = renewable_share.reindex(scores.index).fillna(0.0)
             renew_z = cross_section_zscore(winsorize(renew_aligned, WINSOR_LIMITS))
-            factor = 0.85 * arch_score + 0.15 * renew_z
+            factor = factor + 0.15 * renew_z
 
         factor = cross_section_zscore(winsorize(factor, WINSOR_LIMITS))
         return factor.rename("grid_resilience_factor")
