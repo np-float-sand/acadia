@@ -184,9 +184,9 @@ Record into a comparison table:
 | Architecture | Sharpe | Ann Ret | Max DD | IC@21d | IC t-stat |
 |---|---|---|---|---|---|
 | Baseline (no PJM) | ~0.272 | ~8.0% | ~-15.4% | 0.144 | 1.918 |
-| Hard switch | TBD | | | | |
-| Revenue mix | TBD | | | | |
-| Dual-track | TBD | | | | |
+| Hard switch | **0.331** | **9.38%** | -19.53% | 0.1434 | 1.865 |
+| Revenue mix | 0.185 | 6.64% | **-14.70%** | 0.1340 | 1.702 |
+| Dual-track | 0.031 | 4.44% | -19.02% | 0.1295 | 1.652 |
 
 **Success threshold:** Sharpe > 0.20 with PJM included. If no architecture clears this, the fallback is to remove PJM from the universe (Option A from the handoff doc) and proceed with the clean non-PJM baseline.
 

@@ -1,47 +1,42 @@
 [log] Run log → /Users/sandhyapersad/acadia/output/run.log
 
 [1/7] Fetching equity prices…
-/Users/sandhyapersad/acadia/grid_resilience/main.py:146: RuntimeWarning: [equity] Clipped 3 extreme daily returns (|log| > 0.4): [('NRG', '2025-06-02'), ('PCG', '2019-01-14'), ('PCG', '2019-01-24')]
+/Users/sandhyapersad/acadia/grid_resilience/main.py:149: RuntimeWarning: [equity] Clipped 3 extreme daily returns (|log| > 0.4): [('NRG', '2025-06-02'), ('PCG', '2019-01-14'), ('PCG', '2019-01-24')]
   all_returns = fetch_returns(fetch_tickers, start, end)
 
+  [arch] Business-model arch: 'dual_track' — ICR auto-enabled for regulated path
+
 [2/7] Fetching grid LMP and load data…
-[grid] Fetching PJM LMP (DAY_AHEAD_HOURLY) 2021-01-01 → 2021-01-31…
-[grid] Fetching PJM LMP (DAY_AHEAD_HOURLY) 2021-02-01 → 2021-02-28…
-[grid] Fetching PJM LMP (DAY_AHEAD_HOURLY) 2024-06-01 → 2024-06-30…
-  [grid] PJM LMP fetch failed: 400 Client Error: Bad Request for url: https://api.pjm.com/api/v1/da_hrl_lmps?row_is_current=TRUE&startRow=1&rowCount=50000&type=HUB&datetime_beginning_ept=06%2F01%2F2024+00%3A00to06%2F30%2F2024+00%3A00
+  [warn] PJM data fetch failed: PJM_API_KEY not set. Register free at pjm.com/api then: export PJM_API_KEY=your_key
 
 [3/7] Building stress event calendar…
-  121 events identified ({'congestion': 80, 'lmp_spike': 34, 'cold': 4, 'heat': 2, 'hurricane': 1})
+  107 events identified ({'congestion': 80, 'lmp_spike': 20, 'cold': 4, 'heat': 2, 'hurricane': 1})
 
 [4/7] Computing Grid Stress Index…
   SPP: 83 high-stress days (GSI ≥ 0.6) in period
-  CAISO: 277 high-stress days (GSI ≥ 0.6) in period
-  ERCOT: 698 high-stress days (GSI ≥ 0.6) in period
-  MISO: 347 high-stress days (GSI ≥ 0.6) in period
-  PJM: 715 high-stress days (GSI ≥ 0.6) in period
+  CAISO: 274 high-stress days (GSI ≥ 0.6) in period
+  ERCOT: 692 high-stress days (GSI ≥ 0.6) in period
+  MISO: 346 high-stress days (GSI ≥ 0.6) in period
 
 [5/7] Estimating stress betas…
 
 [6/7] Building Grid Resilience factor scores…
+  Fetching interest coverage ratios…
+  ICR data: 6 quarters, 23 tickers
 
   Latest factor scores:
-    ETR   ▲ +2.022  ██████████
-    EIX   ▲ +1.219  ██████
-    AEE   ▲ +1.090  █████
-    D     ▲ +0.902  ████
-    WEC   ▲ +0.786  ███
-    DTE   ▲ +0.164  
-    PCG   ▲ +0.063  
-    CNP   ▼ -0.081  
-    PPL   ▼ -0.155  
-    FE    ▼ -0.193  
-    AEP   ▼ -0.210  █
-    EXC   ▼ -0.339  █
-    NRG   ▼ -0.580  ██
-    EVRG  ▼ -0.712  ███
-    XEL   ▼ -0.834  ████
-    CMS   ▼ -0.839  ████
-    VST   ▼ -2.303  ███████████
+    AEE   ▲ +1.677  ████████
+    EVRG  ▲ +1.660  ████████
+    ETR   ▲ +1.020  █████
+    EIX   ▲ +0.377  █
+    CMS   ▼ -0.197  
+    DTE   ▼ -0.245  █
+    NRG   ▼ -0.257  █
+    XEL   ▼ -0.363  █
+    WEC   ▼ -0.553  ██
+    CNP   ▼ -0.576  ██
+    PCG   ▼ -1.071  █████
+    VST   ▼ -1.472  ███████
 
 [7/7] Constructing portfolio and running backtest…
 /Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3023: RuntimeWarning: invalid value encountered in divide
@@ -52,64 +47,60 @@
   c /= stddev[:, None]
 /Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3024: RuntimeWarning: invalid value encountered in divide
   c /= stddev[None, :]
-/Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3023: RuntimeWarning: invalid value encountered in divide
-  c /= stddev[:, None]
-/Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3024: RuntimeWarning: invalid value encountered in divide
-  c /= stddev[None, :]
-[ic] dates: 93  |  5d: 90 pts  |  10d: 90 pts  |  21d: 90 pts  |  63d: 88 pts
+[ic] dates: 93  |  5d: 87 pts  |  10d: 87 pts  |  21d: 87 pts  |  63d: 85 pts
 
 =======================================================
   GRID RESILIENCE STRATEGY — PERFORMANCE SUMMARY
 =======================================================
 
   Full Period:
-    ann_return     :    3.53%
-    ann_vol        :   10.93%
-    sharpe         :  -0.043
-    sortino        :  -0.052
-    max_dd         :  -22.25%
-    hit_rate       :    48.4%
+    ann_return     :    4.44%
+    ann_vol        :   14.26%
+    sharpe         :   0.031
+    sortino        :   0.039
+    max_dd         :  -19.02%
+    hit_rate       :    47.2%
 
   Benchmark (XLU):
-    ann_return     :    8.71%
-    ann_vol        :   20.06%
-    sharpe         :   0.235
-    sortino        :   0.287
-    max_dd         :  -36.07%
-    hit_rate       :    49.4%
+    ann_return     :    7.90%
+    ann_vol        :   24.01%
+    sharpe         :   0.162
+    sortino        :   0.182
+    max_dd         :  -36.47%
+    hit_rate       :    48.4%
 
   EW Universe:
-    ann_return     :    8.51%
-    ann_vol        :   20.10%
-    sharpe         :   0.224
-    sortino        :   0.268
-    max_dd         :  -39.61%
-    hit_rate       :    54.2%
+    ann_return     :    8.42%
+    ann_vol        :   20.44%
+    sharpe         :   0.216
+    sortino        :   0.253
+    max_dd         :  -38.78%
+    hit_rate       :    55.2%
 
   Stress Periods:
-    ann_return     :    5.19%
-    ann_vol        :   12.73%
-    sharpe         :   0.094
-    sortino        :   0.112
-    max_dd         :  -22.26%
-    hit_rate       :    51.4%
+    ann_return     :    7.30%
+    ann_vol        :   14.95%
+    sharpe         :   0.221
+    sortino        :   0.281
+    max_dd         :  -19.02%
+    hit_rate       :    49.7%
 
   Calm Periods:
-    ann_return     :    1.19%
-    ann_vol        :    7.73%
-    sharpe         :  -0.363
-    sortino        :  -0.486
-    max_dd         :  -11.38%
-    hit_rate       :    44.1%
+    ann_return     :    0.63%
+    ann_vol        :   13.29%
+    sharpe         :  -0.254
+    sortino        :  -0.317
+    max_dd         :  -13.35%
+    hit_rate       :    43.9%
 
-  Stress days: 1173 / 2010 (58.4%)
+  Stress days: 1147 / 2010 (57.1%)
 
   Stress vs Calm — significance tests:
     Test                         p-value  Sig
     --------------------------  --------  ---
-    Welch t (mean return)         0.5817     
-    Levene  (volatility)          0.0000   ***
-    Mann-Whitney U (distrib)      0.1105      
+    Welch t (mean return)         0.5060     
+    Levene  (volatility)          0.0483    **
+    Mann-Whitney U (distrib)      0.2652      
     Significance: * p<0.10  ** p<0.05  *** p<0.01
 =======================================================
 
@@ -119,28 +110,28 @@
 ==============================================================
   Horizon     Mean IC   Std IC   t-stat   % Pos     N
   ---------- -------- -------- -------- ------- -----
-  5d           0.0346   0.4188    0.783   50.0%    90
-  10d          0.0362   0.4087    0.840   54.4%    90
-  21d          0.0733   0.4545    1.529   52.2%    90
-  63d          0.1447   0.4359    3.114   64.8%    88
+  5d          -0.0090   0.6288   -0.134   47.1%    87
+  10d          0.0790   0.6515    1.131   58.6%    87
+  21d          0.1295   0.7308    1.652   57.5%    87
+  63d          0.1598   0.6982    2.111   58.8%    85
 
   Conditional IC by GSI regime:
   Horizon    Regime      Mean IC   t-stat     N
   ---------- ---------- -------- -------- -----
-  5d         stressed     0.0225    0.467    77
-  5d         calm         0.1052    0.927    13
-  10d        stressed     0.0390    0.821    77
-  10d        calm         0.0197    0.193    13
-  21d        stressed     0.0773    1.479    77
-  21d        calm         0.0497    0.402    13
-  63d        stressed     0.1430    2.857    75
-  63d        calm         0.1546    1.192    13
+  5d         stressed     0.0535    0.713    61
+  5d         calm        -0.1591   -1.140    26
+  10d        stressed     0.0852    1.039    61
+  10d        calm         0.0643    0.476    26
+  21d        stressed     0.1460    1.610    61
+  21d        calm         0.0906    0.581    26
+  63d        stressed     0.1995    2.403    59
+  63d        calm         0.0699    0.432    26
 
   Signal comparison (IC @ 21d fwd  |  EW/Bench IC = 0 by construction):
   Signal                       IC   t-stat   Sharpe   Ann Ret   Max DD
   ---------------------- -------- -------- -------- --------- --------
-  Factor (L/S)             0.0733    1.529   -0.043    3.53%  -22.25%
-  Benchmark (XLU)           0.0000       —    0.235    8.71%  -36.07%
-  EW Universe               0.0000       —    0.224    8.51%  -39.61%
+  Factor (L/S)             0.1295    1.652    0.031    4.44%  -19.02%
+  Benchmark (XLU)           0.0000       —    0.162    7.90%  -36.47%
+  EW Universe               0.0000       —    0.216    8.42%  -38.78%
 ==============================================================
 
