@@ -175,3 +175,33 @@ def compute_dc_load_signal(
             row[ticker] = DC_LEVEL_WEIGHT * level + DC_MOMENTUM_WEIGHT * momentum
         rows[date] = row
     return pd.DataFrame.from_dict(rows, orient="index")[tickers]
+
+
+def fill_with_icr(
+    dc_history: pd.DataFrame,
+    icr_history: pd.DataFrame | None,
+    lag_days: int = 45,
+) -> pd.DataFrame:
+    """
+    Fill NaN cells in dc_history (non-PJM tickers, or PJM tickers with no
+    zone-size data yet) using each ticker's own most-recent ICR reading as
+    of (date - lag_days), instead of build_factor()'s flat cross-sectional
+    mean fallback. Preserves real per-ticker differentiation for the 8 of 14
+    regulated tickers the DC signal doesn't cover in v1 (see design spec).
+    """
+    result = dc_history.copy()
+    if icr_history is None or icr_history.empty:
+        return result
+
+    icr_sorted = icr_history.sort_index()
+    for date in result.index:
+        cutoff = date - pd.Timedelta(days=lag_days)
+        available = icr_sorted[icr_sorted.index <= cutoff]
+        if available.empty:
+            continue
+        icr_row = available.iloc[-1]
+        row = result.loc[date]
+        for ticker in row[row.isna()].index:
+            if ticker in icr_row.index and pd.notna(icr_row[ticker]):
+                result.loc[date, ticker] = icr_row[ticker]
+    return result

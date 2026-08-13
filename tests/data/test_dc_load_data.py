@@ -263,3 +263,41 @@ def test_compute_dc_load_signal_multi_zone_ticker_sums_zones():
     )
     # level = (400+100)/(2000+500) = 0.2
     assert abs(result.loc[pd.Timestamp("2020-01-01"), "EXC"] - 0.6 * 0.2) < 1e-6
+
+
+def test_fill_with_icr_fills_nan_columns_from_most_recent_icr():
+    from grid_resilience.data.dc_load_data import fill_with_icr
+    dc_history = pd.DataFrame(
+        {"PEG": [0.3], "WEC": [float("nan")]},
+        index=[pd.Timestamp("2020-06-01")],
+    )
+    icr_history = pd.DataFrame(
+        {"WEC": [4.0]},
+        index=[pd.Timestamp("2020-03-01")],  # 92 days before as_of, past a 45d lag
+    )
+    result = fill_with_icr(dc_history, icr_history, lag_days=45)
+    assert result.loc[pd.Timestamp("2020-06-01"), "WEC"] == 4.0
+    assert result.loc[pd.Timestamp("2020-06-01"), "PEG"] == 0.3  # untouched — already had a value
+
+
+def test_fill_with_icr_respects_reporting_lag():
+    from grid_resilience.data.dc_load_data import fill_with_icr
+    dc_history = pd.DataFrame({"WEC": [float("nan")]}, index=[pd.Timestamp("2020-06-01")])
+    icr_history = pd.DataFrame({"WEC": [4.0]}, index=[pd.Timestamp("2020-05-01")])  # only 31 days back
+    result = fill_with_icr(dc_history, icr_history, lag_days=45)
+    assert pd.isna(result.loc[pd.Timestamp("2020-06-01"), "WEC"])
+
+
+def test_fill_with_icr_handles_missing_icr_history():
+    from grid_resilience.data.dc_load_data import fill_with_icr
+    dc_history = pd.DataFrame({"WEC": [float("nan")]}, index=[pd.Timestamp("2020-06-01")])
+    result = fill_with_icr(dc_history, None, lag_days=45)
+    assert pd.isna(result.loc[pd.Timestamp("2020-06-01"), "WEC"])
+
+
+def test_fill_with_icr_ticker_absent_from_icr_stays_nan():
+    from grid_resilience.data.dc_load_data import fill_with_icr
+    dc_history = pd.DataFrame({"EVRG": [float("nan")]}, index=[pd.Timestamp("2020-06-01")])
+    icr_history = pd.DataFrame({"WEC": [4.0]}, index=[pd.Timestamp("2020-03-01")])
+    result = fill_with_icr(dc_history, icr_history, lag_days=45)
+    assert pd.isna(result.loc[pd.Timestamp("2020-06-01"), "EVRG"])
