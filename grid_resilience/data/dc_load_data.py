@@ -92,3 +92,29 @@ def fetch_interconnection_queue(use_cache: bool = True) -> pd.DataFrame:
     if use_cache:
         cleaned.to_parquet(_QUEUE_CACHE_FILE)
     return cleaned
+
+
+def in_queue(queue: pd.DataFrame, as_of: pd.Timestamp) -> pd.Series:
+    """
+    Boolean mask: which queue rows represent a project actually in the queue
+    as of `as_of`, reconstructed from each project's own dated fields
+    (see design spec's point-in-time reconstruction section).
+    """
+    submitted = queue["submitted_date"] <= as_of
+    not_withdrawn = queue["withdrawal_date"].isna() | (queue["withdrawal_date"] > as_of)
+    not_in_service = queue["actual_in_service_date"].isna() | (queue["actual_in_service_date"] > as_of)
+    return submitted & not_withdrawn & not_in_service
+
+
+def queued_mw(queue: pd.DataFrame, zone: str, as_of: pd.Timestamp) -> float:
+    """Total MW capacity in `zone`'s queue as of `as_of`."""
+    mask = in_queue(queue, as_of) & (queue["zone"] == zone)
+    return float(queue.loc[mask, "mw_capacity"].sum())
+
+
+def new_mw_since(queue: pd.DataFrame, zone: str, as_of: pd.Timestamp, window_days: int) -> float:
+    """MW capacity in `zone`'s queue as of `as_of` that was submitted within
+    the trailing `window_days` — the momentum component's numerator."""
+    cutoff = as_of - pd.Timedelta(days=window_days)
+    mask = in_queue(queue, as_of) & (queue["zone"] == zone) & (queue["submitted_date"] > cutoff)
+    return float(queue.loc[mask, "mw_capacity"].sum())

@@ -82,3 +82,71 @@ def test_clean_queue_does_not_filter_by_status():
     })])
     cleaned = _clean_queue(raw)
     assert len(cleaned) == 1
+
+
+def _queue_row(zone="PSEG", mw=500.0, submitted="1/1/2019", withdrawn=None, in_service=None):
+    return {
+        "zone": zone,
+        "mw_capacity": mw,
+        "submitted_date": pd.Timestamp(submitted),
+        "withdrawal_date": pd.Timestamp(withdrawn) if withdrawn else pd.NaT,
+        "actual_in_service_date": pd.Timestamp(in_service) if in_service else pd.NaT,
+    }
+
+
+def test_in_queue_true_before_submission_is_false():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="6/1/2020")])
+    mask = in_queue(queue, pd.Timestamp("2020-01-01"))
+    assert mask.tolist() == [False]
+
+
+def test_in_queue_true_after_submission_before_exit():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="1/1/2019")])
+    mask = in_queue(queue, pd.Timestamp("2020-01-01"))
+    assert mask.tolist() == [True]
+
+
+def test_in_queue_false_after_withdrawal():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="1/1/2019", withdrawn="6/1/2020")])
+    assert in_queue(queue, pd.Timestamp("2020-01-01")).tolist() == [True]
+    assert in_queue(queue, pd.Timestamp("2020-07-01")).tolist() == [False]
+
+
+def test_in_queue_false_after_actual_in_service():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="1/1/2019", in_service="6/1/2020")])
+    assert in_queue(queue, pd.Timestamp("2020-01-01")).tolist() == [True]
+    assert in_queue(queue, pd.Timestamp("2020-07-01")).tolist() == [False]
+
+
+def test_queued_mw_sums_only_matching_zone_and_active_projects():
+    from grid_resilience.data.dc_load_data import queued_mw
+    queue = pd.DataFrame([
+        _queue_row(zone="PSEG", mw=500.0, submitted="1/1/2019"),
+        _queue_row(zone="PSEG", mw=300.0, submitted="1/1/2019", withdrawn="6/1/2019"),
+        _queue_row(zone="DOM", mw=1000.0, submitted="1/1/2019"),
+    ])
+    assert queued_mw(queue, "PSEG", pd.Timestamp("2020-01-01")) == 500.0
+
+
+def test_new_mw_since_only_counts_recent_submissions():
+    from grid_resilience.data.dc_load_data import new_mw_since
+    queue = pd.DataFrame([
+        _queue_row(zone="PSEG", mw=200.0, submitted="2020-01-15"),  # within window
+        _queue_row(zone="PSEG", mw=800.0, submitted="2019-01-01"),  # outside window
+    ])
+    as_of = pd.Timestamp("2020-02-01")
+    result = new_mw_since(queue, "PSEG", as_of, window_days=90)
+    assert result == 200.0
+
+
+def test_new_mw_since_excludes_projects_already_exited():
+    from grid_resilience.data.dc_load_data import new_mw_since
+    queue = pd.DataFrame([
+        _queue_row(zone="PSEG", mw=200.0, submitted="2020-01-15", withdrawn="2020-01-20"),
+    ])
+    as_of = pd.Timestamp("2020-02-01")
+    assert new_mw_since(queue, "PSEG", as_of, window_days=90) == 0.0
