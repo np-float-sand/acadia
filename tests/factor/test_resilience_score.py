@@ -57,3 +57,34 @@ def test_generator_negative_beta_stays_negative():
     betas = _betas(["NRG", "CNP"], [-0.8, -0.4])
     scores = build_factor(betas)
     assert scores["NRG"] < scores["CNP"]  # NRG more negative beta → lower score even for generator
+
+
+def test_build_rolling_factor_respects_custom_regulated_signal_lag_days():
+    import pandas as pd
+    from grid_resilience.factor.resilience_score import build_rolling_factor
+
+    dates = pd.MultiIndex.from_product(
+        [[pd.Timestamp("2020-06-01")], ["PPL", "FE"]], names=["date", "ticker"]
+    )
+    rolling_betas = pd.DataFrame({"stress_beta": [-0.5, -0.5]}, index=dates)
+    pt = pd.Series({"PPL": 0.05, "FE": 0.05})
+
+    # icr_history dated 40 days before the rebalance date: visible with a 0-day
+    # lag, but NOT visible with the default 45-day ICR lag.
+    icr_history = pd.DataFrame({"PPL": [8.0], "FE": [1.0]}, index=[pd.Timestamp("2020-04-22")])
+
+    with_zero_lag = build_rolling_factor(
+        rolling_betas, icr_history=icr_history, arch="hard_switch",
+        pass_through=pt, regulated_signal_lag_days=0,
+    )
+    with_default_lag = build_rolling_factor(
+        rolling_betas, icr_history=icr_history, arch="hard_switch", pass_through=pt,
+    )
+
+    ppl_zero_lag = with_zero_lag[with_zero_lag["ticker"] == "PPL"]["factor_score"].iloc[0]
+    fe_zero_lag  = with_zero_lag[with_zero_lag["ticker"] == "FE"]["factor_score"].iloc[0]
+    assert ppl_zero_lag > fe_zero_lag  # ICR visible, PPL's higher ICR wins
+
+    ppl_default = with_default_lag[with_default_lag["ticker"] == "PPL"]["factor_score"].iloc[0]
+    fe_default  = with_default_lag[with_default_lag["ticker"] == "FE"]["factor_score"].iloc[0]
+    assert ppl_default == fe_default  # ICR not yet visible under 45d lag -> both fall back to beta (tied)

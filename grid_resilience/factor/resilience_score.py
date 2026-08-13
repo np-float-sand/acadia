@@ -174,6 +174,7 @@ def build_rolling_factor(
     icr_history: pd.DataFrame | None = None,
     arch: str = "hard_switch",
     pass_through: pd.Series | None = None,
+    regulated_signal_lag_days: int = _ICR_LAG_DAYS,
 ) -> pd.DataFrame:
     """
     Build time-varying factor scores from rolling_stress_betas output.
@@ -189,6 +190,10 @@ def build_rolling_factor(
     arch                       : blending architecture — passed to build_factor().
     pass_through               : Series keyed by ticker (0.0–1.0) — passed to
                                  build_factor(). None = original behaviour.
+    regulated_signal_lag_days  : Reporting lag applied before an icr_history row is
+                                 considered observable. Default is the 45-day ICR
+                                 filing lag; pass 0 for signals with no lag (e.g.
+                                 the DC load signal, which is a live public dataset).
 
     Returns
     -------
@@ -209,7 +214,7 @@ def build_rolling_factor(
             if period_key in renewable_share_by_period.index:
                 renew = renewable_share_by_period.loc[period_key]
 
-        icr = _icr_at_date(icr_history, date)
+        icr = _icr_at_date(icr_history, date, lag_days=regulated_signal_lag_days)
 
         scores = build_factor(
             betas_at_date,
@@ -227,11 +232,12 @@ def build_rolling_factor(
 def _icr_at_date(
     icr_history: pd.DataFrame | None,
     date: pd.Timestamp,
+    lag_days: int = _ICR_LAG_DAYS,
 ) -> pd.Series | None:
-    """Return the most recently available ICR row as of `date` (with reporting lag)."""
+    """Return the most recently available icr_history row as of `date` (with reporting lag)."""
     if icr_history is None or icr_history.empty:
         return None
-    cutoff = date - pd.Timedelta(days=_ICR_LAG_DAYS)
+    cutoff = date - pd.Timedelta(days=lag_days)
     available = icr_history[icr_history.index <= cutoff]
     if available.empty:
         return None
