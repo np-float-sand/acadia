@@ -139,3 +139,39 @@ def zone_size(zonal_load: pd.DataFrame, zones: list[str], as_of: pd.Timestamp) -
         return float("nan")
     per_zone_avg = in_window.groupby("zone")["load_mw"].mean()
     return float(per_zone_avg.sum())
+
+
+def compute_dc_load_signal(
+    tickers: list[str],
+    node_map: dict,
+    queue: pd.DataFrame,
+    zonal_load: pd.DataFrame,
+    as_of_dates: list[pd.Timestamp],
+) -> pd.DataFrame:
+    """
+    Raw (pre-z-score) DC load signal per ticker per date:
+        0.6 * level + 0.4 * momentum
+    where level = queued_mw / zone_size, momentum = new_mw_since / zone_size.
+    Only PJM tickers get real values (see design spec's v1 PJM-only limitation);
+    all others are NaN, to be filled by fill_with_icr() downstream.
+    """
+    rows = {}
+    for date in as_of_dates:
+        row = {}
+        for ticker in tickers:
+            info = node_map.get(ticker, {})
+            if info.get("iso") != "PJM":
+                row[ticker] = float("nan")
+                continue
+            zones = info.get("load_zones", [])
+            size = zone_size(zonal_load, zones, date)
+            if not size or pd.isna(size) or size <= 0:
+                row[ticker] = float("nan")
+                continue
+            level = sum(queued_mw(queue, z, date) for z in zones) / size
+            momentum = sum(
+                new_mw_since(queue, z, date, DC_MOMENTUM_WINDOW_DAYS) for z in zones
+            ) / size
+            row[ticker] = DC_LEVEL_WEIGHT * level + DC_MOMENTUM_WEIGHT * momentum
+        rows[date] = row
+    return pd.DataFrame.from_dict(rows, orient="index")[tickers]

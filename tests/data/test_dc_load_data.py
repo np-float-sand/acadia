@@ -211,3 +211,55 @@ def test_zone_size_returns_nan_when_no_data():
     zonal_load = pd.DataFrame(columns=["time", "zone", "load_mw"])
     result = zone_size(zonal_load, ["PSEG"], pd.Timestamp("2019-12-01"))
     assert pd.isna(result)
+
+
+def _node_map(**tickers):
+    return tickers
+
+
+def test_compute_dc_load_signal_single_pjm_ticker():
+    from grid_resilience.data.dc_load_data import compute_dc_load_signal
+    queue = pd.DataFrame([_queue_row(zone="PSEG", mw=1000.0, submitted="2019-01-01")])
+    zonal_load = pd.DataFrame([_zonal_load_row("PSEG", "2019-06-15", 5000.0)])
+    node_map = _node_map(PEG={"iso": "PJM", "load_zones": ["PSEG"]})
+
+    result = compute_dc_load_signal(
+        tickers=["PEG"], node_map=node_map, queue=queue, zonal_load=zonal_load,
+        as_of_dates=[pd.Timestamp("2020-01-01")],
+    )
+    assert list(result.columns) == ["PEG"]
+    # level = 1000/5000 = 0.2, momentum = 0 (submitted well outside 90d window)
+    assert abs(result.loc[pd.Timestamp("2020-01-01"), "PEG"] - (0.6 * 0.2 + 0.4 * 0.0)) < 1e-6
+
+
+def test_compute_dc_load_signal_non_pjm_ticker_is_nan():
+    from grid_resilience.data.dc_load_data import compute_dc_load_signal
+    queue = pd.DataFrame(columns=["zone", "mw_capacity", "submitted_date", "withdrawal_date", "actual_in_service_date"])
+    zonal_load = pd.DataFrame(columns=["time", "zone", "load_mw"])
+    node_map = _node_map(VST={"iso": "ERCOT", "load_zones": ["NORTH"]})
+
+    result = compute_dc_load_signal(
+        tickers=["VST"], node_map=node_map, queue=queue, zonal_load=zonal_load,
+        as_of_dates=[pd.Timestamp("2020-01-01")],
+    )
+    assert pd.isna(result.loc[pd.Timestamp("2020-01-01"), "VST"])
+
+
+def test_compute_dc_load_signal_multi_zone_ticker_sums_zones():
+    from grid_resilience.data.dc_load_data import compute_dc_load_signal
+    queue = pd.DataFrame([
+        _queue_row(zone="PECO", mw=400.0, submitted="2019-01-01"),
+        _queue_row(zone="BGE", mw=100.0, submitted="2019-01-01"),
+    ])
+    zonal_load = pd.DataFrame([
+        _zonal_load_row("PECO", "2019-06-15", 2000.0),
+        _zonal_load_row("BGE", "2019-06-15", 500.0),
+    ])
+    node_map = _node_map(EXC={"iso": "PJM", "load_zones": ["PECO", "BGE"]})
+
+    result = compute_dc_load_signal(
+        tickers=["EXC"], node_map=node_map, queue=queue, zonal_load=zonal_load,
+        as_of_dates=[pd.Timestamp("2020-01-01")],
+    )
+    # level = (400+100)/(2000+500) = 0.2
+    assert abs(result.loc[pd.Timestamp("2020-01-01"), "EXC"] - 0.6 * 0.2) < 1e-6
