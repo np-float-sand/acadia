@@ -204,6 +204,43 @@ def _fetch_pjm_load_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
     return total_load
 
 
+def _fetch_pjm_load_by_zone_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Fetch PJM metered hourly load directly from DataMiner 2, keeping the
+    per-zone breakdown (unlike _fetch_pjm_load_direct, which sums to system total).
+    Used for the DC load signal's zone-size denominator.
+    """
+    start_ept = pd.Timestamp(start).strftime("%m/%d/%Y %H:%M")
+    end_ept   = pd.Timestamp(end).strftime("%m/%d/%Y %H:%M")
+    url       = "https://api.pjm.com/api/v1/hrl_load_metered"
+    row_count = 50000
+    start_row = 1
+    all_items: list = []
+
+    while True:
+        params = {
+            "startRow":  start_row,
+            "rowCount":  row_count,
+            "datetime_beginning_ept": f"{start_ept}to{end_ept}",
+        }
+        data  = _pjm_get(url, params, api_key)
+        items = data.get("items", [])
+        all_items.extend(items)
+        total = data.get("totalRows", 0)
+        if start_row + row_count - 1 >= total or not items:
+            break
+        start_row += row_count
+        time.sleep(1)
+
+    if not all_items:
+        return pd.DataFrame(columns=["time", "zone", "load_mw"])
+
+    df = pd.DataFrame(all_items)
+    df["time"] = pd.to_datetime(df["datetime_beginning_utc"])
+    by_zone = df.groupby(["time", "zone"])["mw"].sum().rename("load_mw").reset_index()
+    return by_zone
+
+
 def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd.DataFrame:
     print(f"[grid] Fetching {iso} LMP ({loc_type}) {start} → {end}…")
     if iso == "SPP":
@@ -472,6 +509,39 @@ def fetch_load(
         merged = _fetch_load_raw(iso_obj, iso, start, end)
         if use_cache and not merged.empty:
             save_monthly_chunks(merged, cache_base, "time")
+
+    return _filter_time(merged, start, end)
+
+
+def fetch_zonal_load(
+    start: str,
+    end: str,
+    use_cache: bool = True,
+) -> pd.DataFrame:
+    """
+    Fetch PJM hourly load broken out by zone. PJM-only (other ISOs return empty) —
+    used for the DC load signal's zone-size denominator.
+    Returns DataFrame with columns: time, zone, load_mw
+    """
+    cache_base = _cache_path("PJM", "load_zonal")
+    api_key = os.environ.get("PJM_API_KEY", "")
+
+    if use_cache:
+        missing = find_missing_months(cache_base, start, end)
+        if missing:
+            def _fetch_month(ym: tuple[int, int]) -> None:
+                time.sleep(12)
+                ms, me = month_bounds(*ym)
+                df = _fetch_pjm_load_by_zone_direct(api_key, ms, me)
+                if not df.empty:
+                    save_monthly_chunks(df, cache_base, "time")
+
+            for ym in missing:
+                _fetch_month(ym)
+
+        merged = read_monthly_cache(cache_base, start, end)
+    else:
+        merged = _fetch_pjm_load_by_zone_direct(api_key, start, end)
 
     return _filter_time(merged, start, end)
 
