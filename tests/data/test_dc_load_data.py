@@ -171,3 +171,43 @@ def test_new_mw_since_excludes_projects_already_exited():
     ])
     as_of = pd.Timestamp("2020-02-01")
     assert new_mw_since(queue, "PSEG", as_of, window_days=90) == 0.0
+
+
+def _zonal_load_row(zone, time, mw):
+    return {"time": pd.Timestamp(time), "zone": zone, "load_mw": mw}
+
+
+def test_zone_size_averages_trailing_12_months_single_zone():
+    from grid_resilience.data.dc_load_data import zone_size
+    rows = [_zonal_load_row("PSEG", f"2019-{m:02d}-15", 1000.0 + m) for m in range(1, 13)]
+    zonal_load = pd.DataFrame(rows)
+    result = zone_size(zonal_load, ["PSEG"], pd.Timestamp("2020-01-01"))
+    expected = sum(1000.0 + m for m in range(1, 13)) / 12
+    assert abs(result - expected) < 1e-6
+
+
+def test_zone_size_sums_multiple_zones():
+    from grid_resilience.data.dc_load_data import zone_size
+    zonal_load = pd.DataFrame([
+        _zonal_load_row("PECO", "2019-06-15", 1000.0),
+        _zonal_load_row("BGE", "2019-06-15", 500.0),
+    ])
+    result = zone_size(zonal_load, ["PECO", "BGE"], pd.Timestamp("2019-12-01"))
+    assert result == 1500.0
+
+
+def test_zone_size_excludes_data_after_as_of():
+    from grid_resilience.data.dc_load_data import zone_size
+    zonal_load = pd.DataFrame([
+        _zonal_load_row("PSEG", "2019-06-15", 1000.0),
+        _zonal_load_row("PSEG", "2020-06-15", 9000.0),  # future — must not leak in
+    ])
+    result = zone_size(zonal_load, ["PSEG"], pd.Timestamp("2019-12-01"))
+    assert result == 1000.0
+
+
+def test_zone_size_returns_nan_when_no_data():
+    from grid_resilience.data.dc_load_data import zone_size
+    zonal_load = pd.DataFrame(columns=["time", "zone", "load_mw"])
+    result = zone_size(zonal_load, ["PSEG"], pd.Timestamp("2019-12-01"))
+    assert pd.isna(result)

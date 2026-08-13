@@ -118,3 +118,24 @@ def new_mw_since(queue: pd.DataFrame, zone: str, as_of: pd.Timestamp, window_day
     cutoff = as_of - pd.Timedelta(days=window_days)
     mask = in_queue(queue, as_of) & (queue["zone"] == zone) & (queue["submitted_date"] > cutoff)
     return float(queue.loc[mask, "mw_capacity"].sum())
+
+
+def zone_size(zonal_load: pd.DataFrame, zones: list[str], as_of: pd.Timestamp) -> float:
+    """
+    Trailing-12-month average hourly load (MW), summed across `zones`.
+    Used as the utility-size denominator for the level/momentum ratios.
+    Returns NaN if no data is available in the window (e.g. before PJM's
+    metered-load history begins — see Task 1 Step 7's coverage check).
+    """
+    if zonal_load.empty:
+        return float("nan")
+    window_start = as_of - pd.Timedelta(days=365)
+    in_window = zonal_load[
+        (zonal_load["zone"].isin(zones))
+        & (zonal_load["time"] > window_start)
+        & (zonal_load["time"] <= as_of)
+    ]
+    if in_window.empty:
+        return float("nan")
+    per_zone_avg = in_window.groupby("zone")["load_mw"].mean()
+    return float(per_zone_avg.sum())
