@@ -4,6 +4,7 @@ All modules import from here to avoid scattered magic constants.
 """
 
 from pathlib import Path
+from typing import Literal
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).parent
@@ -103,6 +104,14 @@ XLU_HEDGE: bool = False  # True
 
 # Enable interest coverage ratio as a factor component (default off — see CLAUDE.md)
 USE_ICR: bool = False
+
+REGULATED_SIGNAL: Literal["icr", "dc_queue"] = "dc_queue"
+
+DC_QUEUE_MW_MIN        = 100.0   # ignore sub-100MW queue entries as noise
+DC_QUEUE_PROJECT_TYPES = ["Generation Interconnection"]
+DC_MOMENTUM_WINDOW_DAYS = 90
+DC_LEVEL_WEIGHT    = 0.6
+DC_MOMENTUM_WEIGHT = 0.4
 
 # Business-model-aware signal architecture (Task 1 of spec 2026-06-29).
 # None = original behaviour. Set via --arch CLI flag.
