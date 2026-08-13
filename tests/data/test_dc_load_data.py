@@ -122,6 +122,27 @@ def test_in_queue_false_after_actual_in_service():
     assert in_queue(queue, pd.Timestamp("2020-07-01")).tolist() == [False]
 
 
+def test_in_queue_true_exactly_on_submission_date():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="2020-01-01")])
+    mask = in_queue(queue, pd.Timestamp("2020-01-01"))
+    assert mask.tolist() == [True]
+
+
+def test_in_queue_false_exactly_on_withdrawal_date():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="2019-01-01", withdrawn="2020-06-01")])
+    mask = in_queue(queue, pd.Timestamp("2020-06-01"))
+    assert mask.tolist() == [False]
+
+
+def test_in_queue_false_exactly_on_actual_in_service_date():
+    from grid_resilience.data.dc_load_data import in_queue
+    queue = pd.DataFrame([_queue_row(submitted="2019-01-01", in_service="2020-06-01")])
+    mask = in_queue(queue, pd.Timestamp("2020-06-01"))
+    assert mask.tolist() == [False]
+
+
 def test_queued_mw_sums_only_matching_zone_and_active_projects():
     from grid_resilience.data.dc_load_data import queued_mw
     queue = pd.DataFrame([
