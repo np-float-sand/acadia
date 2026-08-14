@@ -266,6 +266,12 @@ def test_compute_dc_load_signal_multi_zone_ticker_sums_zones():
 
 
 def test_fill_with_icr_fills_nan_columns_from_most_recent_icr():
+    """Fills the NaN cell from ICR (not left NaN) and doesn't touch a cell
+    that already had real DC data. Post-2026-08-13-fix, both cells are
+    z-scored within their own (single-member) subpopulation, so the exact
+    value is 0.0 rather than a raw passthrough — see
+    test_fill_with_icr_zscores_dc_and_icr_subpopulations_separately for a
+    multi-member-subpopulation check of the ordering/scale contract."""
     from grid_resilience.data.dc_load_data import fill_with_icr
     dc_history = pd.DataFrame(
         {"PEG": [0.3], "WEC": [float("nan")]},
@@ -276,8 +282,8 @@ def test_fill_with_icr_fills_nan_columns_from_most_recent_icr():
         index=[pd.Timestamp("2020-03-01")],  # 92 days before as_of, past a 45d lag
     )
     result = fill_with_icr(dc_history, icr_history, lag_days=45)
-    assert result.loc[pd.Timestamp("2020-06-01"), "WEC"] == 4.0
-    assert result.loc[pd.Timestamp("2020-06-01"), "PEG"] == 0.3  # untouched — already had a value
+    assert pd.notna(result.loc[pd.Timestamp("2020-06-01"), "WEC"])  # filled, not NaN
+    assert pd.notna(result.loc[pd.Timestamp("2020-06-01"), "PEG"])  # untouched — already had a value
 
 
 def test_fill_with_icr_respects_reporting_lag():
@@ -301,3 +307,112 @@ def test_fill_with_icr_ticker_absent_from_icr_stays_nan():
     icr_history = pd.DataFrame({"WEC": [4.0]}, index=[pd.Timestamp("2020-03-01")])
     result = fill_with_icr(dc_history, icr_history, lag_days=45)
     assert pd.isna(result.loc[pd.Timestamp("2020-06-01"), "EVRG"])
+
+
+# ── Finding #2 (2026-08-13 review): DC/ICR subpopulations z-scored separately ──
+
+def test_fill_with_icr_zscores_dc_and_icr_subpopulations_separately():
+    """Raw DC ratios (~0.2-0.8) and raw ICR values (~1.5-4.0) must not be
+    concatenated and z-scored together — that crushes whichever subgroup has
+    less spread. Each subpopulation should independently have mean ~0 and
+    unit-ish std after fill_with_icr, and ordering within each group must be
+    preserved (higher raw value → higher z-score)."""
+    from grid_resilience.data.dc_load_data import fill_with_icr
+
+    date = pd.Timestamp("2020-06-01")
+    dc_history = pd.DataFrame(
+        {
+            "AEP": [0.8],   # real DC data, highest in DC group
+            "D":   [0.2],   # real DC data, lowest in DC group
+            "PEG": [float("nan")],  # to be filled from ICR
+            "WEC": [float("nan")],  # to be filled from ICR
+        },
+        index=[date],
+    )
+    icr_history = pd.DataFrame(
+        {"PEG": [4.0], "WEC": [1.5]},  # PEG highest ICR, WEC lowest
+        index=[pd.Timestamp("2020-03-01")],  # within lag window
+    )
+    result = fill_with_icr(dc_history, icr_history, lag_days=45)
+    row = result.loc[date]
+
+    # Ordering preserved within each subpopulation.
+    assert row["AEP"] > row["D"]
+    assert row["PEG"] > row["WEC"]
+
+    # Each subpopulation is independently centered — neither group is pinned
+    # near a constant offset because the other group has a different scale.
+    dc_group  = row[["AEP", "D"]]
+    icr_group = row[["PEG", "WEC"]]
+    assert abs(dc_group.mean()) < 1e-6
+    assert abs(icr_group.mean()) < 1e-6
+
+    # The two subpopulations no longer carry their raw absolute scale — a
+    # naive concatenate-then-zscore would leave the ICR group's z-scores
+    # dominated by its larger raw range (4.0 vs 1.5) relative to the DC
+    # group's (0.8 vs 0.2); after independent z-scoring both groups have the
+    # same normalized spread regardless of their original units.
+    assert abs(dc_group.iloc[0] - icr_group.iloc[0]) < 1e-6  # both +z (max of pair)
+    assert abs(dc_group.iloc[1] - icr_group.iloc[1]) < 1e-6  # both -z (min of pair)
+
+
+def test_fill_with_icr_docstring_contract_is_zscored_not_raw_passthrough():
+    """A single real DC value with no other DC-covered ticker that date has
+    no within-group spread — cross_section_zscore demeans it to 0.0. This
+    pins down the new (z-scored) contract explicitly, replacing the old
+    raw-passthrough assumption the previous test suite baked in."""
+    from grid_resilience.data.dc_load_data import fill_with_icr
+    dc_history = pd.DataFrame(
+        {"PEG": [0.3], "WEC": [float("nan")]},
+        index=[pd.Timestamp("2020-06-01")],
+    )
+    icr_history = pd.DataFrame(
+        {"WEC": [4.0]},
+        index=[pd.Timestamp("2020-03-01")],
+    )
+    result = fill_with_icr(dc_history, icr_history, lag_days=45)
+    # Single-member subpopulations demean to exactly 0 (cross_section_zscore's
+    # std==0 branch), not the raw input value.
+    assert result.loc[pd.Timestamp("2020-06-01"), "PEG"] == 0.0
+    assert result.loc[pd.Timestamp("2020-06-01"), "WEC"] == 0.0
+
+
+# ── Finding #11 (2026-08-13 review): realistic short-code zone_size fixture ──
+
+def test_zone_size_resolves_for_every_pjm_ticker_against_realistic_fixture():
+    """Build a zonal-load fixture the way fetch_zonal_load actually produces
+    one — i.e. already normalized from PJM's raw short codes via
+    _normalize_pjm_load_zone — and confirm zone_size() is non-NaN for every
+    PJM ticker's load_zones in TICKER_NODE_MAP. This is exactly the check
+    that would have caught finding #1 (only AEP/DOM/ATSI resolving, EXC/PPL/
+    PEG/FE's non-ATSI zones silently discarded) before it shipped."""
+    from grid_resilience.data.dc_load_data import zone_size
+    from grid_resilience.data.grid_data import _normalize_pjm_load_zone
+    from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
+
+    raw_short_codes = [
+        "AE", "AEP", "AP", "ATSI", "BC", "CE", "DAY", "DEOK", "DOM", "DPL",
+        "DUQ", "EKPC", "JC", "ME", "PE", "PEP", "PL", "PN", "PS", "RECO", "RTO",
+    ]
+    as_of = pd.Timestamp("2020-01-01")
+    rows = [
+        {
+            "time": as_of - pd.Timedelta(days=30),
+            "zone": _normalize_pjm_load_zone(code),
+            "load_mw": 1000.0,
+        }
+        for code in raw_short_codes
+    ]
+    zonal_load = pd.DataFrame(rows)
+
+    for ticker, info in TICKER_NODE_MAP.items():
+        if info.get("iso") != "PJM":
+            continue
+        zones = info.get("load_zones", [])
+        if not zones:
+            continue
+        result = zone_size(zonal_load, zones, as_of)
+        assert pd.notna(result), (
+            f"{ticker}'s load_zones {zones} resolved to NaN zone_size against "
+            "the realistic short-code-normalized fixture — a zone mapping gap."
+        )
