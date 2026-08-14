@@ -265,6 +265,31 @@ def test_compute_dc_load_signal_multi_zone_ticker_sums_zones():
     assert abs(result.loc[pd.Timestamp("2020-01-01"), "EXC"] - 0.6 * 0.2) < 1e-6
 
 
+def test_compute_dc_load_signal_warns_on_partial_zone_mismatch(capsys):
+    """One of a multi-zone ticker's zones has queued MW but no matching load
+    data, while the other zone resolves fine — the aggregate zone_size check
+    alone would miss this (total isn't NaN), so this needs its own warning."""
+    from grid_resilience.data.dc_load_data import compute_dc_load_signal
+    queue = pd.DataFrame([
+        _queue_row(zone="PECO", mw=400.0, submitted="2019-01-01"),
+        _queue_row(zone="BGE", mw=100.0, submitted="2019-01-01"),
+    ])
+    zonal_load = pd.DataFrame([
+        _zonal_load_row("PECO", "2019-06-15", 2000.0),
+        # BGE deliberately missing from the load feed
+    ])
+    node_map = _node_map(EXC={"iso": "PJM", "load_zones": ["PECO", "BGE"]})
+
+    compute_dc_load_signal(
+        tickers=["EXC"], node_map=node_map, queue=queue, zonal_load=zonal_load,
+        as_of_dates=[pd.Timestamp("2020-01-01")],
+    )
+    captured = capsys.readouterr()
+    assert "WARNING" in captured.out
+    assert "EXC" in captured.out
+    assert "'BGE'" in captured.out
+
+
 def test_fill_with_icr_fills_nan_columns_from_most_recent_icr():
     """Fills the NaN cell from ICR (not left NaN) and doesn't touch a cell
     that already had real DC data. Post-2026-08-13-fix, both cells are

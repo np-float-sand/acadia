@@ -183,6 +183,27 @@ def compute_dc_load_signal(
                 continue
             zones = info.get("load_zones", [])
             size = zone_size(zonal_load, zones, date)
+
+            # Per-zone check: catches a PARTIAL mapping mismatch (some of a
+            # multi-zone ticker's zones missing from the load feed while
+            # others resolve) — the failure mode that inflated AEP/FE's
+            # ratios undetected before this warning existed. The aggregate
+            # check below only catches a TOTAL mismatch (all zones missing).
+            for z in zones:
+                z_size = zone_size(zonal_load, [z], date)
+                z_queued = queued_mw(queue, z, date)
+                if z_queued > 0 and (not z_size or pd.isna(z_size) or z_size <= 0):
+                    print(
+                        f"  [WARNING] DC load signal: {ticker} zone {z!r} has "
+                        f"{z_queued:,.0f} MW queued but no matching load data "
+                        f"as of {date.date()}, while other zones for this ticker "
+                        "may resolve fine — the ratio is being computed against "
+                        "an incomplete zone set. This is always a zone-name "
+                        "mapping gap between the queue (TICKER_NODE_MAP "
+                        "vocabulary) and the zonal-load feed (PJM short codes). "
+                        "Check _PJM_LOAD_ZONE_ALIASES in grid_data.py."
+                    )
+
             if not size or pd.isna(size) or size <= 0:
                 queued_check = sum(queued_mw(queue, z, date) for z in zones)
                 if queued_check > 0:
