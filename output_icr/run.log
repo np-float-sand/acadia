@@ -1,0 +1,550 @@
+[log] Run log → /Users/sandhyapersad/acadia/output_icr/run.log
+
+[1/7] Fetching equity prices…
+/Users/sandhyapersad/acadia/grid_resilience/main.py:153: RuntimeWarning: [equity] Clipped 3 extreme daily returns (|log| > 0.4): [('NRG', '2025-06-02'), ('PCG', '2019-01-14'), ('PCG', '2019-01-24')]
+  all_returns = fetch_returns(fetch_tickers, start, end)
+
+  [arch] Business-model arch: 'hard_switch' — ICR auto-enabled for regulated path
+
+[2/7] Fetching grid LMP and load data…
+
+[3/7] Building stress event calendar…
+  121 events identified ({'congestion': 80, 'lmp_spike': 34, 'cold': 4, 'heat': 2, 'hurricane': 1})
+
+[4/7] Computing Grid Stress Index…
+  SPP: 83 high-stress days (GSI ≥ 0.6) in period
+  CAISO: 277 high-stress days (GSI ≥ 0.6) in period
+  ERCOT: 698 high-stress days (GSI ≥ 0.6) in period
+  PJM: 729 high-stress days (GSI ≥ 0.6) in period
+  MISO: 347 high-stress days (GSI ≥ 0.6) in period
+
+[5/7] Estimating stress betas…
+
+[6/7] Building Grid Resilience factor scores…
+  Fetching regulated-path signal (icr)…
+  ICR data: 7 quarters, 23 tickers
+
+  Latest factor scores:
+    AEE   ▲ +1.761  ████████
+    EVRG  ▲ +1.740  ████████
+    PEG   ▲ +1.155  █████
+    ETR   ▲ +1.073  █████
+    FE    ▲ +0.505  ██
+    AEP   ▲ +0.327  █
+    EIX   ▲ +0.301  █
+    D     ▲ +0.200  
+    EXC   ▼ -0.036  
+    PPL   ▼ -0.061  
+    CMS   ▼ -0.342  █
+    XEL   ▼ -0.529  ██
+    DTE   ▼ -0.535  ██
+    NRG   ▼ -0.670  ███
+    WEC   ▼ -0.742  ███
+    CNP   ▼ -0.979  ████
+    PCG   ▼ -1.243  ██████
+    VST   ▼ -1.924  █████████
+
+[7/7] Constructing portfolio and running backtest…
+[ic] dates: 93  |  5d: 87 pts  |  10d: 87 pts  |  21d: 87 pts  |  63d: 85 pts
+
+=======================================================
+  GRID RESILIENCE STRATEGY — PERFORMANCE SUMMARY
+=======================================================
+
+  Full Period:
+    ann_return     :    0.80%
+    ann_vol        :   11.57%
+    sharpe         :  -0.276
+    sortino        :  -0.325
+    max_dd         :  -21.93%
+    hit_rate       :    49.4%
+
+  Benchmark (XLU):
+    ann_return     :    7.90%
+    ann_vol        :   24.01%
+    sharpe         :   0.162
+    sortino        :   0.182
+    max_dd         :  -36.47%
+    hit_rate       :    48.4%
+
+  EW Universe:
+    ann_return     :    8.42%
+    ann_vol        :   20.44%
+    sharpe         :   0.216
+    sortino        :   0.253
+    max_dd         :  -38.78%
+    hit_rate       :    55.2%
+
+  Stress Periods:
+    ann_return     :    0.06%
+    ann_vol        :   13.75%
+    sharpe         :  -0.286
+    sortino        :  -0.344
+    max_dd         :  -21.93%
+    hit_rate       :    51.5%
+
+  Calm Periods:
+    ann_return     :    1.84%
+    ann_vol        :    7.51%
+    sharpe         :  -0.287
+    sortino        :  -0.353
+    max_dd         :   -8.23%
+    hit_rate       :    46.4%
+
+  Stress days: 1173 / 2010 (58.4%)
+
+  Stress vs Calm — significance tests:
+    Test                         p-value  Sig
+    --------------------------  --------  ---
+    Welch t (mean return)         0.8142     
+    Levene  (volatility)          0.0000   ***
+    Mann-Whitney U (distrib)      0.7901      
+    Significance: * p<0.10  ** p<0.05  *** p<0.01
+=======================================================
+
+
+==============================================================
+  FACTOR SCORE IC (vs. Forward Returns)
+==============================================================
+  Horizon     Mean IC   Std IC   t-stat   % Pos     N
+  ---------- -------- -------- -------- ------- -----
+  5d           0.0361   0.3668    0.919   49.4%    87
+  10d          0.0334   0.3868    0.805   56.3%    87
+  21d          0.0615   0.4548    1.261   62.1%    87
+  63d          0.1028   0.4359    2.174   64.7%    85
+
+  Conditional IC by GSI regime:
+  Horizon    Regime      Mean IC   t-stat     N
+  ---------- ---------- -------- -------- -----
+  5d         stressed     0.0299    0.714    74
+  5d         calm         0.0717    0.621    13
+  10d        stressed     0.0236    0.521    74
+  10d        calm         0.0889    0.843    13
+  21d        stressed     0.0745    1.422    74
+  21d        calm        -0.0125   -0.092    13
+  63d        stressed     0.0881    1.775    72
+  63d        calm         0.1838    1.271    13
+
+  Signal comparison (IC @ 21d fwd  |  EW/Bench IC = 0 by construction):
+  Signal                       IC   t-stat   Sharpe   Ann Ret   Max DD
+  ---------------------- -------- -------- -------- --------- --------
+  Factor (L/S)             0.0615    1.261   -0.276    0.80%  -21.93%
+  Benchmark (XLU)           0.0000       —    0.162    7.90%  -36.47%
+  EW Universe               0.0000       —    0.216    8.42%  -38.78%
+==============================================================
+
+ntering _get_cookie_and_crumb()
+2026-08-14 06:37:53 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:53 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:53 - DEBUG - reusing cookie
+2026-08-14 06:37:53 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:53 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:53 - DEBUG - reusing crumb
+2026-08-14 06:37:53 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:53 - DEBUG - response code=200
+2026-08-14 06:37:53 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:53 - DEBUG -  Exiting get()
+2026-08-14 06:37:53 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:53 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:53 - DEBUG -  Entering get()
+2026-08-14 06:37:53 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:53 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/AEP?symbol=AEP&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:53 - DEBUG - params=None
+2026-08-14 06:37:53 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:53 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:53 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:53 - DEBUG - reusing cookie
+2026-08-14 06:37:53 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:53 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:53 - DEBUG - reusing crumb
+2026-08-14 06:37:53 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:53 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - response code=200
+2026-08-14 06:37:54 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:54 - DEBUG -  Exiting get()
+2026-08-14 06:37:54 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG -  Entering get()
+2026-08-14 06:37:54 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:54 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/EXC?symbol=EXC&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:54 - DEBUG - params=None
+2026-08-14 06:37:54 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:54 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG - reusing cookie
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG - reusing crumb
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - response code=200
+2026-08-14 06:37:54 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:54 - DEBUG -  Exiting get()
+2026-08-14 06:37:54 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG -  Entering get()
+2026-08-14 06:37:54 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:54 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/PPL?symbol=PPL&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:54 - DEBUG - params=None
+2026-08-14 06:37:54 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:54 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG - reusing cookie
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG - reusing crumb
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - response code=200
+2026-08-14 06:37:54 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:54 - DEBUG -  Exiting get()
+2026-08-14 06:37:54 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG -  Entering get()
+2026-08-14 06:37:54 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:54 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/FE?symbol=FE&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNormali...
+2026-08-14 06:37:54 - DEBUG - params=None
+2026-08-14 06:37:54 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:54 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG - reusing cookie
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG - reusing crumb
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - response code=200
+2026-08-14 06:37:54 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:54 - DEBUG -  Exiting get()
+2026-08-14 06:37:54 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG -  Entering get()
+2026-08-14 06:37:54 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:54 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/ETR?symbol=ETR&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:54 - DEBUG - params=None
+2026-08-14 06:37:54 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:54 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG - reusing cookie
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG - reusing crumb
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - response code=200
+2026-08-14 06:37:54 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:54 - DEBUG -  Exiting get()
+2026-08-14 06:37:54 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:54 - DEBUG -  Entering get()
+2026-08-14 06:37:54 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:54 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/WEC?symbol=WEC&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:54 - DEBUG - params=None
+2026-08-14 06:37:54 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:54 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:54 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG - reusing cookie
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:54 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG - reusing crumb
+2026-08-14 06:37:54 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:54 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - response code=200
+2026-08-14 06:37:55 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:55 - DEBUG -  Exiting get()
+2026-08-14 06:37:55 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG -  Entering get()
+2026-08-14 06:37:55 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:55 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/DTE?symbol=DTE&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:55 - DEBUG - params=None
+2026-08-14 06:37:55 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:55 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG - reusing cookie
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG - reusing crumb
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - response code=200
+2026-08-14 06:37:55 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:55 - DEBUG -  Exiting get()
+2026-08-14 06:37:55 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG -  Entering get()
+2026-08-14 06:37:55 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:55 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/CMS?symbol=CMS&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:55 - DEBUG - params=None
+2026-08-14 06:37:55 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:55 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG - reusing cookie
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG - reusing crumb
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - response code=200
+2026-08-14 06:37:55 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:55 - DEBUG -  Exiting get()
+2026-08-14 06:37:55 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG -  Entering get()
+2026-08-14 06:37:55 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:55 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/PCG?symbol=PCG&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:55 - DEBUG - params=None
+2026-08-14 06:37:55 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:55 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG - reusing cookie
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG - reusing crumb
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - response code=200
+2026-08-14 06:37:55 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:55 - DEBUG -  Exiting get()
+2026-08-14 06:37:55 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG -  Entering get()
+2026-08-14 06:37:55 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:55 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/EIX?symbol=EIX&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:55 - DEBUG - params=None
+2026-08-14 06:37:55 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:55 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG - reusing cookie
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG - reusing crumb
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - response code=200
+2026-08-14 06:37:55 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:55 - DEBUG -  Exiting get()
+2026-08-14 06:37:55 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:55 - DEBUG -  Entering get()
+2026-08-14 06:37:55 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:55 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/XEL?symbol=XEL&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:55 - DEBUG - params=None
+2026-08-14 06:37:55 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:55 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:55 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG - reusing cookie
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:55 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG - reusing crumb
+2026-08-14 06:37:55 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:55 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - response code=200
+2026-08-14 06:37:56 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:56 - DEBUG -  Exiting get()
+2026-08-14 06:37:56 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG -  Entering get()
+2026-08-14 06:37:56 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:56 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/ES?symbol=ES&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNormali...
+2026-08-14 06:37:56 - DEBUG - params=None
+2026-08-14 06:37:56 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:56 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG - reusing cookie
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG - reusing crumb
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - response code=200
+2026-08-14 06:37:56 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:56 - DEBUG -  Exiting get()
+2026-08-14 06:37:56 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG -  Entering get()
+2026-08-14 06:37:56 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:56 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/ED?symbol=ED&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNormali...
+2026-08-14 06:37:56 - DEBUG - params=None
+2026-08-14 06:37:56 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:56 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG - reusing cookie
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG - reusing crumb
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - response code=200
+2026-08-14 06:37:56 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:56 - DEBUG -  Exiting get()
+2026-08-14 06:37:56 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG -  Entering get()
+2026-08-14 06:37:56 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:56 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/D?symbol=D&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNormalize...
+2026-08-14 06:37:56 - DEBUG - params=None
+2026-08-14 06:37:56 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:56 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG - reusing cookie
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG - reusing crumb
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - response code=200
+2026-08-14 06:37:56 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:56 - DEBUG -  Exiting get()
+2026-08-14 06:37:56 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:56 - DEBUG -  Entering get()
+2026-08-14 06:37:56 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:56 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/PEG?symbol=PEG&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:56 - DEBUG - params=None
+2026-08-14 06:37:56 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:56 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:56 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG - reusing cookie
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:56 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG - reusing crumb
+2026-08-14 06:37:56 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:56 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - response code=200
+2026-08-14 06:37:57 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:57 - DEBUG -  Exiting get()
+2026-08-14 06:37:57 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG -  Entering get()
+2026-08-14 06:37:57 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:57 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/AEE?symbol=AEE&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:57 - DEBUG - params=None
+2026-08-14 06:37:57 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:57 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG - reusing cookie
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG - reusing crumb
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - response code=200
+2026-08-14 06:37:57 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:57 - DEBUG -  Exiting get()
+2026-08-14 06:37:57 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG -  Entering get()
+2026-08-14 06:37:57 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:57 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/EVRG?symbol=EVRG&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNor...
+2026-08-14 06:37:57 - DEBUG - params=None
+2026-08-14 06:37:57 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:57 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG - reusing cookie
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG - reusing crumb
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - response code=200
+2026-08-14 06:37:57 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:57 - DEBUG -  Exiting get()
+2026-08-14 06:37:57 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG -  Entering get()
+2026-08-14 06:37:57 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:57 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/DUK?symbol=DUK&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:57 - DEBUG - params=None
+2026-08-14 06:37:57 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:57 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG - reusing cookie
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG - reusing crumb
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - response code=200
+2026-08-14 06:37:57 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:57 - DEBUG -  Exiting get()
+2026-08-14 06:37:57 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:57 - DEBUG -  Entering get()
+2026-08-14 06:37:57 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:57 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/SO?symbol=SO&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNormali...
+2026-08-14 06:37:57 - DEBUG - params=None
+2026-08-14 06:37:57 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:57 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:57 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG - reusing cookie
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:57 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG - reusing crumb
+2026-08-14 06:37:57 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:57 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:58 - DEBUG - response code=200
+2026-08-14 06:37:58 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:58 - DEBUG -  Exiting get()
+2026-08-14 06:37:58 - DEBUG - Exiting _fetch_time_series()
+2026-08-14 06:37:58 - DEBUG - Entering _fetch_time_series()
+2026-08-14 06:37:58 - DEBUG -  Entering get()
+2026-08-14 06:37:58 - DEBUG -   Entering _make_request()
+2026-08-14 06:37:58 - DEBUG - url=https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/NEE?symbol=NEE&type=quarterlyTaxEffectOfUnusualItems,quarterlyTaxRateForCalcs,quarterlyNormalizedEBITDA,quarterlyNorma...
+2026-08-14 06:37:58 - DEBUG - params=None
+2026-08-14 06:37:58 - DEBUG -    Entering _get_cookie_and_crumb()
+2026-08-14 06:37:58 - DEBUG - cookie_mode = 'basic'
+2026-08-14 06:37:58 - DEBUG -     Entering _get_cookie_and_crumb_basic()
+2026-08-14 06:37:58 - DEBUG -      Entering _get_cookie_basic()
+2026-08-14 06:37:58 - DEBUG - reusing cookie
+2026-08-14 06:37:58 - DEBUG -      Exiting _get_cookie_basic()
+2026-08-14 06:37:58 - DEBUG -      Entering _get_crumb_basic()
+2026-08-14 06:37:58 - DEBUG - reusing crumb
+2026-08-14 06:37:58 - DEBUG -      Exiting _get_crumb_basic()
+2026-08-14 06:37:58 - DEBUG -     Exiting _get_cookie_and_crumb_basic()
+2026-08-14 06:37:58 - DEBUG -    Exiting _get_cookie_and_crumb()
+2026-08-14 06:37:58 - DEBUG - response code=200
+2026-08-14 06:37:58 - DEBUG -   Exiting _make_request()
+2026-08-14 06:37:58 - DEBUG -  Exiting get()
+2026-08-14 06:37:58 - DEBUG - Exiting _fetch_time_series()
