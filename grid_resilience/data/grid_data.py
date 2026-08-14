@@ -513,6 +513,45 @@ def fetch_load(
     return _filter_time(merged, start, end)
 
 
+def _fetch_zonal_load_raw(api_key: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Wraps _fetch_pjm_load_by_zone_direct with the same try/except-returns-empty
+    pattern used by every other PJM fetcher in this module (_fetch_lmp_raw,
+    _fetch_load_raw) so a missing PJM_API_KEY or PJM outage doesn't crash the
+    whole run — it just leaves the DC load signal unpopulated for the month.
+    """
+    try:
+        return _fetch_pjm_load_by_zone_direct(api_key, start, end)
+    except Exception as exc:
+        print(f"  [grid] PJM zonal load fetch failed: {exc}")
+        return pd.DataFrame(columns=["time", "zone", "load_mw"])
+
+
+# PJM's hrl_load_metered feed reports zones under short codes that don't match
+# TICKER_NODE_MAP's zone names (e.g. "PS" not "PSEG"). Verified against the
+# actual cached hrl_load_metered vocabulary — see finding #1 of the
+# 2026-08-13 whole-branch review. AEP, ATSI, DOM (and others not listed here,
+# e.g. AE, AP, DEOK, DPL, DUQ, EKPC, ME, PN, RECO, RTO) already match
+# TICKER_NODE_MAP directly or aren't used by any covered ticker's load_zones.
+_PJM_LOAD_ZONE_ALIASES = {
+    "PS":  "PSEG",
+    "PL":  "PPL",
+    "PE":  "PECO",
+    "BC":  "BGE",
+    "PEP": "PEPCO",
+    "CE":  "COMED",
+    "JC":  "JCPL",
+    "DAY": "DAYTON",
+}
+
+
+def _normalize_pjm_load_zone(zone):
+    """Map a raw PJM hrl_load_metered zone code to its TICKER_NODE_MAP name."""
+    if not isinstance(zone, str):
+        return zone
+    return _PJM_LOAD_ZONE_ALIASES.get(zone, zone)
+
+
 def fetch_zonal_load(
     start: str,
     end: str,
@@ -522,6 +561,11 @@ def fetch_zonal_load(
     Fetch PJM hourly load broken out by zone. PJM-only (other ISOs return empty) —
     used for the DC load signal's zone-size denominator.
     Returns DataFrame with columns: time, zone, load_mw
+
+    The `zone` column is normalized to TICKER_NODE_MAP's zone-name vocabulary
+    via _PJM_LOAD_ZONE_ALIASES (applied here, once, at the fetch boundary —
+    including for rows already sitting in the on-disk cache under PJM's raw
+    short codes — rather than scattered across callers).
     """
     cache_base = _cache_path("PJM", "load_zonal")
     api_key = os.environ.get("PJM_API_KEY", "")
@@ -532,7 +576,7 @@ def fetch_zonal_load(
             def _fetch_month(ym: tuple[int, int]) -> None:
                 time.sleep(12)
                 ms, me = month_bounds(*ym)
-                df = _fetch_pjm_load_by_zone_direct(api_key, ms, me)
+                df = _fetch_zonal_load_raw(api_key, ms, me)
                 if not df.empty:
                     save_monthly_chunks(df, cache_base, "time")
 
@@ -541,9 +585,13 @@ def fetch_zonal_load(
 
         merged = read_monthly_cache(cache_base, start, end)
     else:
-        merged = _fetch_pjm_load_by_zone_direct(api_key, start, end)
+        merged = _fetch_zonal_load_raw(api_key, start, end)
 
-    return _filter_time(merged, start, end)
+    merged = _filter_time(merged, start, end)
+    if not merged.empty and "zone" in merged.columns:
+        merged = merged.copy()
+        merged["zone"] = merged["zone"].apply(_normalize_pjm_load_zone)
+    return merged
 
 
 def fetch_fuel_mix(

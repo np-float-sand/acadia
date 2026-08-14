@@ -19,6 +19,11 @@ from grid_resilience.config import (
     DC_LEVEL_WEIGHT,
     DC_MOMENTUM_WEIGHT,
 )
+from grid_resilience.factor.neutralize import cross_section_zscore
+
+_QUEUE_CLEANED_COLUMNS = [
+    "zone", "mw_capacity", "submitted_date", "withdrawal_date", "actual_in_service_date",
+]
 
 # PJM interconnection queue "Transmission Owner" strings that don't uppercase
 # to their matching TICKER_NODE_MAP zone name.
@@ -81,15 +86,28 @@ def fetch_interconnection_queue(use_cache: bool = True) -> pd.DataFrame:
     """
     Fetch and clean the PJM interconnection queue.
     Cached for 1 day (queue updates weekly; daily freshness is more than enough).
+
+    Returns an empty DataFrame (matching the cleaned-queue schema) if the raw
+    fetch fails (e.g. missing PJM_API_KEY, PJM outage, or PJM's Excel export
+    schema drifting again) instead of raising — mirrors the try/except-returns-
+    empty pattern used by every PJM fetcher in grid_data.py. A failed/empty
+    fetch is never written to the cache, so a transient failure doesn't get
+    silently served for 24 hours.
     """
-    today = pd.Timestamp.now().normalize()
+    now_utc = pd.Timestamp.now(tz="UTC")
     if use_cache and _QUEUE_CACHE_FILE.exists():
-        age_days = (today - pd.Timestamp(_QUEUE_CACHE_FILE.stat().st_mtime, unit="s").normalize()).days
+        mtime_utc = pd.Timestamp(_QUEUE_CACHE_FILE.stat().st_mtime, unit="s", tz="UTC")
+        age_days = (now_utc - mtime_utc).total_seconds() / 86400.0
         if age_days < 1:
             return pd.read_parquet(_QUEUE_CACHE_FILE)
 
-    cleaned = _clean_queue(_load_raw_queue())
-    if use_cache:
+    try:
+        cleaned = _clean_queue(_load_raw_queue())
+    except Exception as exc:
+        print(f"  [dc_load] Interconnection queue fetch failed: {exc}")
+        return pd.DataFrame(columns=_QUEUE_CLEANED_COLUMNS)
+
+    if use_cache and not cleaned.empty:
         cleaned.to_parquet(_QUEUE_CACHE_FILE)
     return cleaned
 
@@ -166,6 +184,17 @@ def compute_dc_load_signal(
             zones = info.get("load_zones", [])
             size = zone_size(zonal_load, zones, date)
             if not size or pd.isna(size) or size <= 0:
+                queued_check = sum(queued_mw(queue, z, date) for z in zones)
+                if queued_check > 0:
+                    print(
+                        f"  [WARNING] DC load signal: {ticker} has "
+                        f"{queued_check:,.0f} MW queued in zones {zones} but "
+                        f"zone_size is NaN/0 as of {date.date()}. This combination "
+                        "is always a zone-name mapping bug between the queue "
+                        "(TICKER_NODE_MAP vocabulary) and the zonal-load feed "
+                        "(PJM short codes) — never legitimate missing data. "
+                        "Check _PJM_LOAD_ZONE_ALIASES in grid_data.py."
+                    )
                 row[ticker] = float("nan")
                 continue
             level = sum(queued_mw(queue, z, date) for z in zones) / size
@@ -186,22 +215,50 @@ def fill_with_icr(
     Fill NaN cells in dc_history (non-PJM tickers, or PJM tickers with no
     zone-size data yet) using each ticker's own most-recent ICR reading as
     of (date - lag_days), instead of build_factor()'s flat cross-sectional
-    mean fallback. Preserves real per-ticker differentiation for the 8 of 14
-    regulated tickers the DC signal doesn't cover in v1 (see design spec).
+    mean fallback. Preserves real per-ticker differentiation for the tickers
+    the DC signal doesn't cover (see design spec).
+
+    IMPORTANT — normalization contract (fixed 2026-08-13, see finding #2 of
+    the whole-branch review): raw DC ratios (~0.3-1.1) and raw ICR values
+    (~1.5-4.0) are two different-scale populations. Concatenating them into
+    one series and z-scoring once biases the comparison — it pins one
+    subpopulation near a near-constant offset and crushes the other's
+    internal dispersion. To avoid that, this function cross-sectionally
+    z-scores the DC-covered subpopulation and the ICR-filled subpopulation
+    *separately*, each within its own ticker set, on every date, BEFORE
+    merging them into one output series. The two subpopulations are
+    therefore already on a comparable scale (mean 0, std 1 within each
+    group) by the time they're combined, so any downstream z-scoring
+    (e.g. resilience_score.build_factor's winsorize+zscore) operates on a
+    single coherent population rather than a bimodal mixture.
+
+    Returns a per-date, per-subpopulation z-scored series (not raw ratios/
+    ICR values) — callers relying on raw pass-through values must be updated.
     """
     result = dc_history.copy()
-    if icr_history is None or icr_history.empty:
-        return result
 
-    icr_sorted = icr_history.sort_index()
+    icr_sorted = icr_history.sort_index() if (icr_history is not None and not icr_history.empty) else None
+
     for date in result.index:
-        cutoff = date - pd.Timedelta(days=lag_days)
-        available = icr_sorted[icr_sorted.index <= cutoff]
-        if available.empty:
-            continue
-        icr_row = available.iloc[-1]
-        row = result.loc[date]
-        for ticker in row[row.isna()].index:
-            if ticker in icr_row.index and pd.notna(icr_row[ticker]):
-                result.loc[date, ticker] = icr_row[ticker]
+        row = dc_history.loc[date]
+        dc_vals = row.dropna()
+
+        icr_vals = pd.Series(dtype=float)
+        if icr_sorted is not None:
+            cutoff = date - pd.Timedelta(days=lag_days)
+            available = icr_sorted[icr_sorted.index <= cutoff]
+            if not available.empty:
+                icr_row = available.iloc[-1]
+                nan_tickers = row[row.isna()].index
+                candidates = {
+                    t: icr_row[t] for t in nan_tickers
+                    if t in icr_row.index and pd.notna(icr_row[t])
+                }
+                icr_vals = pd.Series(candidates, dtype=float)
+
+        if not dc_vals.empty:
+            result.loc[date, dc_vals.index] = cross_section_zscore(dc_vals)
+        if not icr_vals.empty:
+            result.loc[date, icr_vals.index] = cross_section_zscore(icr_vals)
+
     return result
