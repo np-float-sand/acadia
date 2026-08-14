@@ -110,7 +110,7 @@ from grid_resilience.signals.conditional_beta import (
     rolling_stress_betas, compute_stress_betas,
 )
 from grid_resilience.factor.resilience_score import (
-    build_factor, build_rolling_factor,
+    build_factor, build_rolling_factor, _ICR_LAG_DAYS,
 )
 from grid_resilience.portfolio.construction import (
     build_rolling_weights, weights_to_matrix, portfolio_summary,
@@ -305,8 +305,15 @@ def run(
 
     # ── 6. Factor scores ──────────────────────────────────────────────────────
     print("\n[6/7] Building Grid Resilience factor scores…")
+    if regulated_signal not in ("icr", "dc_queue"):
+        raise ValueError(
+            f"Unrecognized regulated_signal={regulated_signal!r}. "
+            "Expected 'icr' or 'dc_queue' (note: underscore form, not the "
+            "CLI's hyphenated 'dc-queue')."
+        )
+
     icr_history = None
-    regulated_signal_lag_days = 45
+    regulated_signal_lag_days = _ICR_LAG_DAYS
     if use_icr:
         print(f"  Fetching regulated-path signal ({regulated_signal})…")
         icr_history = fetch_icr(universe_tickers)
@@ -317,18 +324,36 @@ def run(
 
         if regulated_signal == "dc_queue":
             queue = fetch_interconnection_queue()
-            zonal_load = fetch_zonal_load(start, end)
-            dc_history = compute_dc_load_signal(
-                tickers=universe_tickers,
-                node_map=TICKER_NODE_MAP,
-                queue=queue,
-                zonal_load=zonal_load,
-                as_of_dates=list(rebalance_dates),
-            )
-            icr_history = fill_with_icr(dc_history, icr_history, lag_days=45)
-            regulated_signal_lag_days = 0
-            print(f"  DC load signal: {dc_history.notna().any().sum()} PJM tickers with real data, "
-                  f"{(icr_history.notna().any() & dc_history.isna().all()).sum()} filled from ICR")
+            # zone_size() looks back 365 days from each as_of, so the zonal-load
+            # fetch must start a year before the backtest start — otherwise the
+            # first backtest year sees a partial, seasonally-biased window.
+            zonal_load_start = (pd.Timestamp(start) - pd.DateOffset(years=1)).strftime("%Y-%m-%d")
+            zonal_load = fetch_zonal_load(zonal_load_start, end)
+
+            if queue.empty or zonal_load.empty:
+                print(
+                    "  [WARNING] DC load signal unavailable — "
+                    f"{'interconnection queue' if queue.empty else ''}"
+                    f"{' and ' if queue.empty and zonal_load.empty else ''}"
+                    f"{'zonal load' if zonal_load.empty else ''} fetch came back "
+                    "empty (missing PJM_API_KEY, PJM outage, or schema drift). "
+                    "Falling back to regulated_signal='icr' for this run."
+                )
+            else:
+                dc_history = compute_dc_load_signal(
+                    tickers=universe_tickers,
+                    node_map=TICKER_NODE_MAP,
+                    queue=queue,
+                    zonal_load=zonal_load,
+                    as_of_dates=list(rebalance_dates),
+                )
+                merged_history = fill_with_icr(dc_history, icr_history, lag_days=_ICR_LAG_DAYS)
+                n_real   = int(dc_history.notna().any().sum())
+                n_filled = int((merged_history.notna().any() & dc_history.isna().all()).sum())
+                print(f"  DC load signal: {n_real} PJM tickers with real data, "
+                      f"{n_filled} filled from ICR")
+                icr_history = merged_history
+                regulated_signal_lag_days = 0
 
     rolling_factors = build_rolling_factor(
         rolling_betas,
@@ -428,7 +453,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument(
         "--regulated-signal",
         dest="regulated_signal",
-        default=REGULATED_SIGNAL,
+        default=REGULATED_SIGNAL.replace("_", "-"),
         choices=["icr", "dc-queue"],
         help="Signal used for the regulated path of --arch hard-switch "
              f"(default: {REGULATED_SIGNAL.replace('_', '-')})",
