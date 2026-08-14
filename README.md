@@ -127,13 +127,23 @@ python -m grid_resilience.main
 
 **All CLI options:**
 ```
---iso    ERCOT PJM MISO CAISO SPP   ISOs to include (default: all 5)
---start  YYYY-MM-DD                 Backtest start (default: 2018-01-01)
---end    YYYY-MM-DD                 Backtest end (default: 2026-05-27)
---long   N                          Long book size (default: 3)
---short  N                          Short book size (default: 5)
---no-plot                           Skip matplotlib charts
---output PATH                       Output directory (default: ./output)
+--iso              ERCOT PJM MISO CAISO SPP   ISOs to include (default: all 5)
+--start            YYYY-MM-DD                 Backtest start (default: 2018-01-01)
+--end              YYYY-MM-DD                 Backtest end (default: 2026-05-27)
+--long             N                          Long book size (default: 3)
+--short            N                          Short book size (default: 5)
+--xlu-hedge / --no-xlu-hedge                  Replace short book with -0.5 XLU hedge (default: off)
+--icr / --no-icr                              Include interest coverage ratio as a factor component (default: off)
+--zone-gsi / --no-zone-gsi                    Per-ticker PJM zone GSI instead of shared system-hub GSI (default: on)
+--arch             hard-switch|revenue-mix|dual-track
+                                               Business-model-aware signal architecture (default: none — original
+                                               stress-beta-only behaviour). Auto-enables --icr when set.
+--regulated-signal icr|dc-queue               Signal used for the regulated path of --arch hard-switch
+                                               (default: dc-queue). dc-queue proxies data-center load growth from PJM's
+                                               interconnection queue for PJM tickers, falling back to ICR elsewhere —
+                                               see docs/superpowers/specs/2026-07-06-dc-load-signal-design.md.
+--no-plot                                     Skip matplotlib charts
+--output           PATH                       Output directory (default: ./output)
 ```
 
 ### 4. Outputs
