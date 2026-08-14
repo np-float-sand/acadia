@@ -56,27 +56,35 @@ All 8 tasks reviewed clean (no unresolved Critical/Important findings). Task 3's
 
 ### Results (on today's complete-but-drifting data — see Part 1 caveat)
 
+**Caveat — ICR baseline has almost no historical coverage.** The cached ICR frame (`grid_resilience/data/cache/icr_*.parquet`) only has usable values from 2024-12-31 onward (7 quarters; yfinance's ~4-12 quarter depth limit, already noted generally in CLAUDE.md). For roughly the first 85% of the 2018-2025 backtest window, the "Hard switch + ICR" configuration has NO regulated-path signal at all and silently falls back to `build_factor()`'s flat cross-sectional-mean fill for every regulated ticker on every date before 2025. The table below is therefore not an apples-to-apples full-history comparison — it mostly measures 2025 behavior for the ICR row, versus full-history behavior for the DC-queue row (once #1/#2 below are fixed, the DC-queue signal has real PJM zonal-load coverage back to 2018).
+
+**⚠️ 2026-08-13 UPDATE — the numbers above were WRONG. A whole-branch review found a Critical zone-name-mismatch bug (finding #1) plus an Important z-score-mixing bug (finding #2) in the DC load signal path; both are now fixed. See `.superpowers/sdd/final-review-findings.md` and `.superpowers/sdd/final-review-fix-report.md` for the full account. Corrected numbers below supersede the table that used to be here.**
+
+Root cause of the original bug: `hrl_load_metered`'s `zone` field uses PJM's short codes (`PS`, `PL`, `PE`, `BC`, `PEP`, `CE`, `JC`, `DAY`), which don't match `TICKER_NODE_MAP`'s zone names (`PSEG`, `PPL`, `PECO`, `BGE`, `PEPCO`, `COMED`, `JCPL`, `DAYTON`) except for `AEP`, `ATSI`, `DOM`. EXC, PPL, and PEG were silently getting NO DC signal at all (fell through to ICR); AEP and FE had a numerator/denominator zone mismatch. Only 3 of 6 PJM tickers were actually on the DC path (log said "3 PJM tickers with real data"). Fixed with a `_PJM_LOAD_ZONE_ALIASES` map applied at the `fetch_zonal_load()` boundary in `grid_data.py`. Separately, `fill_with_icr` was concatenating raw DC ratios (~0.3-1.1) and raw ICR values (~1.5-4.0) into one series before a single z-score — now z-scores each subpopulation separately before merging.
+
 | Configuration | Sharpe | Ann Ret | Max DD | IC@21d | IC@63d |
 |---|---|---|---|---|---|
 | Hard switch + ICR | -0.276 | 0.80% | -21.93% | 0.0615 (t=1.261) | 0.1028 (t=2.174) |
-| Hard switch + DC load signal | 0.043 | 4.46% | -17.55% | 0.0274 (t=0.715) | 0.0770 (t=2.111) |
+| Hard switch + DC load signal (post-fix) | -0.213 | 2.06% | -19.63% | 0.0290 (t=0.766) | 0.0680 (t=2.008) |
 
-**Mixed result.** DC load signal improves Sharpe (+0.32) and Max DD (+4.4pp) over ICR, but has *weaker* IC at both horizons (21d: 0.027 vs 0.061; 63d: 0.077 vs 0.103). This does not cleanly clear the design spec's original success bar ("IC improves vs. baseline") — it trades signal purity for portfolio-level risk-adjusted return. Worth another look once Part 1's data issues are resolved, since both configurations' absolute levels are suspect right now.
+**Still a mixed result, now on correct data.** DC load signal improves Sharpe (+0.06), Ann Ret (+1.26pp), and Max DD (+2.3pp) over ICR, but still has *weaker* IC at both horizons (21d: 0.029 vs 0.062; 63d: 0.068 vs 0.103) — qualitatively the same shape as the pre-fix (buggy) numbers, though every absolute value moved. This still does not cleanly clear the design spec's original success bar ("IC improves vs. baseline"). "DC load signal: 6 PJM tickers with real data, 17 filled from ICR" confirms all 6 PJM tickers (AEP, D, EXC, FE, PPL, PEG) are now genuinely on the DC path, so this comparison is at least measuring the feature as designed — but it remains an ICR-vs-DC-coverage comparison that leans heavily on 2025 data for the ICR side (see coverage caveat above), so treat both numbers as provisional.
 
 ### Qualitative check — the actual motivation for this feature
-Latest rebalance (2025-12-31) factor scores under `--regulated-signal dc-queue`:
+**⚠️ RETRACTED (2026-08-13):** The PEG claim below was measured while PEG was silently on the ICR fallback path (finding #1's zone-mismatch bug), not the DC signal — it was never evidence about the DC load signal at all. Corrected latest rebalance (2025-12-31) factor scores under `--regulated-signal dc-queue`, post-fix, with all 6 PJM tickers genuinely on the DC path:
 
 ```
-AEE   1.50   EVRG  1.49   PEG   1.13  ← long
-ETR   1.08   EIX   0.61   EXC   0.40
-PPL   0.39   CMS   0.22   XEL   0.10
-DTE   0.10   WEC  -0.03   CNP  -0.17
-PCG  -0.45   NRG  -0.60   FE   -1.03
-AEP  -1.39   D    -1.44   VST  -1.91  ← short
+FE    1.842   AEE   1.652   EVRG  1.621  ← long (top 3)
+ETR   1.043   AEP   0.432   EIX   0.375
+D     0.204   CMS  -0.183   EXC  -0.183
+XEL  -0.344   DTE  -0.350   WEC  -0.529
+PEG  -0.629   NRG  -0.667   CNP  -0.734
+PPL  -0.760   PCG  -0.974   VST  -1.817  ← short (bottom 5)
 ```
 
-- **PEG (PSEG/NJ corridor): scores 1.13, 3rd of 18 — flips to a long candidate.** This validates the core hypothesis: PEG was previously scored on ICR/leverage alone, missing its NJ data-center exposure; the DC load signal now captures it.
-- **D (Dominion/Virginia, the single largest DC market in the dataset): scores -1.44, 2nd-worst — does NOT flip.** This contradicts the qualitative motivation that specifically named D as the clearest case (Northern Virginia, ~250 DCs). Not investigated further this session — leading hypothesis is that DOM's zone already has a very large existing load base, diluting the queued-MW/zone-size ratio even if absolute queue activity is substantial. Worth checking `queued_mw(queue, "DOM", as_of)` and `zone_size(zonal_load, ["DOM"], as_of)` directly before trusting this result.
+- **PEG now scores -0.629 (13th of 18) — does NOT flip to a long candidate.** The original "PEG flips to a long candidate, validating the hypothesis" claim is retracted: it was an artifact of PEG being mis-routed to the ICR fallback, not a DC-signal result. On the real DC signal (queued_mw in the PSEG zone / zone_size), PEG scores negative.
+- **D (Dominion/Virginia) now scores +0.204 (7th of 18)** — mildly positive, a sign flip from the pre-fix -1.44, but still far from the long book (top 3 cut: FE, AEE, EVRG at +1.84/+1.65/+1.62). Doesn't clear the bar to validate the "D should be a standout long" qualitative motivation either, though the direction is now at least consistent with it. AEP (also PJM, on the DC path) scores +0.432 — mildly positive, similar story.
+- **FE (FirstEnergy, ATSI+JCPL zones) is now the single highest-scoring name in the universe (+1.842)**, driven by real DC-queue activity — this is a genuinely new result the pre-fix numbers never surfaced (FE was previously scored on the numerator/denominator-mismatched ATSI-only ratio, per finding #1's "inflated ~1.8x" measurement).
+- **Bottom line: the DC load signal, correctly wired, does not validate the original PEG hypothesis, gives an ambiguous (directionally right, magnitude-weak) read on D, and produces one clear surprise (FE) that wasn't part of the original motivating narrative.** This is a more honest but less flattering picture than the pre-fix results doc presented.
 
 ---
 

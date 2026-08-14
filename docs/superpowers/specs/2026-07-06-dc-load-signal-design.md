@@ -161,14 +161,18 @@ python -m grid_resilience.main --no-plot --no-zone-gsi --arch hard-switch --regu
 python -m grid_resilience.main --no-plot --no-zone-gsi --arch hard-switch --regulated-signal dc-queue
 ```
 
+**⚠️ ICR baseline has almost no historical coverage.** The cached ICR frame only has usable values from 2024-12-31 onward (7 quarters). For ~85% of the 2018-2025 backtest window, "Hard switch + ICR" has NO regulated-path signal at all and silently falls back to the cross-sectional-mean fill. Treat the ICR row below as measuring mostly 2025 behavior, not full-history behavior.
+
 **⚠️ Results below are NOT comparable to the `0.331` figure this spec was written against.** During implementation (2026-08-13), a pre-existing PJM data gap (one silently-missing LMP month) was discovered and incidentally fixed, and a second, broader equity-price data drift was found. Both change backtest numbers independent of this feature's code — see `docs/compact_2026-08-13-dc-load-signal-results.md` for the full account. The table below reports both configurations measured on the *same* (today's, complete) data, which is the only valid comparison right now.
+
+**⚠️ 2026-08-13 UPDATE:** The row below was originally measured with a Critical zone-name-mismatch bug (only 3 of 6 PJM tickers actually had real DC data) and an Important z-score-mixing bug in `fill_with_icr`. Both are now fixed — see `docs/compact_2026-08-13-dc-load-signal-results.md` for the full account, including the retraction of the original "PEG flips to a long candidate" claim (PEG was on the ICR fallback path when that claim was made, not the DC signal).
 
 | Configuration | Sharpe | Ann Ret | Max DD | IC@21d | IC@63d |
 |---|---|---|---|---|---|
 | Hard switch + ICR (today's data) | -0.276 | 0.80% | -21.93% | 0.0615 (t=1.261) | 0.1028 (t=2.174) |
-| Hard switch + DC load signal (today's data) | 0.043 | 4.46% | -17.55% | 0.0274 (t=0.715) | 0.0770 (t=2.111) |
+| Hard switch + DC load signal (today's data, post-fix) | -0.213 | 2.06% | -19.63% | 0.0290 (t=0.766) | 0.0680 (t=2.008) |
 
-DC load signal improves Sharpe and Max DD over ICR on identical data, but has weaker IC at both horizons — a mixed result, not a clean win. See the compact doc for the qualitative D/PEG check (PEG flips to a long candidate as hypothesized; D does not).
+DC load signal improves Sharpe, Ann Ret, and Max DD over ICR on identical data, but still has weaker IC at both horizons — a mixed result, not a clean win, qualitatively unchanged from the pre-fix numbers even though every absolute value moved. Now genuinely reflects all 6 PJM tickers (AEP, D, EXC, FE, PPL, PEG) on the DC path ("DC load signal: 6 PJM tickers with real data, 17 filled from ICR"). See the compact doc for the corrected qualitative check — PEG does NOT flip to a long candidate on the real DC signal (that was an ICR-fallback artifact); D flips sign but stays mid-pack; FE is now the top-scoring name, unanticipated by the original motivation.
 
 ---
 
