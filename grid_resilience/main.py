@@ -90,7 +90,7 @@ from grid_resilience.config import (
     SUPPORTED_ISOS, REBALANCE_FREQ,
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
     CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
-    XLU_HEDGE, USE_ICR, BUSINESS_MODEL_ARCH,
+    XLU_HEDGE, USE_ICR, BUSINESS_MODEL_ARCH, REGULATED_SIGNAL,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
@@ -98,8 +98,11 @@ from grid_resilience.data.universe import (
 from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
 from grid_resilience.data.equity_prices import fetch_returns, fetch_icr
 from grid_resilience.data.grid_data import (
-    fetch_lmp, fetch_load, daily_lmp_summary, daily_load_summary,
+    fetch_lmp, fetch_load, fetch_zonal_load, daily_lmp_summary, daily_load_summary,
     daily_spread_summary, fill_congestion_from_spread,
+)
+from grid_resilience.data.dc_load_data import (
+    fetch_interconnection_queue, compute_dc_load_signal, fill_with_icr,
 )
 from grid_resilience.signals.stress_events import build_full_event_calendar
 from grid_resilience.signals.grid_stress_index import build_multi_iso_gsi
@@ -127,6 +130,7 @@ def run(
     xlu_hedge:    bool      = XLU_HEDGE,
     use_icr:      bool      = USE_ICR,
     arch:         str | None = BUSINESS_MODEL_ARCH,
+    regulated_signal: str   = REGULATED_SIGNAL,
     zone_gsi:     bool      = True,
     plot:         bool      = True,
     save_dir:     str       = "output",
@@ -302,19 +306,36 @@ def run(
     # ── 6. Factor scores ──────────────────────────────────────────────────────
     print("\n[6/7] Building Grid Resilience factor scores…")
     icr_history = None
+    regulated_signal_lag_days = 45
     if use_icr:
-        print("  Fetching interest coverage ratios…")
+        print(f"  Fetching regulated-path signal ({regulated_signal})…")
         icr_history = fetch_icr(universe_tickers)
         if not icr_history.empty:
             print(f"  ICR data: {len(icr_history)} quarters, {icr_history.notna().any().sum()} tickers")
         else:
             print("  [warn] ICR data unavailable — factor will use beta + renewables only")
 
+        if regulated_signal == "dc_queue":
+            queue = fetch_interconnection_queue()
+            zonal_load = fetch_zonal_load(start, end)
+            dc_history = compute_dc_load_signal(
+                tickers=universe_tickers,
+                node_map=TICKER_NODE_MAP,
+                queue=queue,
+                zonal_load=zonal_load,
+                as_of_dates=list(rebalance_dates),
+            )
+            icr_history = fill_with_icr(dc_history, icr_history, lag_days=45)
+            regulated_signal_lag_days = 0
+            print(f"  DC load signal: {dc_history.notna().any().sum()} PJM tickers with real data, "
+                  f"{(icr_history.notna().any() & dc_history.isna().all()).sum()} filled from ICR")
+
     rolling_factors = build_rolling_factor(
         rolling_betas,
         icr_history=icr_history,
         arch=arch or "hard_switch",
         pass_through=pass_through,
+        regulated_signal_lag_days=regulated_signal_lag_days,
     )
     rolling_factors.to_csv(output_dir / "factor_scores.csv", index=False)
 
@@ -404,6 +425,14 @@ def _parse_args() -> argparse.Namespace:
         help="Business-model signal architecture. When set, ICR is auto-enabled. "
              "Default: None (original stress-beta-only behaviour).",
     )
+    p.add_argument(
+        "--regulated-signal",
+        dest="regulated_signal",
+        default=REGULATED_SIGNAL,
+        choices=["icr", "dc-queue"],
+        help="Signal used for the regulated path of --arch hard-switch "
+             f"(default: {REGULATED_SIGNAL.replace('_', '-')})",
+    )
     p.add_argument("--no-plot", action="store_true", help="Skip matplotlib charts")
     p.add_argument("--output", default="output", help="Output directory")
     return p.parse_args()
@@ -420,6 +449,7 @@ if __name__ == "__main__":
         xlu_hedge = args.xlu_hedge,
         use_icr   = args.use_icr,
         arch      = args.arch.replace("-", "_") if args.arch else None,
+        regulated_signal = args.regulated_signal.replace("-", "_"),
         zone_gsi  = args.zone_gsi,
         plot      = not args.no_plot,
         save_dir  = args.output,
