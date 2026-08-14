@@ -1,4 +1,5 @@
 name,type,window_start,window_end,context_start,context_end,iso_list,notes
+PJM LMP Spike 2018-01-02,lmp_spike,2018-01-02,2018-01-08,2017-12-19,2018-01-22,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 Northeast Polar Vortex,cold,2018-01-04,2018-01-08,2017-12-01,2018-02-28,"['PJM', 'ISO-NE', 'NYISO']",ISO-NE and PJM set cold records. Gas supply disruptions caused gen outages.
 ERCOT Congestion 2018-04-29,congestion,2018-04-29,2018-07-24,2018-04-22,2018-07-31,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT LMP Spike 2018-07-17,lmp_spike,2018-07-17,2018-07-26,2018-07-03,2018-08-09,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
@@ -28,18 +29,25 @@ ERCOT West Texas Congestion,congestion,2022-03-01,2022-03-31,2021-01-01,2023-12-
 ERCOT Congestion 2022-03-16,congestion,2022-03-16,2022-04-01,2022-03-09,2022-04-08,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2022-04-17,congestion,2022-04-17,2022-05-05,2022-04-10,2022-05-12,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT LMP Spike 2022-05-13,lmp_spike,2022-05-13,2022-05-15,2022-04-29,2022-05-29,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
+PJM LMP Spike 2022-06-14,lmp_spike,2022-06-14,2022-06-16,2022-05-31,2022-06-30,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 ERCOT LMP Spike 2022-07-11,lmp_spike,2022-07-11,2022-07-14,2022-06-27,2022-07-28,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
 ERCOT LMP Spike 2022-07-18,lmp_spike,2022-07-18,2022-07-20,2022-07-04,2022-08-03,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
+PJM LMP Spike 2022-07-19,lmp_spike,2022-07-19,2022-07-25,2022-07-05,2022-08-08,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
+PJM LMP Spike 2022-08-02,lmp_spike,2022-08-02,2022-08-05,2022-07-19,2022-08-19,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
+PJM LMP Spike 2022-08-07,lmp_spike,2022-08-07,2022-08-10,2022-07-24,2022-08-24,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
+PJM LMP Spike 2022-08-24,lmp_spike,2022-08-24,2022-08-26,2022-08-10,2022-09-09,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 California Heat Dome,heat,2022-09-05,2022-09-09,2022-08-01,2022-10-01,['CAISO'],"CAISO Flex Alert x7 days. SP15 LMPs >$2,000. Relevant for PCG, EIX."
+PJM LMP Spike 2022-09-19,lmp_spike,2022-09-19,2022-09-21,2022-09-05,2022-10-05,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 ERCOT Congestion 2022-11-28,congestion,2022-11-28,2022-12-08,2022-11-21,2022-12-15,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ISO-NE Winter Storm Elliott,cold,2022-12-22,2022-12-26,2022-11-01,2023-03-01,"['ISO-NE', 'PJM']",Bomb cyclone. Gas supply stress. Relevant for ES.
+PJM LMP Spike 2022-12-23,lmp_spike,2022-12-23,2022-12-28,2022-12-09,2023-01-11,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 ERCOT Congestion 2022-12-31,congestion,2022-12-31,2023-02-01,2022-12-24,2023-02-08,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-01-11,congestion,2023-01-11,2023-01-20,2023-01-04,2023-01-27,['MISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-02-01,congestion,2023-02-01,2023-02-27,2023-01-25,2023-03-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2023-02-06,congestion,2023-02-06,2023-05-15,2023-01-30,2023-05-22,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-03-05,congestion,2023-03-05,2023-03-26,2023-02-26,2023-04-02,['MISO'],Algo-detected: congestion_frac ≥ 30%
-CAISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-11,2023-03-25,2023-04-18,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-22,2023-03-25,2023-04-29,['MISO'],Algo-detected: congestion_frac ≥ 30%
+CAISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-11,2023-03-25,2023-04-18,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-05-21,congestion,2023-05-21,2023-05-30,2023-05-14,2023-06-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Heat Emergency Jun 2023,heat,2023-06-15,2023-06-28,2023-05-01,2023-08-01,['ERCOT'],"Multiple ERCOT conservation notices. HB_NORTH spiked above $5,000/MWh."
 CAISO Congestion 2023-06-17,congestion,2023-06-17,2023-06-26,2023-06-10,2023-07-03,['CAISO'],Algo-detected: congestion_frac ≥ 30%
@@ -55,8 +63,8 @@ ERCOT LMP Spike 2023-09-07,lmp_spike,2023-09-07,2023-09-09,2023-08-24,2023-09-23
 MISO Congestion 2023-09-14,congestion,2023-09-14,2023-09-24,2023-09-07,2023-10-01,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2023-09-22,congestion,2023-09-22,2023-11-03,2023-09-15,2023-11-10,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-10-16,congestion,2023-10-16,2023-10-27,2023-10-09,2023-11-03,['MISO'],Algo-detected: congestion_frac ≥ 30%
-MISO LMP Spike 2023-11-01,lmp_spike,2023-11-01,2023-11-03,2023-10-18,2023-11-17,['MISO'],Algo-detected: lmp_max ≥ 478 $/MWh
 MISO Congestion 2023-11-01,congestion,2023-11-01,2023-11-17,2023-10-25,2023-11-24,['MISO'],Algo-detected: congestion_frac ≥ 30%
+MISO LMP Spike 2023-11-01,lmp_spike,2023-11-01,2023-11-03,2023-10-18,2023-11-17,['MISO'],Algo-detected: lmp_max ≥ 478 $/MWh
 ERCOT Congestion 2023-11-05,congestion,2023-11-05,2023-11-24,2023-10-29,2023-12-01,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2023-11-26,congestion,2023-11-26,2023-12-25,2023-11-19,2024-01-01,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-12-04,congestion,2023-12-04,2023-12-15,2023-11-27,2023-12-22,['MISO'],Algo-detected: congestion_frac ≥ 30%
@@ -68,11 +76,13 @@ CAISO Congestion 2024-03-01,congestion,2024-03-01,2024-03-30,2024-02-23,2024-04-
 MISO Congestion 2024-03-10,congestion,2024-03-10,2024-03-30,2024-03-03,2024-04-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2024-04-01,congestion,2024-04-01,2024-04-29,2024-03-25,2024-05-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2024-04-01,congestion,2024-04-01,2024-04-29,2024-03-25,2024-05-06,['CAISO'],Algo-detected: congestion_frac ≥ 30%
-MISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-13,2024-04-24,2024-05-20,['MISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-17,2024-04-24,2024-05-24,['CAISO'],Algo-detected: congestion_frac ≥ 30%
+MISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-13,2024-04-24,2024-05-20,['MISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2024-05-17,congestion,2024-05-17,2024-05-30,2024-05-10,2024-06-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2024-05-18,congestion,2024-05-18,2024-06-20,2024-05-11,2024-06-27,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
+PJM LMP Spike 2024-07-08,lmp_spike,2024-07-08,2024-07-10,2024-06-24,2024-07-24,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 CAISO LMP Spike 2024-07-09,lmp_spike,2024-07-09,2024-07-11,2024-06-25,2024-07-25,['CAISO'],Algo-detected: lmp_max ≥ 235 $/MWh
+PJM LMP Spike 2024-07-15,lmp_spike,2024-07-15,2024-07-17,2024-07-01,2024-07-31,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 ERCOT Congestion 2024-07-18,congestion,2024-07-18,2024-08-01,2024-07-11,2024-08-08,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2024-08-03,congestion,2024-08-03,2024-08-15,2024-07-27,2024-08-22,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2024-08-17,congestion,2024-08-17,2024-09-13,2024-08-10,2024-09-20,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
@@ -86,10 +96,11 @@ ERCOT Congestion 2024-12-02,congestion,2024-12-02,2024-12-31,2024-11-25,2025-01-
 MISO Congestion 2024-12-03,congestion,2024-12-03,2024-12-23,2024-11-26,2024-12-30,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2025-01-02,congestion,2025-01-02,2025-03-15,2024-12-26,2025-03-22,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2025-01-14,congestion,2025-01-14,2025-01-30,2025-01-07,2025-02-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
+PJM LMP Spike 2025-01-20,lmp_spike,2025-01-20,2025-01-23,2025-01-06,2025-02-06,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 MISO LMP Spike 2025-01-21,lmp_spike,2025-01-21,2025-01-23,2025-01-07,2025-02-06,['MISO'],Algo-detected: lmp_max ≥ 478 $/MWh
 CAISO Congestion 2025-02-01,congestion,2025-02-01,2025-02-11,2025-01-25,2025-02-18,['CAISO'],Algo-detected: congestion_frac ≥ 30%
-CAISO Congestion 2025-02-14,congestion,2025-02-14,2025-02-27,2025-02-07,2025-03-06,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 SPP Congestion 2025-02-14,congestion,2025-02-14,2025-03-08,2025-02-07,2025-03-15,['SPP'],Algo-detected: congestion_frac ≥ 30%
+CAISO Congestion 2025-02-14,congestion,2025-02-14,2025-02-27,2025-02-07,2025-03-06,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2025-03-01,congestion,2025-03-01,2025-03-25,2025-02-22,2025-04-01,['MISO'],Algo-detected: congestion_frac ≥ 30%
 SPP Congestion 2025-03-10,congestion,2025-03-10,2025-03-21,2025-03-03,2025-03-28,['SPP'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2025-03-17,congestion,2025-03-17,2025-05-31,2025-03-10,2025-06-07,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
@@ -98,6 +109,8 @@ MISO Congestion 2025-05-09,congestion,2025-05-09,2025-05-21,2025-05-02,2025-05-2
 SPP Congestion 2025-05-11,congestion,2025-05-11,2025-05-21,2025-05-04,2025-05-28,['SPP'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2025-05-13,congestion,2025-05-13,2025-05-27,2025-05-06,2025-06-03,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2025-06-02,congestion,2025-06-02,2025-09-13,2025-05-26,2025-09-20,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
+PJM LMP Spike 2025-06-23,lmp_spike,2025-06-23,2025-06-26,2025-06-09,2025-07-10,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
+PJM LMP Spike 2025-07-28,lmp_spike,2025-07-28,2025-07-30,2025-07-14,2025-08-13,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
 MISO LMP Spike 2025-07-28,lmp_spike,2025-07-28,2025-07-30,2025-07-14,2025-08-13,['MISO'],Algo-detected: lmp_max ≥ 478 $/MWh
 MISO Congestion 2025-09-07,congestion,2025-09-07,2025-09-19,2025-08-31,2025-09-26,['MISO'],Algo-detected: congestion_frac ≥ 30%
 SPP Congestion 2025-09-08,congestion,2025-09-08,2025-09-18,2025-09-01,2025-09-25,['SPP'],Algo-detected: congestion_frac ≥ 30%
@@ -106,3 +119,4 @@ MISO Congestion 2025-10-07,congestion,2025-10-07,2025-10-22,2025-09-30,2025-10-2
 MISO Congestion 2025-11-01,congestion,2025-11-01,2025-11-12,2025-10-25,2025-11-19,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2025-11-24,congestion,2025-11-24,2025-12-30,2025-11-17,2026-01-06,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2025-12-12,congestion,2025-12-12,2025-12-25,2025-12-05,2026-01-01,['MISO'],Algo-detected: congestion_frac ≥ 30%
+PJM LMP Spike 2025-12-14,lmp_spike,2025-12-14,2025-12-17,2025-11-30,2025-12-31,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
