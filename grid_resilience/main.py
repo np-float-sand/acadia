@@ -96,7 +96,7 @@ from grid_resilience.config import (
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
 )
-from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
+from grid_resilience.data.utility_node_map import TICKER_NODE_MAP, ERCOT_TSP_MAP
 from grid_resilience.data.equity_prices import fetch_returns, fetch_icr
 from grid_resilience.data.grid_data import (
     fetch_lmp, fetch_load, fetch_zonal_load, daily_lmp_summary, daily_load_summary,
@@ -105,6 +105,10 @@ from grid_resilience.data.grid_data import (
 from grid_resilience.data.dc_load_data import (
     fetch_interconnection_queue, compute_dc_load_signal, fill_with_icr,
 )
+from grid_resilience.data.pjm_large_load_data import fetch_large_load_adjustment, cross_check_dc_signal
+from grid_resilience.data.ercot_large_load_data import load_ercot_large_load_seed, compute_ercot_signal
+from grid_resilience.data.hyperscaler_deals import load_hyperscaler_deals, compute_hyperscaler_signal
+from grid_resilience.data.dc_demand_combined import combine_dc_demand_layers
 from grid_resilience.signals.stress_events import build_full_event_calendar
 from grid_resilience.signals.grid_stress_index import build_multi_iso_gsi
 from grid_resilience.signals.conditional_beta import (
@@ -309,11 +313,11 @@ def run(
 
     # ── 6. Factor scores ──────────────────────────────────────────────────────
     print("\n[6/7] Building Grid Resilience factor scores…")
-    if regulated_signal not in ("icr", "dc_queue"):
+    if regulated_signal not in ("icr", "dc_queue", "dc_multi"):
         raise ValueError(
             f"Unrecognized regulated_signal={regulated_signal!r}. "
-            "Expected 'icr' or 'dc_queue' (note: underscore form, not the "
-            "CLI's hyphenated 'dc-queue')."
+            "Expected 'icr', 'dc_queue', or 'dc_multi' (note: underscore form, not the "
+            "CLI's hyphenated 'dc-multi')."
         )
 
     icr_history = None
@@ -358,6 +362,104 @@ def run(
                       f"{n_filled} filled from ICR")
                 icr_history = merged_history
                 regulated_signal_lag_days = 0
+
+        elif regulated_signal == "dc_multi":
+            queue = fetch_interconnection_queue()
+            zonal_load_start = (pd.Timestamp(start) - pd.DateOffset(years=1)).strftime("%Y-%m-%d")
+            zonal_load = fetch_zonal_load(zonal_load_start, end)
+            pjm_dc_history = compute_dc_load_signal(
+                tickers=universe_tickers, node_map=TICKER_NODE_MAP,
+                queue=queue, zonal_load=zonal_load, as_of_dates=list(rebalance_dates),
+            ) if not (queue.empty or zonal_load.empty) else pd.DataFrame()
+
+            ercot_seed = load_ercot_large_load_seed()
+            ercot_history = compute_ercot_signal(
+                tickers=universe_tickers, tsp_map=ERCOT_TSP_MAP,
+                ercot_history=ercot_seed, as_of_dates=list(rebalance_dates),
+            )
+
+            deals = load_hyperscaler_deals()
+            hyperscaler_history = compute_hyperscaler_signal(
+                tickers=universe_tickers, deals=deals, as_of_dates=list(rebalance_dates),
+            )
+
+            # Duplicate-column fix: compute_dc_load_signal / compute_ercot_signal /
+            # compute_hyperscaler_signal each return a column for EVERY universe
+            # ticker (NaN where uncovered), not just the tickers they actually
+            # cover — so passing all three straight into combine_dc_demand_layers's
+            # plain pd.concat(axis=1) (which does not merge same-named columns)
+            # triplicates every ticker's column name, not just CEG/TLN. Confirmed
+            # empirically: an unfiltered live run crashed in fill_with_icr with
+            # "cannot reindex on an axis with duplicate labels" because `combined`
+            # had 75 columns (25 universe tickers x 3 layers) instead of ~9.
+            # Fix: trim each layer to only the tickers it has REAL (non-all-NaN)
+            # coverage for before combining. Where more than one layer really
+            # covers the same ticker (TICKER_NODE_MAP["CEG"]/["TLN"] are both
+            # iso="PJM", so pjm_dc_history's generation-queue proxy has real CEG/TLN
+            # values that also collide with hyperscaler_history's disclosed-deal
+            # coverage of the same two tickers), give the more precise layer
+            # precedence: hyperscaler (disclosed deals) > PJM generation-queue
+            # proxy > ERCOT TSP level. Only the *_for_combine copies are trimmed —
+            # pjm_dc_history itself is left intact below for the Layer 2
+            # cross-check, which diagnoses the generation-queue signal's own
+            # tagging and should still see every ticker it actually computed a
+            # value for.
+            def _real_coverage(df: pd.DataFrame) -> list[str]:
+                return [t for t in df.columns if df[t].notna().any()]
+
+            hyperscaler_covered = _real_coverage(hyperscaler_history)
+            pjm_covered = [t for t in _real_coverage(pjm_dc_history) if t not in hyperscaler_covered]
+            ercot_covered = [
+                t for t in _real_coverage(ercot_history)
+                if t not in hyperscaler_covered and t not in pjm_covered
+            ]
+
+            pjm_dc_for_combine = pjm_dc_history[pjm_covered] if pjm_covered else pd.DataFrame()
+            ercot_for_combine = ercot_history[ercot_covered] if ercot_covered else pd.DataFrame()
+            hyperscaler_for_combine = hyperscaler_history[hyperscaler_covered] if hyperscaler_covered else pd.DataFrame()
+
+            combined = combine_dc_demand_layers(pjm_dc_for_combine, ercot_for_combine, hyperscaler_for_combine)
+            assert not combined.columns.duplicated().any(), (
+                "combine_dc_demand_layers produced duplicate columns despite per-layer "
+                "real-coverage trimming — a ticker is covered with real data by more "
+                "than the three precedence tiers already handled above."
+            )
+            if not combined.empty:
+                # dtype fix: _zscore_columns (dc_demand_combined.py) does
+                # std.replace(0, pd.NA) for zero-spread rows (e.g. a single-ticker
+                # population on a date before other tickers in that layer have
+                # any data). Dividing by a Series containing pd.NA upcasts the
+                # affected columns to dtype=object, and the subsequent
+                # .fillna(0.0) doesn't downcast them back — confirmed by direct
+                # inspection (VST/CEG/TLN columns came back dtype=object here
+                # even though every cell held a plain float). An object-dtype
+                # column silently survives fill_with_icr and only breaks much
+                # later, in resilience_score.build_factor's boolean-mask
+                # assignment (TypeError: Invalid value ... for dtype 'float64').
+                # Cast back to float64 here rather than in dc_demand_combined.py —
+                # that module belongs to an already-tested, separate task; this
+                # is a pure dtype coercion of already-numeric values, not a
+                # change to the z-scoring logic itself.
+                combined = combined.astype(float)
+            merged_history = fill_with_icr(combined, icr_history, lag_days=_ICR_LAG_DAYS)
+            n_real = int(combined.notna().any().sum()) if not combined.empty else 0
+            print(f"  Multi-source DC demand signal: {n_real} tickers with real layer data "
+                  f"(PJM/ERCOT/hyperscaler), rest filled from ICR")
+            icr_history = merged_history
+            regulated_signal_lag_days = 0
+
+            # Layer 2's cross-check is a diagnostic, not blended into the score
+            # (see spec) — still run it and write the output so a reviewer can
+            # actually see where the generation-queue signal and PJM's own
+            # industry tags disagree, rather than importing it unused.
+            if not pjm_dc_history.empty:
+                large_load = fetch_large_load_adjustment()
+                cross_check = cross_check_dc_signal(pjm_dc_history, large_load, TICKER_NODE_MAP)
+                cross_check.to_csv(output_dir / "dc_signal_cross_check.csv", index=False)
+                n_disagree = int((~cross_check["agrees"]).sum())
+                if n_disagree:
+                    print(f"  [WARNING] {n_disagree} ticker(s) disagree between the generation-queue "
+                          f"DC signal and PJM's own industry tags — see output/dc_signal_cross_check.csv")
 
     rolling_factors = build_rolling_factor(
         rolling_betas,
@@ -468,7 +570,7 @@ def _parse_args() -> argparse.Namespace:
         "--regulated-signal",
         dest="regulated_signal",
         default=REGULATED_SIGNAL.replace("_", "-"),
-        choices=["icr", "dc-queue"],
+        choices=["icr", "dc-queue", "dc-multi"],
         help="Signal used for the regulated path of --arch hard-switch "
              f"(default: {REGULATED_SIGNAL.replace('_', '-')})",
     )

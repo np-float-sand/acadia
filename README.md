@@ -138,10 +138,21 @@ python -m grid_resilience.main
 --arch             hard-switch|revenue-mix|dual-track
                                                Business-model-aware signal architecture (default: none — original
                                                stress-beta-only behaviour). Auto-enables --icr when set.
---regulated-signal icr|dc-queue               Signal used for the regulated path of --arch hard-switch
+--regulated-signal icr|dc-queue|dc-multi      Signal used for the regulated path of --arch hard-switch
                                                (default: dc-queue). dc-queue proxies data-center load growth from PJM's
                                                interconnection queue for PJM tickers, falling back to ICR elsewhere —
                                                see docs/superpowers/specs/2026-07-06-dc-load-signal-design.md.
+                                               dc-multi blends three layers — PJM generation-queue proxy, ERCOT
+                                               TSP-level large-load data, and disclosed hyperscaler colocation deals
+                                               (each cross-sectionally z-scored within its own covered tickers) —
+                                               falling back to ICR for tickers none of the three cover. Where more
+                                               than one layer covers a ticker with real data, hyperscaler deals take
+                                               precedence over the PJM generation-queue proxy, which takes precedence
+                                               over ERCOT TSP data. Currently resolves real (non-ICR) values for
+                                               ~9 tickers (6 PJM regulated names + CEG/TLN/VST from hyperscaler deals;
+                                               ERCOT's public TSP data doesn't yet yield usable per-ticker MW figures).
+                                               Also writes `dc_signal_cross_check.csv` (see Outputs) — see
+                                               docs/superpowers/specs/2026-08-26-dc-demand-exposure-signal-design.md.
 --peer-group / --no-peer-group                 Build long/short baskets within business-model peer groups
                                                (merchant/mixed/regulated) instead of ranking the whole universe
                                                (default: off). Intended to cancel sector-beta exposure that
@@ -165,6 +176,7 @@ All files are written to `./output/` (or `--output` path):
 | `factor_scores.csv` | Rolling factor scores per ticker per rebalance date |
 | `pnl.csv` | Daily strategy P&L |
 | `backtest_performance.png` | Equity curve + drawdown + stress event overlay |
+| `dc_signal_cross_check.csv` | (`--regulated-signal dc-multi` only) Diagnostic: flags tickers where the PJM generation-queue DC signal is positive but PJM's own industry-tagged Large Load data doesn't call the driving zone(s) a data center — not blended into the factor score |
 
 ---
 

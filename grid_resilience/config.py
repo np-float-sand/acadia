@@ -116,7 +116,7 @@ XLU_HEDGE: bool = False  # True
 # Enable interest coverage ratio as a factor component (default off — see CLAUDE.md)
 USE_ICR: bool = False
 
-REGULATED_SIGNAL: Literal["icr", "dc_queue"] = "dc_queue"
+REGULATED_SIGNAL: Literal["icr", "dc_queue", "dc_multi"] = "dc_queue"
 
 DC_QUEUE_MW_MIN        = 100.0   # ignore sub-100MW queue entries as noise
 DC_QUEUE_PROJECT_TYPES = ["Generation Interconnection"]
