@@ -404,6 +404,15 @@ def test_fill_with_icr_docstring_contract_is_zscored_not_raw_passthrough():
 
 # ── Finding #11 (2026-08-13 review): realistic short-code zone_size fixture ──
 
+def test_fe_load_zones_include_meted_and_penelec():
+    """FE's load_zones was missing METED/PENELEC even though FE's own `nodes`
+    field already listed them, silently limiting the DC-load signal to
+    roughly half of FE's actual PJM footprint (flagged in
+    docs/compact_2026-08-13-dc-load-signal-results.md)."""
+    from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
+    assert set(TICKER_NODE_MAP["FE"]["load_zones"]) >= {"ATSI", "JCPL", "METED", "PENELEC"}
+
+
 def test_zone_size_resolves_for_every_pjm_ticker_against_realistic_fixture():
     """Build a zonal-load fixture the way fetch_zonal_load actually produces
     one — i.e. already normalized from PJM's raw short codes via

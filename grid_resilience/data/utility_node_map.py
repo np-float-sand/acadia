@@ -78,7 +78,11 @@ TICKER_NODE_MAP = {
         "name": "FirstEnergy",
         "iso": "PJM",
         "nodes": ["ATSI", "JCPL", "METED", "PENELEC"],
-        "load_zones": ["ATSI", "JCPL"],
+        # NOTE: FE's WV/MD territory (ex-Allegheny Energy) may also map to
+        # PJM's "APS" (Allegheny Power System) zone — not verified against
+        # FE's 10-K service-territory map yet. Confirm before adding "APS"
+        # here; don't guess it in.
+        "load_zones": ["ATSI", "JCPL", "METED", "PENELEC"],
         "service_territory": "OH, PA, NJ, WV, MD T&D",
         "notes": "ATSI zone most material. Known seam congestion with MISO.",
         "business_model": "regulated",

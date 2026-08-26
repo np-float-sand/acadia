@@ -537,8 +537,13 @@ def _fetch_zonal_load_raw(api_key: str, start: str, end: str) -> pd.DataFrame:
 # TICKER_NODE_MAP's zone names (e.g. "PS" not "PSEG"). Verified against the
 # actual cached hrl_load_metered vocabulary — see finding #1 of the
 # 2026-08-13 whole-branch review. AEP, ATSI, DOM (and others not listed here,
-# e.g. AE, AP, DEOK, DPL, DUQ, EKPC, ME, PN, RECO, RTO) already match
-# TICKER_NODE_MAP directly or aren't used by any covered ticker's load_zones.
+# e.g. AE, AP, DEOK, DPL, DUQ, EKPC, RECO, RTO) already match TICKER_NODE_MAP
+# directly or aren't used by any covered ticker's load_zones.
+# ME/PN added alongside the 2026-08-26 FE load_zones widening (METED,
+# PENELEC) — PJM's real short codes for FirstEnergy's Met-Ed and Penelec
+# operating companies; without these two, zone_size() would silently fail
+# to match FE's new zones against real load data (see
+# test_normalized_real_vocabulary_covers_every_pjm_ticker_load_zone).
 _PJM_LOAD_ZONE_ALIASES = {
     "PS":  "PSEG",
     "PL":  "PPL",
@@ -548,6 +553,8 @@ _PJM_LOAD_ZONE_ALIASES = {
     "CE":  "COMED",
     "JC":  "JCPL",
     "DAY": "DAYTON",
+    "ME":  "METED",
+    "PN":  "PENELEC",
 }
 
 
