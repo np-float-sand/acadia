@@ -85,6 +85,8 @@ def test_pjm_load_zone_aliases_match_verified_mapping():
         "CE":  "COMED",
         "JC":  "JCPL",
         "DAY": "DAYTON",
+        "ME":  "METED",
+        "PN":  "PENELEC",
         # Already match TICKER_NODE_MAP directly — no alias needed.
         "AEP":  "AEP",
         "ATSI": "ATSI",
