@@ -738,8 +738,15 @@ def compute_hyperscaler_signal(
 ) -> pd.DataFrame:
     """
     Raw (pre-z-score) cumulative disclosed DC-linked MW under contract per
-    ticker, as of each date. regulatory_setback rows (sign=-1) remove the
-    associated MW until a resolution row (sign=+1) re-adds it.
+    ticker, as of each date: running sum of sign*mw across all rows up to
+    that date. `event_type` is a descriptive label only, not read by this
+    function — a `regulatory_setback` row's sign=-1 subtracts its own mw,
+    but nothing here assumes later rows "resolve" it or that adjacent rows
+    for the same ticker form a clean +/-/+ cycle of one MW figure. Real
+    deal chains can be several distinct, differently-sized instruments in
+    sequence (see grid_resilience/data/seed/hyperscaler_deals.csv's TLN
+    rows) — this function sums whatever `sign*mw` values it's given, and
+    it's each row's own accuracy (not this function) that has to earn that.
     """
     rows = {}
     for date in as_of_dates:
