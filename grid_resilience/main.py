@@ -108,7 +108,7 @@ from grid_resilience.data.dc_load_data import (
 from grid_resilience.data.pjm_large_load_data import fetch_large_load_adjustment, cross_check_dc_signal
 from grid_resilience.data.ercot_large_load_data import load_ercot_large_load_seed, compute_ercot_signal
 from grid_resilience.data.hyperscaler_deals import load_hyperscaler_deals, compute_hyperscaler_signal
-from grid_resilience.data.dc_demand_combined import combine_dc_demand_layers
+from grid_resilience.data.dc_demand_combined import combine_dc_demand_layers, apply_layer_precedence
 from grid_resilience.signals.stress_events import build_full_event_calendar
 from grid_resilience.signals.grid_stress_index import build_multi_iso_gsi
 from grid_resilience.signals.conditional_beta import (
@@ -388,59 +388,26 @@ def run(
             # ticker (NaN where uncovered), not just the tickers they actually
             # cover — so passing all three straight into combine_dc_demand_layers's
             # plain pd.concat(axis=1) (which does not merge same-named columns)
-            # triplicates every ticker's column name, not just CEG/TLN. Confirmed
-            # empirically: an unfiltered live run crashed in fill_with_icr with
-            # "cannot reindex on an axis with duplicate labels" because `combined`
-            # had 75 columns (25 universe tickers x 3 layers) instead of ~9.
-            # Fix: trim each layer to only the tickers it has REAL (non-all-NaN)
-            # coverage for before combining. Where more than one layer really
-            # covers the same ticker (TICKER_NODE_MAP["CEG"]/["TLN"] are both
-            # iso="PJM", so pjm_dc_history's generation-queue proxy has real CEG/TLN
-            # values that also collide with hyperscaler_history's disclosed-deal
-            # coverage of the same two tickers), give the more precise layer
-            # precedence: hyperscaler (disclosed deals) > PJM generation-queue
-            # proxy > ERCOT TSP level. Only the *_for_combine copies are trimmed —
-            # pjm_dc_history itself is left intact below for the Layer 2
-            # cross-check, which diagnoses the generation-queue signal's own
-            # tagging and should still see every ticker it actually computed a
-            # value for.
-            def _real_coverage(df: pd.DataFrame) -> list[str]:
-                return [t for t in df.columns if df[t].notna().any()]
-
-            hyperscaler_covered = _real_coverage(hyperscaler_history)
-            pjm_covered = [t for t in _real_coverage(pjm_dc_history) if t not in hyperscaler_covered]
-            ercot_covered = [
-                t for t in _real_coverage(ercot_history)
-                if t not in hyperscaler_covered and t not in pjm_covered
-            ]
-
-            pjm_dc_for_combine = pjm_dc_history[pjm_covered] if pjm_covered else pd.DataFrame()
-            ercot_for_combine = ercot_history[ercot_covered] if ercot_covered else pd.DataFrame()
-            hyperscaler_for_combine = hyperscaler_history[hyperscaler_covered] if hyperscaler_covered else pd.DataFrame()
+            # triplicates every ticker's column name, not just CEG/TLN (both
+            # iso="PJM", so pjm_dc_history's generation-queue proxy has real
+            # CEG/TLN values that also collide with hyperscaler_history's
+            # disclosed-deal coverage of the same two tickers). Resolve via
+            # apply_layer_precedence(): hyperscaler (disclosed deals) > PJM
+            # generation-queue proxy > ERCOT TSP level. Only the *_for_combine
+            # copies are trimmed — pjm_dc_history itself is left intact below
+            # for the Layer 2 cross-check, which diagnoses the generation-queue
+            # signal's own tagging and should still see every ticker it
+            # actually computed a value for.
+            hyperscaler_for_combine, pjm_dc_for_combine, ercot_for_combine = apply_layer_precedence(
+                [hyperscaler_history, pjm_dc_history, ercot_history]
+            )
 
             combined = combine_dc_demand_layers(pjm_dc_for_combine, ercot_for_combine, hyperscaler_for_combine)
             assert not combined.columns.duplicated().any(), (
-                "combine_dc_demand_layers produced duplicate columns despite per-layer "
-                "real-coverage trimming — a ticker is covered with real data by more "
-                "than the three precedence tiers already handled above."
+                "combine_dc_demand_layers produced duplicate columns despite "
+                "apply_layer_precedence() trimming — a ticker is covered with "
+                "real data by more than the three precedence tiers already handled."
             )
-            if not combined.empty:
-                # dtype fix: _zscore_columns (dc_demand_combined.py) does
-                # std.replace(0, pd.NA) for zero-spread rows (e.g. a single-ticker
-                # population on a date before other tickers in that layer have
-                # any data). Dividing by a Series containing pd.NA upcasts the
-                # affected columns to dtype=object, and the subsequent
-                # .fillna(0.0) doesn't downcast them back — confirmed by direct
-                # inspection (VST/CEG/TLN columns came back dtype=object here
-                # even though every cell held a plain float). An object-dtype
-                # column silently survives fill_with_icr and only breaks much
-                # later, in resilience_score.build_factor's boolean-mask
-                # assignment (TypeError: Invalid value ... for dtype 'float64').
-                # Cast back to float64 here rather than in dc_demand_combined.py —
-                # that module belongs to an already-tested, separate task; this
-                # is a pure dtype coercion of already-numeric values, not a
-                # change to the z-scoring logic itself.
-                combined = combined.astype(float)
             merged_history = fill_with_icr(combined, icr_history, lag_days=_ICR_LAG_DAYS)
             n_real = int(combined.notna().any().sum()) if not combined.empty else 0
             print(f"  Multi-source DC demand signal: {n_real} tickers with real layer data "
