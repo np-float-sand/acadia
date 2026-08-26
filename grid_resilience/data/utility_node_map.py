@@ -290,6 +290,16 @@ TICKER_NODE_MAP = {
     },
 }
 
+# ERCOT "Large Load" queue TSP categories don't match TICKER_NODE_MAP's
+# iso/load_zones fields (e.g. AEP Texas, an ERCOT TDU, isn't reflected in
+# AEP's PJM-oriented load_zones). Kept separate rather than overloading
+# those fields. Only entries independently verified against ERCOT's public
+# TSP list belong here — see Task 6 of the DC-demand-exposure plan.
+ERCOT_TSP_MAP = {
+    "AEP": "AEP",
+    "CNP": "CenterPoint",
+}
+
 # Tickers with actionable node data (excludes SERC/FRCC which lack LMP)
 LMP_MAPPED_TICKERS = [t for t, v in TICKER_NODE_MAP.items() if v["nodes"]]
 
