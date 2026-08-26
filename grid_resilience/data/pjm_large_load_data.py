@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from grid_resilience.config import CACHE_DIR
+from grid_resilience.data.grid_data import _normalize_pjm_load_zone
 
 # One entry per PJM Load Analysis Subcommittee "Large Load Adjustment
 # Requests" vintage, confirmed live during design (2026-08-26). Add new
@@ -78,16 +79,24 @@ def cross_check_dc_signal(
         return pd.DataFrame(columns=["ticker", "latest_dc_queue_score", "industries", "mw_demand_2030", "agrees"])
 
     latest_date = dc_history.index.max()
+    # The LAS spreadsheet reports zones in PJM's own vocabulary, which mixes
+    # full TICKER_NODE_MAP-style names (AEP, PPL, PSEG…) with short codes
+    # (DAY for DAYTON). Matching raw against TICKER_NODE_MAP's load_zones
+    # silently dropped every short-code row — AEP's 2030 demand came out
+    # 9,296 MW instead of 13,996 MW because the DAY rows never matched
+    # (whole-branch review finding #4). Normalize once, here, with the same
+    # alias table fetch_zonal_load already uses.
+    normalized_zone = large_load["zone"].apply(_normalize_pjm_load_zone)
     rows = []
     for ticker, info in node_map.items():
         if info.get("iso") != "PJM" or ticker not in dc_history.columns:
             continue
         score = dc_history.loc[latest_date, ticker]
         zones = info.get("load_zones", [])
-        zone_rows = large_load[large_load["zone"].isin(zones)]
+        zone_rows = large_load[normalized_zone.isin(zones)]
         industries = sorted(zone_rows["industry"].dropna().unique().tolist())
         mw_2030 = float(zone_rows[zone_rows["year"] == 2030]["mw_demand"].sum())
-        is_dc_tagged = any("data center" in i for i in industries)
+        is_dc_tagged = any("data center" in i.lower() for i in industries)
         agrees = (pd.isna(score) or score <= 0) or is_dc_tagged
         rows.append({
             "ticker": ticker,

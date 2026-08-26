@@ -39,15 +39,75 @@ def test_compute_hyperscaler_signal_uncovered_ticker_is_nan():
     assert pd.isna(result.loc[pd.Timestamp("2025-01-01"), "FE"])
 
 
-def test_compute_hyperscaler_signal_zero_before_first_disclosure():
+def test_compute_hyperscaler_signal_nan_before_first_disclosure():
+    """SEMANTICS CHANGED 2026-08-26 (whole-branch review finding #3).
+
+    This test previously asserted 0.0 before a covered ticker's first
+    disclosure, on the reasoning that "the ticker is in `deals`, so the
+    layer covers it". That conflated two different things:
+
+      * "this layer measured the ticker and the answer is zero exposure"
+      * "this layer had nothing to say about the ticker on this date"
+
+    Only the first is a 0.0. Returning 0.0 for the second made
+    apply_layer_precedence() — which claims a (date, ticker) cell for the
+    highest-precedence layer that has a non-NaN value there — hand the
+    hyperscaler layer every rebalance date back to 2018 for CEG/TLN, on
+    the strength of deals not announced until 2024, and thereby DISPLACE
+    the PJM generation-queue layer's real, dispersed data for that whole
+    pre-disclosure period. NaN is the honest answer and lets the lower
+    layer supply the cell.
+
+    See test_compute_hyperscaler_signal_zero_when_disclosed_sum_nets_to_zero
+    below for the case that must still return a real 0.0.
+    """
     from grid_resilience.data.hyperscaler_deals import compute_hyperscaler_signal
     deals = pd.DataFrame([
         {"ticker": "TLN", "mw": 1920, "sign": 1, "first_disclosure_date": pd.Timestamp("2024-03-04")},
     ])
     result = compute_hyperscaler_signal(
         tickers=["TLN"], deals=deals,
-        as_of_dates=[pd.Timestamp("2024-01-01")],
+        as_of_dates=[pd.Timestamp("2024-01-01"), pd.Timestamp("2024-06-01")],
     )
-    # Ticker is in deals (covered by layer), but as_of_date is before first disclosure,
-    # so exposure is 0.0 (not NaN which would mean uncovered/unmeasured)
-    assert result.loc[pd.Timestamp("2024-01-01"), "TLN"] == 0.0
+    assert pd.isna(result.loc[pd.Timestamp("2024-01-01"), "TLN"])
+    # …and on/after the first disclosure the layer does have information.
+    assert result.loc[pd.Timestamp("2024-06-01"), "TLN"] == 1920.0
+
+
+def test_compute_hyperscaler_signal_zero_when_disclosed_sum_nets_to_zero():
+    """The other half of the NaN/0.0 distinction: once a ticker HAS a
+    disclosed deal, a running sign*mw sum that nets to exactly zero (a
+    setback fully offsetting an announcement) is a real measurement of
+    zero net contracted MW and must stay 0.0, not become NaN."""
+    from grid_resilience.data.hyperscaler_deals import compute_hyperscaler_signal
+    deals = pd.DataFrame([
+        {"ticker": "TLN", "mw": 1920, "sign": 1, "first_disclosure_date": pd.Timestamp("2024-03-01")},
+        {"ticker": "TLN", "mw": 1920, "sign": -1, "first_disclosure_date": pd.Timestamp("2024-11-04")},
+    ])
+    result = compute_hyperscaler_signal(
+        tickers=["TLN"], deals=deals,
+        as_of_dates=[pd.Timestamp("2024-02-01"), pd.Timestamp("2025-01-01")],
+    )
+    assert pd.isna(result.loc[pd.Timestamp("2024-02-01"), "TLN"])   # pre-disclosure → no information
+    assert result.loc[pd.Timestamp("2025-01-01"), "TLN"] == 0.0     # disclosed, nets to zero → measured 0
+
+
+def test_compute_hyperscaler_signal_vst_only_deal_is_outside_backtest_window():
+    """VST's single disclosed deal (2026-01-09) postdates config.BACKTEST_END
+    (2025-12-31), so across the whole backtest window the hyperscaler layer
+    has NO information about VST. With the corrected NaN semantics that is
+    an all-NaN column, which apply_layer_precedence() will not claim — so
+    VST correctly falls through to the ICR fallback instead of being pinned
+    to the bottom of the {CEG,TLN,VST} z-score range for a period where it
+    has zero information (whole-branch review finding #2)."""
+    from grid_resilience.config import BACKTEST_END
+    from grid_resilience.data.hyperscaler_deals import (
+        compute_hyperscaler_signal, load_hyperscaler_deals,
+    )
+    deals = load_hyperscaler_deals()
+    vst_first = deals[deals["ticker"] == "VST"]["first_disclosure_date"].min()
+    assert vst_first > pd.Timestamp(BACKTEST_END)
+
+    dates = list(pd.date_range("2018-01-31", BACKTEST_END, freq="ME"))
+    result = compute_hyperscaler_signal(tickers=["VST"], deals=deals, as_of_dates=dates)
+    assert result["VST"].isna().all()

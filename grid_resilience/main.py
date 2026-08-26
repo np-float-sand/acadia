@@ -367,66 +367,91 @@ def run(
             queue = fetch_interconnection_queue()
             zonal_load_start = (pd.Timestamp(start) - pd.DateOffset(years=1)).strftime("%Y-%m-%d")
             zonal_load = fetch_zonal_load(zonal_load_start, end)
-            pjm_dc_history = compute_dc_load_signal(
-                tickers=universe_tickers, node_map=TICKER_NODE_MAP,
-                queue=queue, zonal_load=zonal_load, as_of_dates=list(rebalance_dates),
-            ) if not (queue.empty or zonal_load.empty) else pd.DataFrame()
 
-            ercot_seed = load_ercot_large_load_seed()
-            ercot_history = compute_ercot_signal(
-                tickers=universe_tickers, tsp_map=ERCOT_TSP_MAP,
-                ercot_history=ercot_seed, as_of_dates=list(rebalance_dates),
-            )
+            if queue.empty or zonal_load.empty:
+                # Mirror the dc_queue branch above: the PJM generation-queue layer
+                # is dc-multi's only long, dispersed history (ERCOT yields no
+                # per-ticker MW at all, and the hyperscaler layer only starts in
+                # 2024), so losing it degrades dc-multi to something far weaker
+                # than the name implies. Warn loudly and fall back rather than
+                # silently substituting an empty DataFrame and reporting apparent
+                # success (whole-branch review finding #5).
+                print(
+                    "  [WARNING] Multi-source DC demand signal unavailable — "
+                    f"{'interconnection queue' if queue.empty else ''}"
+                    f"{' and ' if queue.empty and zonal_load.empty else ''}"
+                    f"{'zonal load' if zonal_load.empty else ''} fetch came back "
+                    "empty (missing PJM_API_KEY, PJM outage, or schema drift). "
+                    "The PJM generation-queue layer is dc-multi's only long-history "
+                    "layer, so the remaining layers (ERCOT, hyperscaler deals) are "
+                    "not a usable substitute. Falling back to regulated_signal='icr' "
+                    "for this run."
+                )
+            else:
+                pjm_dc_history = compute_dc_load_signal(
+                    tickers=universe_tickers, node_map=TICKER_NODE_MAP,
+                    queue=queue, zonal_load=zonal_load, as_of_dates=list(rebalance_dates),
+                )
 
-            deals = load_hyperscaler_deals()
-            hyperscaler_history = compute_hyperscaler_signal(
-                tickers=universe_tickers, deals=deals, as_of_dates=list(rebalance_dates),
-            )
+                ercot_seed = load_ercot_large_load_seed()
+                ercot_history = compute_ercot_signal(
+                    tickers=universe_tickers, tsp_map=ERCOT_TSP_MAP,
+                    ercot_history=ercot_seed, as_of_dates=list(rebalance_dates),
+                )
 
-            # Duplicate-column fix: compute_dc_load_signal / compute_ercot_signal /
-            # compute_hyperscaler_signal each return a column for EVERY universe
-            # ticker (NaN where uncovered), not just the tickers they actually
-            # cover — so passing all three straight into combine_dc_demand_layers's
-            # plain pd.concat(axis=1) (which does not merge same-named columns)
-            # triplicates every ticker's column name, not just CEG/TLN (both
-            # iso="PJM", so pjm_dc_history's generation-queue proxy has real
-            # CEG/TLN values that also collide with hyperscaler_history's
-            # disclosed-deal coverage of the same two tickers). Resolve via
-            # apply_layer_precedence(): hyperscaler (disclosed deals) > PJM
-            # generation-queue proxy > ERCOT TSP level. Only the *_for_combine
-            # copies are trimmed — pjm_dc_history itself is left intact below
-            # for the Layer 2 cross-check, which diagnoses the generation-queue
-            # signal's own tagging and should still see every ticker it
-            # actually computed a value for.
-            hyperscaler_for_combine, pjm_dc_for_combine, ercot_for_combine = apply_layer_precedence(
-                [hyperscaler_history, pjm_dc_history, ercot_history]
-            )
+                deals = load_hyperscaler_deals()
+                hyperscaler_history = compute_hyperscaler_signal(
+                    tickers=universe_tickers, deals=deals, as_of_dates=list(rebalance_dates),
+                )
 
-            combined = combine_dc_demand_layers(pjm_dc_for_combine, ercot_for_combine, hyperscaler_for_combine)
-            assert not combined.columns.duplicated().any(), (
-                "combine_dc_demand_layers produced duplicate columns despite "
-                "apply_layer_precedence() trimming — a ticker is covered with "
-                "real data by more than the three precedence tiers already handled."
-            )
-            merged_history = fill_with_icr(combined, icr_history, lag_days=_ICR_LAG_DAYS)
-            n_real = int(combined.notna().any().sum()) if not combined.empty else 0
-            print(f"  Multi-source DC demand signal: {n_real} tickers with real layer data "
-                  f"(PJM/ERCOT/hyperscaler), rest filled from ICR")
-            icr_history = merged_history
-            regulated_signal_lag_days = 0
+                # Overlap resolution: compute_dc_load_signal / compute_ercot_signal /
+                # compute_hyperscaler_signal each return a column for EVERY universe
+                # ticker (NaN where uncovered), not just the tickers they actually
+                # cover, and CEG/TLN are covered with real data by two layers at once
+                # (both are iso="PJM", so pjm_dc_history's generation-queue proxy has
+                # real values for them that collide with hyperscaler_history's
+                # disclosed-deal coverage). apply_layer_precedence() resolves this
+                # PER DATE — hyperscaler (disclosed deals) > PJM generation-queue
+                # proxy > ERCOT TSP level — so the hyperscaler layer only wins the
+                # dates on which it actually has post-disclosure information and the
+                # PJM proxy keeps CEG/TLN's pre-2024 history. Only the *_for_combine
+                # copies are trimmed — pjm_dc_history itself is left intact below
+                # for the Layer 2 cross-check, which diagnoses the generation-queue
+                # signal's own tagging and should still see every ticker it
+                # actually computed a value for.
+                hyperscaler_for_combine, pjm_dc_for_combine, ercot_for_combine = apply_layer_precedence(
+                    [hyperscaler_history, pjm_dc_history, ercot_history]
+                )
 
-            # Layer 2's cross-check is a diagnostic, not blended into the score
-            # (see spec) — still run it and write the output so a reviewer can
-            # actually see where the generation-queue signal and PJM's own
-            # industry tags disagree, rather than importing it unused.
-            if not pjm_dc_history.empty:
-                large_load = fetch_large_load_adjustment()
-                cross_check = cross_check_dc_signal(pjm_dc_history, large_load, TICKER_NODE_MAP)
-                cross_check.to_csv(output_dir / "dc_signal_cross_check.csv", index=False)
-                n_disagree = int((~cross_check["agrees"]).sum())
-                if n_disagree:
-                    print(f"  [WARNING] {n_disagree} ticker(s) disagree between the generation-queue "
-                          f"DC signal and PJM's own industry tags — see output/dc_signal_cross_check.csv")
+                combined = combine_dc_demand_layers(pjm_dc_for_combine, ercot_for_combine, hyperscaler_for_combine)
+                n_real = int(combined.notna().any().sum()) if not combined.empty else 0
+                # apply_layer_precedence() returns only the columns a layer actually
+                # won, so tickers no layer covers are absent from `combined` entirely
+                # — and fill_with_icr() fills NaN *cells*, so it never sees them and
+                # they end up on build_factor's flat cross-sectional-mean fallback
+                # instead of their own ICR reading. Reindex to the full universe
+                # first so dc-multi honours the same "falling back to ICR for tickers
+                # none of the layers cover" contract the dc_queue branch gets for
+                # free (compute_dc_load_signal returns a column per universe ticker).
+                combined = combined.reindex(index=list(rebalance_dates), columns=universe_tickers).astype(float)
+                merged_history = fill_with_icr(combined, icr_history, lag_days=_ICR_LAG_DAYS)
+                print(f"  Multi-source DC demand signal: {n_real} tickers with real layer data "
+                      f"(PJM/ERCOT/hyperscaler), rest filled from ICR")
+                icr_history = merged_history
+                regulated_signal_lag_days = 0
+
+                # Layer 2's cross-check is a diagnostic, not blended into the score
+                # (see spec) — still run it and write the output so a reviewer can
+                # actually see where the generation-queue signal and PJM's own
+                # industry tags disagree, rather than importing it unused.
+                if not pjm_dc_history.empty:
+                    large_load = fetch_large_load_adjustment()
+                    cross_check = cross_check_dc_signal(pjm_dc_history, large_load, TICKER_NODE_MAP)
+                    cross_check.to_csv(output_dir / "dc_signal_cross_check.csv", index=False)
+                    n_disagree = int((~cross_check["agrees"]).sum())
+                    if n_disagree:
+                        print(f"  [WARNING] {n_disagree} ticker(s) disagree between the generation-queue "
+                              f"DC signal and PJM's own industry tags — see output/dc_signal_cross_check.csv")
 
     rolling_factors = build_rolling_factor(
         rolling_betas,

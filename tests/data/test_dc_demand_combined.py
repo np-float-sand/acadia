@@ -126,6 +126,77 @@ class TestApplyLayerPrecedence:
         assert len(trimmed) == 3
         assert all(t.empty for t in trimmed)
 
+    def test_precedence_is_per_date_not_per_whole_column(self):
+        """Whole-branch review finding #3: precedence used to be decided per
+        COLUMN — a layer claimed a ticker outright if it had a value anywhere
+        in that column. So the hyperscaler layer, whose first CEG/TLN deal is
+        in 2024, claimed those tickers for every rebalance date back to 2018
+        and displaced the PJM generation-queue layer's real data there. The
+        higher-precedence layer must only win the dates it actually covers."""
+        from grid_resilience.data.dc_demand_combined import apply_layer_precedence
+
+        dates = [pd.Timestamp("2023-12-31"), pd.Timestamp("2024-12-31")]
+        hyperscaler = pd.DataFrame({"CEG": [float("nan"), 835.0]}, index=dates)
+        pjm = pd.DataFrame({"CEG": [0.6, 0.7], "AEP": [0.2, 0.3]}, index=dates)
+        ercot = pd.DataFrame(index=dates)
+
+        hyperscaler_out, pjm_out, _ = apply_layer_precedence([hyperscaler, pjm, ercot])
+
+        assert pd.isna(hyperscaler_out.loc[dates[0], "CEG"])
+        assert hyperscaler_out.loc[dates[1], "CEG"] == 835.0
+        # PJM keeps CEG on the pre-disclosure date and loses it only on the date
+        # the hyperscaler layer actually has information.
+        assert pjm_out.loc[dates[0], "CEG"] == 0.6
+        assert pd.isna(pjm_out.loc[dates[1], "CEG"])
+        assert pjm_out["AEP"].tolist() == [0.2, 0.3]
+
+    def test_combine_merges_a_ticker_split_across_two_layers_by_date(self):
+        """End-to-end of the above: one output column per ticker, sourced from
+        the highest-precedence layer that has data on each date."""
+        from grid_resilience.data.dc_demand_combined import (
+            apply_layer_precedence, combine_dc_demand_layers,
+        )
+
+        dates = [pd.Timestamp("2023-12-31"), pd.Timestamp("2024-12-31")]
+        hyperscaler = pd.DataFrame(
+            {"CEG": [float("nan"), 835.0], "TLN": [float("nan"), 1920.0]}, index=dates
+        )
+        pjm = pd.DataFrame(
+            {"CEG": [0.6, 0.7], "TLN": [0.4, 0.5], "AEP": [0.2, 0.3]}, index=dates
+        )
+        ercot = pd.DataFrame(index=dates)
+
+        h_t, p_t, e_t = apply_layer_precedence([hyperscaler, pjm, ercot])
+        combined = combine_dc_demand_layers(p_t, e_t, h_t)
+
+        assert not combined.columns.duplicated().any()
+        assert set(combined.columns) == {"AEP", "CEG", "TLN"}
+        assert combined.notna().all().all()
+        # 2023: CEG/TLN come from the PJM layer, z-scored inside {AEP,CEG,TLN}
+        # (CEG highest of the three) — not from the hyperscaler layer.
+        assert combined.loc[dates[0], "CEG"] > combined.loc[dates[0], "TLN"]
+        assert combined.loc[dates[0], "TLN"] > combined.loc[dates[0], "AEP"]
+        # 2024: CEG/TLN come from the hyperscaler layer's own {CEG,TLN}
+        # subpopulation, where TLN (1920) outranks CEG (835).
+        assert combined.loc[dates[1], "TLN"] > 0 > combined.loc[dates[1], "CEG"]
+
+    def test_combine_raises_on_unresolved_overlapping_coverage(self):
+        """Whole-branch review finding #7: this contract used to be a bare
+        `assert` in main.py's caller (stripped under `python -O`). It now
+        lives in combine_dc_demand_layers itself as a ValueError, and checks
+        the cause (two layers covering the same date/ticker cell) rather than
+        the symptom (duplicate output columns)."""
+        import pytest
+        from grid_resilience.data.dc_demand_combined import combine_dc_demand_layers
+
+        dates = [pd.Timestamp("2025-12-31")]
+        pjm = pd.DataFrame({"CEG": [0.6], "AEP": [0.2]}, index=dates)
+        ercot = pd.DataFrame(index=dates)
+        hyperscaler = pd.DataFrame({"CEG": [835.0]}, index=dates)
+
+        with pytest.raises(ValueError, match="apply_layer_precedence"):
+            combine_dc_demand_layers(pjm, ercot, hyperscaler)
+
     def test_output_feeds_combine_dc_demand_layers_without_duplicate_columns(self):
         """End-to-end sanity check tying apply_layer_precedence's contract to
         combine_dc_demand_layers's documented requirement that overlaps be
