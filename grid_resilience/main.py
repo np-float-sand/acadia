@@ -91,6 +91,7 @@ from grid_resilience.config import (
     PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N,
     CONGESTION_SPREAD_ISOS, ISO_ZONE_LOCATION_TYPE,
     XLU_HEDGE, USE_ICR, BUSINESS_MODEL_ARCH, REGULATED_SIGNAL,
+    PEER_GROUP_CONSTRUCTION, GSI_WEIGHTS, GSI_WEIGHTS_PRICE_ONLY,
 )
 from grid_resilience.data.universe import (
     UNIVERSE, LMP_MAPPED, get_ticker_iso,
@@ -132,6 +133,8 @@ def run(
     arch:         str | None = BUSINESS_MODEL_ARCH,
     regulated_signal: str   = REGULATED_SIGNAL,
     zone_gsi:     bool      = True,
+    peer_group:   bool      = PEER_GROUP_CONSTRUCTION,
+    price_only_gsi: bool    = False,
     plot:         bool      = True,
     save_dir:     str       = "output",
 ) -> dict:
@@ -268,7 +271,8 @@ def run(
 
     # ── 4. Grid Stress Index ──────────────────────────────────────────────────
     print("\n[4/7] Computing Grid Stress Index…")
-    gsi_by_iso = build_multi_iso_gsi(daily_lmp_by_iso, daily_load_by_iso, events_df)
+    gsi_weights = GSI_WEIGHTS_PRICE_ONLY if price_only_gsi else GSI_WEIGHTS
+    gsi_by_iso = build_multi_iso_gsi(daily_lmp_by_iso, daily_load_by_iso, events_df, weights=gsi_weights)
 
     for iso, gsi_df in gsi_by_iso.items():
         if not gsi_df.empty:
@@ -380,6 +384,7 @@ def run(
         n_long=n_long,
         n_short=n_short,
         xlu_hedge=xlu_hedge,
+        grouped=peer_group,
     )
 
     weights_matrix = weights_to_matrix(weights_df, returns.index, list(returns.columns))
@@ -444,6 +449,15 @@ def _parse_args() -> argparse.Namespace:
         help="Use per-ticker PJM zone GSI (default: on)",
     )
     p.add_argument(
+        "--peer-group", dest="peer_group",
+        action=argparse.BooleanOptionalAction,
+        default=PEER_GROUP_CONSTRUCTION,
+        help="Build long/short baskets within business-model peer groups "
+             "(merchant/mixed/regulated) instead of ranking the whole universe. "
+             "Cancels sector-beta exposure that whole-universe ranking carries on "
+             "both legs (default: off).",
+    )
+    p.add_argument(
         "--arch",
         default=None,
         choices=["hard-switch", "revenue-mix", "dual-track"],
@@ -457,6 +471,14 @@ def _parse_args() -> argparse.Namespace:
         choices=["icr", "dc-queue"],
         help="Signal used for the regulated path of --arch hard-switch "
              f"(default: {REGULATED_SIGNAL.replace('_', '-')})",
+    )
+    p.add_argument(
+        "--price-only-gsi", dest="price_only_gsi",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Build GSI from lmp_zscore alone (100%%), dropping congestion/reserve/"
+             "event — isolates the energy-price leg of the resilience thesis from "
+             "the congestion leg (default: off, uses the blended GSI_WEIGHTS)",
     )
     p.add_argument("--no-plot", action="store_true", help="Skip matplotlib charts")
     p.add_argument("--output", default="output", help="Output directory")
@@ -476,6 +498,8 @@ if __name__ == "__main__":
         arch      = args.arch.replace("-", "_") if args.arch else None,
         regulated_signal = args.regulated_signal.replace("-", "_"),
         zone_gsi  = args.zone_gsi,
+        peer_group = args.peer_group,
+        price_only_gsi = args.price_only_gsi,
         plot      = not args.no_plot,
         save_dir  = args.output,
     )

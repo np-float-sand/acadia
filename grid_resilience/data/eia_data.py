@@ -9,8 +9,8 @@ Data source: U.S. Energy Information Administration Open Data API v2
   Set env var: EIA_API_KEY=your_key
 
 Key datasets used here:
-  /electricity/facility-fuel    — monthly net generation by plant + fuel type
-  /electricity/operating-generator/generator — plant-level capacity (Form 860)
+  /electricity/facility-fuel               — monthly net generation by plant + fuel type
+  /electricity/operating-generator-capacity — plant-level capacity + operating status (Form 860)
 
 Both endpoints are public and free once you have a key.
 """
@@ -117,6 +117,9 @@ def fetch_generation_mix(
     return result
 
 
+_EIA_PAGE_LENGTH = 5000  # EIA API v2's max rows per request
+
+
 def fetch_plant_capacity(
     iso: str,
     year: int = 2023,
@@ -129,6 +132,12 @@ def fetch_plant_capacity(
         plant_id, plant_name, state, fuel_type, capacity_mw, ba_code
 
     Used for the utility → node asset mapping validation.
+
+    The operating-generator-capacity dataset is monthly-only (confirmed live:
+    frequency=annual returns HTTP 400) — a full year for one balancing authority
+    can exceed the API's per-request row cap (~10,600 rows/year for ERCOT alone
+    vs. a 5000-row cap), so this pages through via `offset` until a short page
+    signals the end, rather than silently truncating.
     """
     ba_codes = ISO_BA_CODES.get(iso)
     if not ba_codes:
@@ -142,25 +151,32 @@ def fetch_plant_capacity(
     frames = []
 
     for ba in ba_codes:
-        url = f"{_EIA_BASE}/electricity/operating-generator/generator/data/"
-        params = {
-            "api_key":                  key,
-            "frequency":                "annual",
-            "data[0]":                  "nameplate-capacity-mw",
-            "facets[balancing_authority_code][]": ba,
-            "start":                    str(year),
-            "end":                      str(year),
-            "length":                   5000,
-        }
+        url = f"{_EIA_BASE}/electricity/operating-generator-capacity/data/"
         print(f"[eia] Fetching plant capacity for {ba} ({year})…")
+        offset = 0
         try:
-            r = requests.get(url, params=params, timeout=30)
-            r.raise_for_status()
-            data = r.json().get("response", {}).get("data", [])
-            if data:
-                df = pd.DataFrame(data)
+            while True:
+                params = {
+                    "api_key":                  key,
+                    "frequency":                "monthly",
+                    "data[0]":                  "nameplate-capacity-mw",
+                    "facets[balancing_authority_code][]": ba,
+                    "start":                    f"{year}-01",
+                    "end":                      f"{year}-12",
+                    "length":                   _EIA_PAGE_LENGTH,
+                    "offset":                   offset,
+                }
+                r = requests.get(url, params=params, timeout=30)
+                r.raise_for_status()
+                page = r.json().get("response", {}).get("data", [])
+                if not page:
+                    break
+                df = pd.DataFrame(page)
                 df["ba_code"] = ba
                 frames.append(df)
+                if len(page) < _EIA_PAGE_LENGTH:
+                    break
+                offset += _EIA_PAGE_LENGTH
         except Exception as exc:
             print(f"  [eia] {ba} capacity fetch failed: {exc}")
 

@@ -119,14 +119,16 @@ def _pjm_get(url: str, params: dict, api_key: str, retries: int = 6) -> dict:
     return {}
 
 
-def _fetch_pjm_lmp_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
+def _fetch_pjm_lmp_direct(api_key: str, start: str, end: str, loc_type: str = "HUB") -> pd.DataFrame:
     """
-    Fetch PJM DA hourly LMPs directly from DataMiner 2, hub nodes only.
+    Fetch PJM DA hourly LMPs directly from DataMiner 2.
 
     Bypasses gridstatus to avoid its client-side location filtering, which
     downloads all 337k nodes per day before filtering — exhausting the rate
-    limit across multiple pages.  Filtering server-side with type=HUB reduces
-    each monthly pull to ~9k rows (1 page).
+    limit across multiple pages.  Filtering server-side with type=HUB or
+    type=ZONE reduces each monthly pull to ~9k rows (1 page).
+
+    loc_type: "HUB" for system benchmark hubs, "ZONE" for settlement zones.
     """
     start_ept = pd.Timestamp(start).strftime("%m/%d/%Y %H:%M")
     end_ept   = pd.Timestamp(end).strftime("%m/%d/%Y %H:%M")
@@ -140,7 +142,7 @@ def _fetch_pjm_lmp_direct(api_key: str, start: str, end: str) -> pd.DataFrame:
             "row_is_current": "TRUE",
             "startRow":       start_row,
             "rowCount":       row_count,
-            "type":           "HUB",
+            "type":           loc_type.upper(),
             "datetime_beginning_ept": f"{start_ept}to{end_ept}",
         }
         data  = _pjm_get(url, params, api_key)
@@ -247,8 +249,12 @@ def _fetch_lmp_raw(iso_obj, iso: str, start: str, end: str, loc_type: str) -> pd
         return _fetch_spp_lmp_raw(iso_obj, start, end)
     if iso == "PJM":
         api_key = os.environ.get("PJM_API_KEY", "")
+        # loc_type here is the gridstatus market string (e.g. "DAY_AHEAD_HOURLY").
+        # Map to PJM DataMiner API type param: ZONE only when explicitly requested,
+        # otherwise fall back to HUB (the default for all regular hub fetches).
+        pjm_api_type = "ZONE" if loc_type.upper() == "ZONE" else "HUB"
         try:
-            return _fetch_pjm_lmp_direct(api_key, start, end)
+            return _fetch_pjm_lmp_direct(api_key, start, end, loc_type=pjm_api_type)
         except Exception as exc:
             print(f"  [grid] PJM LMP fetch failed: {exc}")
             return pd.DataFrame()

@@ -84,6 +84,34 @@ TICKER_NODE_MAP = {
         "business_model": "regulated",
         "pass_through": 0.05,
     },
+    "CEG": {
+        "name": "Constellation Energy",
+        "iso": "PJM",
+        "nodes": ["COMED", "PECO", "BGE"],
+        "load_zones": ["COMED", "PECO", "BGE"],
+        "service_territory": "Merchant nuclear fleet: IL (largest), PA, MD. Also owns NY/CT "
+                              "nuclear (Nine Mile Point, Ginna, Millstone) on NYISO/ISO-NE — "
+                              "unsupported here, not mapped.",
+        "notes": "Spun off from Exelon (2022) with Exelon Generation's competitive nuclear "
+                 "fleet — the generation counterpart to EXC's wires-only remainder. Price "
+                 "history starts 2022-01-19; no coverage of pre-2022 backtest years including "
+                 "Winter Storm Uri.",
+        "business_model": "merchant",
+        "pass_through": 0.80,
+    },
+    "TLN": {
+        "name": "Talen Energy",
+        "iso": "PJM",
+        "nodes": ["PPL"],
+        "load_zones": ["PPL"],
+        "service_territory": "PA merchant generation: Susquehanna nuclear + gas/coal fleet.",
+        "notes": "Re-listed 2023 after Chapter 11 restructuring — unrelated as a public entity "
+                 "to the pre-2016 Talen Energy that went private under the same ticker. "
+                 "Susquehanna nuclear sits in PPL's PJM zone. Price history starts 2023-06-02, "
+                 "covering less than half the backtest window.",
+        "business_model": "merchant",
+        "pass_through": 0.90,
+    },
     # ── MISO ──────────────────────────────────────────────────────────────────
     "ETR": {
         "name": "Entergy",

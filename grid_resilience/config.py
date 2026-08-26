@@ -93,6 +93,17 @@ GSI_WEIGHTS = {
     "event_flag": 0.15,  # named-event binary with ±5-day decay
 }
 
+# Isolates the "energy price" leg of the resilience thesis from the
+# "congestion" leg — 100% lmp_zscore, dropping congestion/reserve/event
+# entirely. Used via --price-only-gsi to test whether blending congestion
+# into the composite GSI dilutes or strengthens the price-shock signal.
+GSI_WEIGHTS_PRICE_ONLY = {
+    "lmp_zscore": 1.0,
+    "congestion_frac": 0.0,
+    "reserve_tightness": 0.0,
+    "event_flag": 0.0,
+}
+
 # ── Portfolio construction ────────────────────────────────────────────────────
 PORTFOLIO_LONG_N = 3  # number of names to go long  (grid-search optimised 2026-06-17)
 PORTFOLIO_SHORT_N = 5  # number of names to go short
@@ -116,6 +127,18 @@ DC_MOMENTUM_WEIGHT = 0.4
 # Business-model-aware signal architecture (Task 1 of spec 2026-06-29).
 # None = original behaviour. Set via --arch CLI flag.
 BUSINESS_MODEL_ARCH: str | None = None
+
+# Peer-group (basket-vs-basket) portfolio construction (spec 2026-08-15).
+# False = original whole-universe ranking. Set via --peer-group CLI flag.
+# Diagnosis: whole-universe long/short exposes both books to sector beta
+# (long book corr to XLU +0.76; short book no better than a naive universe
+# short). Building long+short baskets within business-model peer groups
+# cancels most of that beta while preserving diversification. Merchant
+# (VST/NRG) is deliberately absent below — too small (2 names) to configure;
+# it goes through build_weights() with the global PORTFOLIO_LONG_N/SHORT_N
+# defaults, which already shrink to 1 long / 1 short for a 2-name input.
+PEER_GROUP_CONSTRUCTION: bool = False
+PEER_GROUP_BOOK_SIZES = {"regulated": (2, 3), "mixed": (1, 2)}
 
 # ── Conditional beta estimation ───────────────────────────────────────────────
 # Event window (trading days) around each stress event for the event study

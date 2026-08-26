@@ -1,35 +1,82 @@
 # Handoff — Outage / Reserve-Margin Signal for Merchant Generator Differentiation
 
-**Status:** Idea only, least developed of the three follow-on ideas from the 2026-08-15 session. Needs data-source research before any real brainstorming can happen — this is earlier-stage than the RT/DA spread handoff.
-
-**Start a fresh conversation with:** "Let's explore the outage/reserve-margin signal idea — read docs/handoff_2026-08-15-outage-reserve-margin-signal.md" and use the `superpowers:brainstorming` skill from scratch.
+**Status: SHELVED (2026-08-22).** A live spike test disproved the core premise. Do not pick
+this back up without new data — see "Why this is shelved" below. If a new outage-availability
+data source is ever found, start there, not from the design spec (`docs/superpowers/specs/2026-08-20-outage-availability-signal-design.md`,
+now superseded/dead).
 
 ---
 
-## Why this exists — the diagnosis that led here
+## Why this is shelved
 
-Full context in `docs/compact_2026-08-13-dc-load-signal-results.md`. Short version: current signals underperform XLU; long book rides sector beta, short book has no edge over naive selection (see `docs/handoff_2026-08-15-pairs-basket-construction.md` for the diagnostic numbers). This idea, like the RT/DA spread idea, targets *signal quality* rather than portfolio construction — specifically, it targets a known gap: **the existing stress-beta signal treats all merchant generators as interchangeable**, when in reality their exposure to a given stress event depends on their own generation fleet's availability at that moment.
+A design spec was written (`docs/superpowers/specs/2026-08-20-outage-availability-signal-design.md`)
+proposing to modulate merchant stress-beta by a 3-month-trailing EIA-860 `status`-based
+availability ratio. An independent harsh review of that spec surfaced several serious issues
+(directional-logic bug in the modulation formula, a code path — `dual_track` — the fix silently
+never reached, no empirical validation plan) — see git history of the design spec doc for the
+full review if needed. Before fixing any of that, a cheap spike was run to test the review's
+most damaging finding: that ~90-100 days of EIA reporting lag plus a 3-month trailing average
+might make the signal too stale to ever see the events it exists for.
 
-When asked "what else can we do with the power grid info," this was one of four ideas offered (the user chose to pursue #1, #3, and #4 — this is #4):
+**The spike found something worse than staleness: the data source doesn't capture the
+phenomenon at all, at any lag.** Live-pulled EIA `operating-generator-capacity` status history
+for VST's and NRG's curated ERCOT entities (`NRG Energy Inc`, `NRG Texas Power LLC`,
+`NRG Cedar Bayou Development Company LLC`, `Luminant Generation Company LLC`) for all of
+2020–2021. Result: **`OP` ratio = 1.0 in every single month for both tickers — including
+February 2021, the month of Winter Storm Uri**, one of the most severe ERCOT generation-outage
+events on record (widely documented ~40-50GW of ERCOT capacity offline at the storm's peak).
+Zero status change, for either company, through the single most extreme stress event in the
+entire backtest window.
 
-> Bring in outage/reserve-margin data (EIA-860/861 planned outages, or PJM/ERCOT capacity auction clearing prices) to differentiate which merchant generators actually benefit from an upcoming stress period, rather than treating VST/NRG as interchangeable. Addresses a real gap (today's stress-beta signal doesn't distinguish generators by their own outage/reserve exposure) but is more data-integration effort.
+Sanity-checked this wasn't a fetch or entity-mapping bug: the dataset *can* show non-`OP` status
+in February 2021 — 41 of 1330 ERCOT generators did (3%) — just none of them are VST/NRG
+entities, and 3% is nowhere near the real scale of Uri's outages.
 
-## The core idea (not yet fleshed out)
+**Root cause, visible in hindsight from the status-code descriptions already pulled during the
+original research pass:** EIA-860's `status` facet is annual-scale, not event-scale. `OS` =
+"out of service and **not expected to return to service in next calendar year**"; `OA` = "out of
+service but **expected to return to service in next calendar year**." These codes track
+retirements and extended mothballing, not the days-to-weeks forced outages that actually happen
+during a winter storm or heat wave. A unit that trips for 3–5 days during Uri and is back online
+before month-end never touches this field — the monthly categorical snapshot simply doesn't
+register it. This is not a lag or granularity problem that a shorter lag/lookback window could
+fix; the field itself doesn't carry the information at any lag.
 
-Today, `grid_resilience/signals/conditional_beta.py::compute_stress_betas()` estimates a rolling OLS "stress beta" per ticker — how much a stock's excess return responds to system-wide grid stress (the GSI). This treats VST and NRG (the only two merchant generators in the universe) symmetrically except for whatever their historical price-return relationship happens to show. It doesn't account for **which generator has more available (non-outaged) capacity to actually capture a stress event's price spike** — a generator with a unit down for maintenance during a heat wave captures less upside than one running at full capacity, even if their historical stress-betas look similar.
+Combined with the earlier finding that ERCOT's actual event-scale data source
+(`gridstatus.Ercot.get_hourly_resource_outage_capacity`) has no historical archive (rolling
+window only, nothing before ~last month), **there is currently no available data source — free
+or otherwise checked — that can support this signal's original thesis** (differentiate which
+merchant generator can capture a specific stress event's price spike based on real-time
+availability). Both realistic candidates have been tried and ruled out.
 
-Candidate data sources (none verified for availability/quality yet):
-- **EIA-860/861** — annual/monthly generator-level capacity and (for 861) some outage-adjacent data. Need to check actual granularity and lag (annual data would likely be too stale to matter for a signal meant to differentiate short-term stress-event capture).
-- **NERC GADS** (Generating Availability Data System) — the standard industry source for generator outage/availability rates, but access may be restricted/paid — needs checking, this is not something already used elsewhere in this codebase.
-- **PJM/ERCOT capacity market clearing prices** (PJM capacity auction, ERCOT ORDC scarcity pricing) — these are forward-looking, market-priced reflections of expected reserve margin/scarcity, which might be a cleaner and more available proxy than trying to get unit-level outage data directly. Worth checking whether `gridstatus` exposes anything here before assuming custom scraping is needed.
+## What would need to be true to revisit this
 
-## Open questions to work through when this gets picked up (none explored yet)
+- A new, event-scale, historically-archived generator-outage data source is found (NERC GADS
+  remains theoretically possible but was already deprioritized as subscription-restricted with
+  no free/public access — would need someone to actually check institutional access, not just
+  assume).
+- Or the thesis itself changes scope — e.g., accepting that this can only ever be a
+  structural/annual-scale signal (fleet retirements, long-term mothballing) rather than an
+  event-response signal, which is a fundamentally different and much weaker claim than what
+  motivated the idea originally ("a generator with a unit down for maintenance during a heat
+  wave"). Worth an honest gut-check on whether that weaker claim is worth anything before
+  reviving this.
 
-1. **Does usable data even exist at the right granularity and lag?** This needs to be answered before any design work — if outage data is only available annually or with a multi-month lag, it can't differentiate a specific stress event's capture, and the idea doesn't work as stated. This is the first thing to check, not something to assume.
-2. Is this really only relevant to the 2-name merchant group (VST, NRG), or could a similar reserve-margin/scarcity signal also matter for the regulated path (e.g., utilities whose service territory sits behind a chronically tight reserve margin face different regulatory/rate dynamics)? Scope this explicitly rather than assuming merchant-only.
-3. How does this relate to the existing Grid Stress Index, which already has a "reserve tightness" sub-component (`grid_resilience/signals/grid_stress_index.py`, 20% weight in GSI per the CLAUDE.md doc) — is that already capturing some of what this idea is after, at the system level rather than the generator level? Read that code before assuming this is entirely new.
-4. Given the merchant group is only 2 names, is a new signal here worth the data-integration effort at all, versus just accepting VST/NRG's existing stress-beta differentiation as adequate and spending effort elsewhere (peer-group construction, RT/DA spread)? This is worth an honest gut-check early, given the "more data-integration effort" cost flagged when this idea was first raised.
+## Original research trail (for context only — superseded by the shelving above)
 
-## Recommendation for whoever picks this up
+Full prior history: EIA-860 route/frequency/pagination bugs were found and fixed in
+`grid_resilience/data/eia_data.py::fetch_plant_capacity()` along the way (that fix stands on its
+own merits, unrelated to this idea's fate, and is covered by `tests/data/test_eia_data.py`).
+Entity-name curation findings (Vistra appears only as "Luminant Generation Company LLC" in EIA
+data, no "Vistra" substring at all) are preserved in the design spec's Background section if
+ever useful for a different signal touching the same data.
 
-Don't start with a design doc — start with a scoped research question: "what generator-level outage/availability/reserve-margin data can we actually get, at what granularity and lag, and does gridstatus already expose any of it?" If the answer is "nothing usable at the needed granularity," this idea should be shelved in favor of the other two. This is the most speculative of the three follow-on ideas and should be evaluated cheaply before real investment.
+## What's still open, unaffected by this
+
+- **RT/DA LMP spread** (`docs/handoff_2026-08-15-rt-da-spread-signal.md`) — a separate,
+  not-yet-brainstormed idea, still worth pursuing. Its own recommended first step (verify
+  `gridstatus` actually returns clean historical RT LMP for PJM/ERCOT) hasn't been done yet.
+- **Reserve-margin/scarcity-market data** (PJM/ERCOT capacity auctions) — noted as out of scope
+  in the now-dead design spec, never live-checked. A genuinely different, forward-looking thesis
+  from generator-level outages; not disproven by this spike. Would need its own research pass if
+  picked up.

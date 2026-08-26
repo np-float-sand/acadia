@@ -33,6 +33,7 @@ except ImportError:
     _HAS_SM = False
 
 from grid_resilience.config import EVENT_WINDOW_PRE, EVENT_WINDOW_POST, MIN_STRESS_OBS
+from grid_resilience.signals.grid_stress_index import gsi_for_ticker
 
 
 # ── Event study ───────────────────────────────────────────────────────────────
@@ -174,10 +175,9 @@ def compute_stress_betas(
 
     for ticker in returns.columns:
         iso = ticker_iso_map.get(ticker)
-        if iso is None or iso not in gsi_by_iso:
+        gsi_series = gsi_for_ticker(ticker, gsi_by_iso, ticker_iso_map)
+        if gsi_series.empty:
             continue
-
-        gsi_series = gsi_by_iso[iso]["gsi"]
         excess_ret = (returns[ticker] - sector_return).dropna()
 
         # Align on common dates

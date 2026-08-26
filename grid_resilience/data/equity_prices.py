@@ -15,6 +15,7 @@ Usage:
 """
 
 import hashlib
+import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 
@@ -56,6 +57,34 @@ def _download(tickers: list[str], start: str, end: str) -> pd.DataFrame:
     return prices.ffill(limit=5).dropna(how="all")
 
 
+_RETRY_DELAY_SECONDS = 2
+
+
+def _download_with_retry(
+    tickers: list[str], start: str, end: str, max_attempts: int = 2
+) -> pd.DataFrame:
+    """
+    Wraps _download() with a retry when the result is missing one or more
+    requested tickers as columns.
+
+    yfinance's batch download can silently drop a ticker under concurrent/
+    rate-limited load without raising — found via a real backfill where newly
+    added tickers came back with 0/96 months cached correctly under the
+    ThreadPoolExecutor gap-fill, while an isolated unthrottled fetch of the
+    same range succeeded cleanly. A missing ticker can also mean it genuinely
+    has no data that month (e.g. before its IPO/spinoff date) — that looks
+    identical from here, so this caps retries at `max_attempts` rather than
+    looping, and accepts whatever the last attempt returned.
+    """
+    frame = _download(tickers, start, end)
+    for _ in range(max_attempts - 1):
+        if all(t in frame.columns for t in tickers):
+            break
+        time.sleep(_RETRY_DELAY_SECONDS)
+        frame = _download(tickers, start, end)
+    return frame
+
+
 def fetch_prices(
     tickers: list[str],
     start: str,
@@ -82,7 +111,7 @@ def fetch_prices(
             def _fetch_month(ym: tuple[int, int]) -> None:
                 ms, me = month_bounds(*ym)
                 print(f"[equity] Downloading {len(tickers)} tickers {ms[:7]}…")
-                frame = _download(tickers, ms, me)
+                frame = _download_with_retry(tickers, ms, me)
                 if not frame.empty:
                     save_monthly_chunks_wide(frame, _PRICE_CACHE_BASE)
                 else:

@@ -26,8 +26,19 @@ DCQ = {
     "sharpe": "-0.213", "ann_return": "2.06%", "max_dd": "-19.63%",
     "ic21": "0.0290", "ic21_t": "0.77", "ic63": "0.0680", "ic63_t": "2.01",
 }
-XLU = {"sharpe": "0.162", "ann_return": "7.90%", "max_dd": "-36.47%"}
+XLU = {"sharpe": "0.162", "ann_return": "7.90%", "max_dd": "-36.47%", "total_return": "+87.7%"}
 EW = {"sharpe": "0.216", "ann_return": "8.42%", "max_dd": "-38.78%"}
+
+# Leg-level stats (long_book / short_book contribution to total return),
+# computed by generate_dc_chart.py — re-paste here if that script's numbers change.
+ICR_LEGS = {
+    "long_sharpe": "0.185", "long_total": "+72.9%",
+    "short_sharpe": "-0.656", "short_total": "-38.3%",
+}
+DCQ_LEGS = {
+    "long_sharpe": "0.102", "long_total": "+53.4%",
+    "short_sharpe": "-0.615", "short_total": "-23.2%",
+}
 
 chart_b64 = ""
 chart_path = OUT / "dc_signal_comparison.png"
@@ -178,14 +189,28 @@ html = f"""<!DOCTYPE html>
     <tr><th>Configuration</th><th>Sharpe</th><th>Ann Return</th><th>Max DD</th><th>IC@21d</th><th>IC@63d</th></tr>
     <tr><td>Hard switch + ICR</td><td class="lose">{ICR["sharpe"]}</td><td>{ICR["ann_return"]}</td><td>{ICR["max_dd"]}</td><td class="win">{ICR["ic21"]} (t={ICR["ic21_t"]})</td><td class="win">{ICR["ic63"]} (t={ICR["ic63_t"]})</td></tr>
     <tr><td><strong>Hard switch + DC load signal</strong></td><td class="neutral">{DCQ["sharpe"]}</td><td class="neutral">{DCQ["ann_return"]}</td><td class="neutral">{DCQ["max_dd"]}</td><td>{DCQ["ic21"]} (t={DCQ["ic21_t"]})</td><td>{DCQ["ic63"]} (t={DCQ["ic63_t"]})</td></tr>
+    <tr><td>XLU (utility ETF, buy &amp; hold)</td><td class="win">{XLU["sharpe"]}</td><td class="win">{XLU["ann_return"]}</td><td class="lose">{XLU["max_dd"]}</td><td>—</td><td>—</td></tr>
   </table>
-  <p style="margin-top:10px"><strong>Mixed result — not a clean win.</strong> DC load signal improves Sharpe (+0.06), Ann Return (+1.3pp), and Max DD (+2.3pp) over ICR, but has weaker IC at both horizons. This does not clear the original design spec's success bar (IC improvement vs. ICR baseline).</p>
+  <p style="margin-top:10px"><strong>Neither configuration beats XLU right now.</strong> DC load signal improves Sharpe over ICR (+0.06), but both remain negative and both trail simply buying and holding the sector ETF (Sharpe {XLU["sharpe"]}). DC load signal also has weaker IC than ICR at both horizons — it does not clear the original design spec's success bar (IC improvement vs. ICR baseline). See below for why: it's the short book, not the signal's stock-picking, that's driving the shortfall.</p>
+</div>
+
+<!-- Long vs Short leg breakdown -->
+<div class="change-box" style="background:#fdeeee;border-color:var(--red);">
+  <h3 style="color:var(--red)">Which Leg Is Losing? The Short Book, In Both Configurations</h3>
+  <p>Breaking total return into its long-book and short-book contributions (each leg's actual weight-scaled contribution to portfolio P&amp;L, not a fully-invested return) shows the same pattern under both signals: <strong>the long book is profitable on its own; the short book is what drags total Sharpe negative.</strong></p>
+  <table class="compare-table" style="margin-top:10px">
+    <tr><th>Leg</th><th>ICR Sharpe</th><th>ICR Total Return</th><th>DC-queue Sharpe</th><th>DC-queue Total Return</th></tr>
+    <tr><td>Long book</td><td class="win">{ICR_LEGS["long_sharpe"]}</td><td class="win">{ICR_LEGS["long_total"]}</td><td class="win">{DCQ_LEGS["long_sharpe"]}</td><td class="win">{DCQ_LEGS["long_total"]}</td></tr>
+    <tr><td>Short book</td><td class="lose">{ICR_LEGS["short_sharpe"]}</td><td class="lose">{ICR_LEGS["short_total"]}</td><td class="lose">{DCQ_LEGS["short_sharpe"]}</td><td class="lose">{DCQ_LEGS["short_total"]}</td></tr>
+    <tr><td><strong>Total</strong></td><td class="lose"><strong>{ICR["sharpe"]}</strong></td><td>—</td><td class="neutral"><strong>{DCQ["sharpe"]}</strong></td><td>—</td></tr>
+  </table>
+  <p style="margin-top:10px">Both long books post a positive Sharpe (ICR +0.19, DC-queue +0.10) — comparable to or better than XLU's +0.16. Both short books post a strongly negative Sharpe (ICR -0.66, DC-queue -0.62), losing enough to overwhelm the long book's gains. <strong>The regulated-path signal swap (this feature) changed which names populate each book, but did not fix the structural problem: the short side of this strategy is losing money in both configurations.</strong> Worth investigating directly — possibly the short book's candidates (weakest-scoring names) aren't actually the names that underperform going forward, a much bigger question than which regulated-path signal is used.</p>
 </div>
 
 <!-- Chart -->
 <div class="chart-wrap">
   {chart_html}
-  <div class="chart-caption">Cumulative return, both configurations run identically on today's (corrected) data. Neither series should be compared to charts generated before 2026-08-13.</div>
+  <div class="chart-caption">Top: total strategy vs. XLU. Middle/bottom: long vs. short book contribution for each signal — both configurations run identically on today's (corrected) data. None of these series should be compared to charts generated before 2026-08-13.</div>
 </div>
 
 <!-- The Critical Bug -->
@@ -238,6 +263,7 @@ html = f"""<!DOCTYPE html>
   <div class="card">
     <h3>Roadmap</h3>
     <p><span class="tag tag-road">Priority</span><br><strong>Re-validate historical baselines</strong> — re-run the grid search and hard-switch/revenue-mix/dual-track comparison on today's complete data before any further signal work. Nothing downstream of this should be trusted until it's done.</p>
+    <p><span class="tag tag-road">Priority</span><br><strong>Diagnose the short book</strong> — both regulated-path signals post a strongly negative short-book Sharpe (-0.66 / -0.62) that overwhelms a genuinely profitable long book. Swapping the regulated-path signal changes which names populate each book but hasn't fixed this. Check whether the weakest-scoring names are actually the names that go on to underperform, whether short-side portfolio construction (position sizing, hedge structure) needs rework, or whether this is a universe/liquidity issue independent of any signal choice.</p>
     <p><span class="tag tag-road">Next</span><br><strong>Investigate FE's JCPL projects</strong> — pull project-level detail from the queue to confirm or rule out data-center-driven generation before treating FE as a genuine signal winner.</p>
     <p><span class="tag tag-road">Near-term</span><br><strong>Parameter sweep</strong> on level/momentum weights and MW/day thresholds, mirroring the existing grid-search process, once baselines are re-validated.</p>
     <p><span class="tag tag-road">Medium-term</span><br><strong>Extend beyond PJM</strong> via EIA-861 realized load-by-customer-class, and evaluate PJM's annual "Large Load Additions" workshop PDFs for a true (not generation-proxy) load-side signal.</p>

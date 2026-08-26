@@ -16,7 +16,11 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 
-from grid_resilience.config import PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N, REBALANCE_FREQ, XLU_HEDGE
+from grid_resilience.config import (
+    PORTFOLIO_LONG_N, PORTFOLIO_SHORT_N, REBALANCE_FREQ, XLU_HEDGE,
+    PEER_GROUP_BOOK_SIZES,
+)
+from grid_resilience.data.utility_node_map import TICKER_NODE_MAP
 
 
 def build_weights(
@@ -58,12 +62,58 @@ def build_weights(
     return weights
 
 
+def build_grouped_weights(factor_scores: pd.Series) -> pd.Series:
+    """
+    Construct dollar-neutral long/short weights using peer-group (basket-vs-basket)
+    construction: the universe is split into business_model sleeves (merchant, mixed,
+    regulated), and build_weights() is called independently within each sleeve.
+
+    This cancels sector-beta exposure that whole-universe ranking carries on both legs
+    (see docs/superpowers/specs/2026-08-15-peer-group-construction-design.md) while
+    preserving diversification within each leg. Each sleeve's capital share is
+    proportional to its share of the groupable universe; sleeve outputs are concatenated
+    into a single Series covering all input tickers.
+
+    XLU is always excluded, matching build_weights(). Merchant uses the global
+    PORTFOLIO_LONG_N/PORTFOLIO_SHORT_N defaults (shrinks to 1 long/1 short for its
+    2-name universe via build_weights()'s existing fallback); mixed and regulated use
+    the sizes in config.PEER_GROUP_BOOK_SIZES.
+    """
+    scores = factor_scores.drop("XLU", errors="ignore")
+
+    groups: dict[str, list[str]] = {}
+    for ticker in scores.index:
+        model = TICKER_NODE_MAP.get(ticker, {}).get("business_model")
+        if model in ("merchant", "mixed", "regulated"):
+            groups.setdefault(model, []).append(ticker)
+
+    total = sum(len(tickers) for tickers in groups.values())
+    if total == 0:
+        return pd.Series(dtype=float)
+
+    sleeves = []
+    for model, tickers in groups.items():
+        sleeve_scores = scores.loc[tickers]
+        if model == "merchant":
+            sleeve_weights = build_weights(sleeve_scores, xlu_hedge=False)
+        else:
+            n_long, n_short = PEER_GROUP_BOOK_SIZES[model]
+            sleeve_weights = build_weights(sleeve_scores, n_long=n_long, n_short=n_short, xlu_hedge=False)
+        sleeves.append(sleeve_weights * (len(tickers) / total))
+
+    if not sleeves:
+        return pd.Series(dtype=float)
+
+    return pd.concat(sleeves)
+
+
 def build_rolling_weights(
     rolling_factors: pd.DataFrame,
     rebalance_dates: pd.DatetimeIndex | None = None,
     n_long:    int  = PORTFOLIO_LONG_N,
     n_short:   int  = PORTFOLIO_SHORT_N,
     xlu_hedge: bool = XLU_HEDGE,
+    grouped:   bool = False,
 ) -> pd.DataFrame:
     """
     Build a time series of portfolio weights, one set per rebalance date.
@@ -73,8 +123,12 @@ def build_rolling_weights(
     rolling_factors : DataFrame with columns [date, ticker, factor_score]
                       from factor.resilience_score.build_rolling_factor()
     rebalance_dates : if None, uses all unique dates in rolling_factors
-    n_long / n_short: book sizes
+    n_long / n_short: book sizes (ignored when grouped=True — sizes come from
+                      config.PEER_GROUP_BOOK_SIZES instead)
     xlu_hedge       : if True, replace short book with -0.5 XLU position
+                      (ignored when grouped=True)
+    grouped         : if True, use build_grouped_weights() (peer-group,
+                      basket-vs-basket construction) instead of build_weights()
 
     Returns
     -------
@@ -88,8 +142,11 @@ def build_rolling_weights(
         day_factors = rolling_factors[rolling_factors["date"] == date]
         if day_factors.empty:
             continue
-        scores  = day_factors.set_index("ticker")["factor_score"]
-        weights = build_weights(scores, n_long=n_long, n_short=n_short, xlu_hedge=xlu_hedge)
+        scores = day_factors.set_index("ticker")["factor_score"]
+        if grouped:
+            weights = build_grouped_weights(scores)
+        else:
+            weights = build_weights(scores, n_long=n_long, n_short=n_short, xlu_hedge=xlu_hedge)
         for ticker, w in weights.items():
             if w != 0.0:
                 rows.append({"date": date, "ticker": ticker, "weight": w})

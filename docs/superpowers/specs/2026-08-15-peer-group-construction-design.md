@@ -1,6 +1,10 @@
 # Peer-Group (Basket-vs-Basket) Portfolio Construction — Design
 
-**Status:** Approved design, ready for implementation planning.
+**Status:** Implemented (`--peer-group` CLI flag, `PEER_GROUP_CONSTRUCTION` config, off by
+default). Validated on backtest — cuts volatility/drawdown materially (~26%/~29%) but does not
+improve Sharpe or beat XLU, and the predicted sector-beta-cancellation effect did not hold at
+the whole-strategy level despite working correctly within each peer group. Full results:
+`docs/compact_2026-08-19-peer-group-construction-results.md`.
 
 ## Background
 

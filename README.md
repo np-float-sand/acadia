@@ -142,6 +142,14 @@ python -m grid_resilience.main
                                                (default: dc-queue). dc-queue proxies data-center load growth from PJM's
                                                interconnection queue for PJM tickers, falling back to ICR elsewhere —
                                                see docs/superpowers/specs/2026-07-06-dc-load-signal-design.md.
+--peer-group / --no-peer-group                 Build long/short baskets within business-model peer groups
+                                               (merchant/mixed/regulated) instead of ranking the whole universe
+                                               (default: off). Intended to cancel sector-beta exposure that
+                                               whole-universe ranking carries on both legs — see
+                                               docs/superpowers/specs/2026-08-15-peer-group-construction-design.md.
+                                               Reduces volatility/drawdown materially in testing but has not been
+                                               shown to beat XLU on Sharpe — see
+                                               docs/compact_2026-08-19-peer-group-construction-results.md.
 --no-plot                                     Skip matplotlib charts
 --output           PATH                       Output directory (default: ./output)
 ```

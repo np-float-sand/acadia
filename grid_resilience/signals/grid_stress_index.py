@@ -39,6 +39,7 @@ def build_gsi(
     daily_load: pd.DataFrame,
     events_df: pd.DataFrame,
     iso: str,
+    weights: dict[str, float] = GSI_WEIGHTS,
 ) -> pd.DataFrame:
     """
     Construct the daily Grid Stress Index for a single ISO.
@@ -49,6 +50,10 @@ def build_gsi(
     daily_load  : output of grid_data.daily_load_summary() — indexed by date
     events_df   : output of stress_events.build_full_event_calendar()
     iso         : ISO label (used only for logging)
+    weights     : sub-signal weights for the composite; defaults to
+                  config.GSI_WEIGHTS. Pass config.GSI_WEIGHTS_PRICE_ONLY to
+                  isolate the energy-price leg of the resilience thesis from
+                  the congestion leg.
 
     Returns
     -------
@@ -96,10 +101,10 @@ def build_gsi(
 
     # ── Composite GSI ─────────────────────────────────────────────────────────
     gsi_raw = (
-        GSI_WEIGHTS["lmp_zscore"]        * _rescale(lmp_z)
-        + GSI_WEIGHTS["congestion_frac"] * _rescale(cong_z)
-        + GSI_WEIGHTS["reserve_tightness"] * _rescale(reserve_z)
-        + GSI_WEIGHTS["event_flag"]       * event_flag
+        weights["lmp_zscore"]        * _rescale(lmp_z)
+        + weights["congestion_frac"] * _rescale(cong_z)
+        + weights["reserve_tightness"] * _rescale(reserve_z)
+        + weights["event_flag"]       * event_flag
     )
     gsi = gsi_raw.clip(0, 1).rename("gsi")
 
@@ -125,19 +130,27 @@ def build_multi_iso_gsi(
     daily_lmp_by_iso:  dict[str, pd.DataFrame],
     daily_load_by_iso: dict[str, pd.DataFrame],
     events_df:         pd.DataFrame,
+    weights: dict[str, float] = GSI_WEIGHTS,
 ) -> dict[str, pd.DataFrame]:
     """
-    Build GSI for each ISO and return a dict keyed by ISO name.
+    Build GSI for each key in daily_lmp_by_iso and return a dict keyed by the same keys.
+
+    Supports compound keys like "PJM:AEP" for per-ticker zone GSIs.  For a compound
+    key the base ISO ("PJM") is used to look up load data and to filter events.
+
+    weights : passed through to build_gsi() — see its docstring.
     """
-    return {
-        iso: build_gsi(
-            daily_lmp  = daily_lmp_by_iso.get(iso, pd.DataFrame()),
-            daily_load = daily_load_by_iso.get(iso, pd.DataFrame()),
+    result = {}
+    for key in daily_lmp_by_iso:
+        base_iso = key.split(":")[0] if ":" in key else key
+        result[key] = build_gsi(
+            daily_lmp  = daily_lmp_by_iso.get(key, pd.DataFrame()),
+            daily_load = daily_load_by_iso.get(base_iso, pd.DataFrame()),
             events_df  = events_df,
-            iso        = iso,
+            iso        = base_iso,
+            weights    = weights,
         )
-        for iso in daily_lmp_by_iso
-    }
+    return result
 
 
 def gsi_for_ticker(
@@ -146,11 +159,18 @@ def gsi_for_ticker(
     ticker_iso_map: dict[str, str],
 ) -> pd.Series:
     """
-    Return the GSI series relevant to a specific ticker based on its primary ISO.
+    Return the GSI series relevant to a specific ticker.
+
+    Checks for a per-ticker zone GSI keyed as "ISO:TICKER" first (e.g. "PJM:AEP"),
+    then falls back to the ISO-wide GSI.
     """
     iso = ticker_iso_map.get(ticker)
-    if iso and iso in gsi_by_iso:
-        return gsi_by_iso[iso]["gsi"].rename(f"gsi_{ticker}")
+    if iso:
+        ticker_key = f"{iso}:{ticker}"
+        if ticker_key in gsi_by_iso:
+            return gsi_by_iso[ticker_key]["gsi"].rename(f"gsi_{ticker}")
+        if iso in gsi_by_iso:
+            return gsi_by_iso[iso]["gsi"].rename(f"gsi_{ticker}")
     return pd.Series(dtype=float, name=f"gsi_{ticker}")
 
 
