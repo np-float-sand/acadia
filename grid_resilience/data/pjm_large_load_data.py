@@ -60,3 +60,40 @@ def fetch_large_load_adjustment(vintage: str = "2026", use_cache: bool = True) -
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         merged.to_parquet(cache_file)
     return merged
+
+
+def cross_check_dc_signal(
+    dc_history: pd.DataFrame,
+    large_load: pd.DataFrame,
+    node_map: dict,
+) -> pd.DataFrame:
+    """
+    Diagnostic (not blended into the factor score): flags tickers where the
+    existing generation-queue DC signal is positive but PJM's own
+    industry-tagged Large Load data doesn't call the driving zone(s) a
+    data center — the exact ambiguity that made the original FE result
+    unverifiable (see docs/compact_2026-08-13-dc-load-signal-results.md).
+    """
+    if dc_history.empty:
+        return pd.DataFrame(columns=["ticker", "latest_dc_queue_score", "industries", "mw_demand_2030", "agrees"])
+
+    latest_date = dc_history.index.max()
+    rows = []
+    for ticker, info in node_map.items():
+        if info.get("iso") != "PJM" or ticker not in dc_history.columns:
+            continue
+        score = dc_history.loc[latest_date, ticker]
+        zones = info.get("load_zones", [])
+        zone_rows = large_load[large_load["zone"].isin(zones)]
+        industries = sorted(zone_rows["industry"].dropna().unique().tolist())
+        mw_2030 = float(zone_rows[zone_rows["year"] == 2030]["mw_demand"].sum())
+        is_dc_tagged = any("data center" in i for i in industries)
+        agrees = (pd.isna(score) or score <= 0) or is_dc_tagged
+        rows.append({
+            "ticker": ticker,
+            "latest_dc_queue_score": score,
+            "industries": industries,
+            "mw_demand_2030": mw_2030,
+            "agrees": agrees,
+        })
+    return pd.DataFrame(rows)

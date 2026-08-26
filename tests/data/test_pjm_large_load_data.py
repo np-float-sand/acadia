@@ -1,5 +1,5 @@
 import pandas as pd
-from grid_resilience.data.pjm_large_load_data import _parse_industry_tags, _parse_requests_sheet
+from grid_resilience.data.pjm_large_load_data import _parse_industry_tags, _parse_requests_sheet, cross_check_dc_signal
 
 
 def test_parse_industry_tags_drops_header_repeat_row_and_keeps_only_zone_rows():
@@ -43,3 +43,27 @@ def test_parse_requests_sheet_melts_year_columns_to_long_format():
     bge_2026 = result[(result["zone"] == "BGE") & (result["year"] == 2026)]
     assert bge_2026["mw_demand"].iloc[0] == 17.756
     assert not (result["zone"] == "AE").any()
+
+
+def test_cross_check_flags_disagreement_when_industry_tag_is_not_data_center():
+    dc_history = pd.DataFrame({"AEP": [0.8]}, index=[pd.Timestamp("2025-12-31")])
+    large_load = pd.DataFrame([
+        {"zone": "AEP", "area": "APCO", "industry": "industrial & crypto", "year": 2030, "mw_demand": 500.0, "mw_capacity": 600.0},
+    ])
+    node_map = {"AEP": {"iso": "PJM", "load_zones": ["AEP", "DAYTON"]}}
+
+    result = cross_check_dc_signal(dc_history, large_load, node_map)
+    row = result[result["ticker"] == "AEP"].iloc[0]
+    assert row["agrees"] == False
+    assert "industrial & crypto" in row["industries"]
+
+
+def test_cross_check_agrees_when_industry_tag_is_data_center():
+    dc_history = pd.DataFrame({"EXC": [0.5]}, index=[pd.Timestamp("2025-12-31")])
+    large_load = pd.DataFrame([
+        {"zone": "PECO", "area": "PECO", "industry": "data center", "year": 2030, "mw_demand": 800.0, "mw_capacity": 900.0},
+    ])
+    node_map = {"EXC": {"iso": "PJM", "load_zones": ["PECO", "BGE", "PEPCO", "COMED"]}}
+
+    result = cross_check_dc_signal(dc_history, large_load, node_map)
+    assert result[result["ticker"] == "EXC"].iloc[0]["agrees"] == True
