@@ -1,0 +1,12 @@
+snapshot_date,scope,tsp,standalone_mw,co_located_mw,total_mw,source_url
+2025-05-01,system_wide,,144571,25044,169615,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-06-01,system_wide,,147784,25043,172828,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-07-01,system_wide,,155964,26443,182408,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-08-01,system_wide,,163851,25477,189328,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-09-01,system_wide,,168009,27413,195423,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-10-01,system_wide,,180187,31907,212095,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-11-01,system_wide,,198649,32150,230799,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2025-12-01,system_wide,,202475,34714,237189,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2026-01-01,system_wide,,204448,28677,233125,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2026-02-01,system_wide,,213105,28643,241748,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
+2026-03-01,system_wide,,210114,28515,238629,https://www.ercot.com/files/docs/2026/03/12/March-TAC-Report.pdf
