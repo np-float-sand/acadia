@@ -14,6 +14,21 @@ def test_parse_industry_tags_drops_header_repeat_row_and_keeps_only_zone_rows():
     assert result.iloc[0].to_dict() == {"zone": "BGE", "area": "BGE", "industry": "data center"}
 
 
+def test_parse_industry_tags_strips_whitespace_from_industry():
+    raw = pd.DataFrame([
+        ["ZONENAME", "AREANAME", "Capacity", "Demand", "industry", "note"],
+        ["BGE", "BGE", "x", "x", "data center  ", None],
+        ["AEP", "APCO", "x", None, "  industrial & crypto", None],
+        ["DUQ", "DUQ", "x", "x", "  data center  ", None],
+    ])
+    result = _parse_industry_tags(raw)
+    assert result.iloc[0]["industry"] == "data center"
+    assert result.iloc[1]["industry"] == "industrial & crypto"
+    assert result.iloc[2]["industry"] == "data center"
+    # Verify that the duplicate (with/without whitespace) is now normalized
+    assert result[result["industry"] == "data center"].shape[0] == 2
+
+
 def test_parse_requests_sheet_melts_year_columns_to_long_format():
     raw = pd.DataFrame([
         ["Total Demand Request for Large Load Adjustment"] + [None] * 5,

@@ -21,7 +21,9 @@ def _parse_industry_tags(raw_summary: pd.DataFrame) -> pd.DataFrame:
     """Parse the 'summary' sheet's ZONENAME/AREANAME/industry columns."""
     df = raw_summary.iloc[1:].copy()
     df.columns = ["zone", "area", "has_capacity", "has_demand", "industry", "note"]
-    return df[df["zone"].notna()][["zone", "area", "industry"]].reset_index(drop=True)
+    result = df[df["zone"].notna()][["zone", "area", "industry"]].reset_index(drop=True)
+    result["industry"] = result["industry"].str.strip()
+    return result
 
 
 def _parse_requests_sheet(raw: pd.DataFrame, value_name: str) -> pd.DataFrame:
