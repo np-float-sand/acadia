@@ -37,3 +37,17 @@ def test_compute_hyperscaler_signal_uncovered_ticker_is_nan():
     deals = pd.DataFrame(columns=["ticker", "mw", "sign", "first_disclosure_date"])
     result = compute_hyperscaler_signal(tickers=["FE"], deals=deals, as_of_dates=[pd.Timestamp("2025-01-01")])
     assert pd.isna(result.loc[pd.Timestamp("2025-01-01"), "FE"])
+
+
+def test_compute_hyperscaler_signal_zero_before_first_disclosure():
+    from grid_resilience.data.hyperscaler_deals import compute_hyperscaler_signal
+    deals = pd.DataFrame([
+        {"ticker": "TLN", "mw": 1920, "sign": 1, "first_disclosure_date": pd.Timestamp("2024-03-04")},
+    ])
+    result = compute_hyperscaler_signal(
+        tickers=["TLN"], deals=deals,
+        as_of_dates=[pd.Timestamp("2024-01-01")],
+    )
+    # Ticker is in deals (covered by layer), but as_of_date is before first disclosure,
+    # so exposure is 0.0 (not NaN which would mean uncovered/unmeasured)
+    assert result.loc[pd.Timestamp("2024-01-01"), "TLN"] == 0.0
