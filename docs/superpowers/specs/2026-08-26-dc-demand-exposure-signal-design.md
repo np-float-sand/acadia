@@ -52,9 +52,34 @@ Covers the merchant/IPP sleeve (CEG, TLN, VST, NRG) — the cleanest exposure in
 
 Raw score: cumulative disclosed DC-linked MW under contract per ticker, as of each date (event-study style, not a continuous flow like Layers 1–2).
 
+**KNOWN LIMITATION (added 2026-08-26, whole-branch review finding #1) — under `--arch hard-switch`, Layer 3 is inert for the very tickers it targets.**
+
+`resilience_score.build_factor()`'s `hard_switch` architecture splits the universe on `pass_through`:
+
+```python
+is_regulated = pt < 0.5
+arch_score = beta_z.copy()
+arch_score[is_regulated] = icr_z[is_regulated]      # <- the DC-demand signal
+```
+
+The DC-demand signal (whatever `--regulated-signal` resolves to) enters only through `icr_z`, and only for tickers with `pass_through < 0.5`. Layer 3's merchant sleeve is on the other side of that split — `TICKER_NODE_MAP` gives CEG `pass_through=0.80`, TLN `0.90`, VST `1.00` — so all three are scored from `beta_z` and **their own factor scores never read Layer 3 at all**, in any configuration tested. Verified directly: permuting CEG/TLN/VST's Layer 3 scores among themselves leaves every factor score in the universe unchanged (delta 0.000), because the merchant branch never reads `icr_z` and a permutation leaves the pooled `icr_z` mean/std intact.
+
+The only path by which Layer 3 reaches the factor under `hard_switch` is a side-channel, not a signal: the merchant sleeve's values shift the mean/std of the shared cross-sectional `icr_z`, which perturbs *other*, regulated tickers' scores (measured: AEP -0.67, PPL -0.99 when the merchant sleeve was shifted). The merchant tickers' own scores then move too, but only at the very end, via `build_factor`'s closing cross-sectional renormalization picking up the regulated names' changes — their `arch_score` is still pure `beta_z`. That is noise leakage, not the designed mechanism.
+
+Making Layer 3 actually work requires either:
+
+- **a merchant-path integration** — routing the DC-demand signal into the merchant branch of `build_factor()` as well, which is a real architecture change and is out of scope for the review fix that added this note; or
+- **a different `--arch`**, with the caveat that neither existing alternative fixes VST. Verified against the current code:
+  - `revenue_mix` computes `beta_z * pt + icr_z * (1 - pt)`, so CEG gets 20% weight and TLN 10% weight on Layer 3 — partial, not full — while **VST gets exactly 0%**, because `pass_through=1.00` makes `(1 - pt) = 0`.
+  - `dual_track` uses `regulated_mask = pt < 1.0` and then weights by `(1 - pt)` as well, so again CEG 20% / TLN 10% / **VST 0%**.
+
+Until one of those lands, treat Layer 3 as built-and-tested infrastructure with no live effect on its own tickers, and do not attribute any `dc-multi` backtest delta to it.
+
 ## Signal combination
 
 Layers 1–3 are on different scales (queue-MW ratios, LAS-forecast ratios, cumulative contracted MW) and cover non-overlapping ticker subsets with no ticker getting more than one real-data layer in v1 (PJM tickers get Layer 2, CNP gets Layer 1, merchant sleeve gets Layer 3). Combination is therefore per-ticker selection, not blending: each ticker uses whichever layer covers it, z-scored against *its own subpopulation* (tickers on that layer) before entering `build_factor()` — reusing the subpopulation-z-score pattern `fill_with_icr()` already established in `dc_load_data.py`, specifically because concatenating raw values across layers before a single z-score is the exact bug already found and fixed once in this codebase (the DC-ratio/ICR mixing bug in `docs/compact_2026-08-13-dc-load-signal-results.md`). Tickers with no layer coverage keep the existing ICR fallback.
+
+**Correction (2026-08-26, post-implementation):** the premise above — "cover non-overlapping ticker subsets with no ticker getting more than one real-data layer in v1" — is wrong. `TICKER_NODE_MAP` tags CEG and TLN `iso="PJM"`, so Layer 2's generation-queue proxy already covers both, and Layer 3 covers them too. The implementation therefore needs an explicit precedence rule (`apply_layer_precedence()`: Layer 3 > Layer 2 > Layer 1), and that precedence must be resolved **per date**, not per ticker: Layer 3 has no information about a ticker before its first disclosed deal, so claiming the whole column would discard Layer 2's real pre-disclosure history. Correspondingly, Layer 3 returns NaN (not 0.0) before a ticker's first disclosure — 0.0 is reserved for a disclosed running sum that genuinely nets to zero. See whole-branch review finding #3.
 
 ## Backtest / validation approach
 

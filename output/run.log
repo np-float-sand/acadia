@@ -1,7 +1,7 @@
 [log] Run log → /Users/sandhyapersad/acadia/output/run.log
 
 [1/7] Fetching equity prices…
-/Users/sandhyapersad/acadia/grid_resilience/main.py:153: RuntimeWarning: [equity] Clipped 3 extreme daily returns (|log| > 0.4): [('NRG', '2025-06-02'), ('PCG', '2019-01-14'), ('PCG', '2019-01-24')]
+/Users/sandhyapersad/acadia/grid_resilience/main.py:160: RuntimeWarning: [equity] Clipped 6 extreme daily returns (|log| > 0.4): [('CEG', '2022-11-01'), ('PCG', '2019-01-14'), ('PCG', '2019-01-24'), ('TLN', '2025-01-02'), ('VST', '2025-04-01')]...
   all_returns = fetch_returns(fetch_tickers, start, end)
 
   [arch] Business-model arch: 'hard_switch' — ICR auto-enabled for regulated path
@@ -14,92 +14,98 @@
 [4/7] Computing Grid Stress Index…
   SPP: 83 high-stress days (GSI ≥ 0.6) in period
   CAISO: 277 high-stress days (GSI ≥ 0.6) in period
-  ERCOT: 698 high-stress days (GSI ≥ 0.6) in period
   PJM: 729 high-stress days (GSI ≥ 0.6) in period
+  ERCOT: 698 high-stress days (GSI ≥ 0.6) in period
   MISO: 347 high-stress days (GSI ≥ 0.6) in period
 
 [5/7] Estimating stress betas…
 
 [6/7] Building Grid Resilience factor scores…
-  Fetching regulated-path signal (dc_queue)…
-  ICR data: 7 quarters, 23 tickers
-  DC load signal: 6 PJM tickers with real data, 17 filled from ICR
+  Fetching regulated-path signal (dc_multi)…
+  ICR data: 7 quarters, 25 tickers
+  Multi-source DC demand signal: 8 tickers with real layer data (PJM/ERCOT/hyperscaler), rest filled from ICR
 
   Latest factor scores:
-    FE    ▲ +1.842  █████████
-    AEE   ▲ +1.652  ████████
-    EVRG  ▲ +1.621  ████████
-    ETR   ▲ +1.043  █████
-    AEP   ▲ +0.432  ██
-    EIX   ▲ +0.375  █
-    D     ▲ +0.204  █
-    CMS   ▼ -0.183  
-    EXC   ▼ -0.183  
-    XEL   ▼ -0.344  █
-    DTE   ▼ -0.350  █
-    WEC   ▼ -0.529  ██
-    PEG   ▼ -0.629  ███
-    NRG   ▼ -0.667  ███
-    CNP   ▼ -0.734  ███
-    PPL   ▼ -0.760  ███
-    PCG   ▼ -0.974  ████
-    VST   ▼ -1.817  █████████
+    CEG   ▲ +1.844  █████████
+    FE    ▲ +1.632  ████████
+    AEE   ▲ +1.327  ██████
+    EVRG  ▲ +1.299  ██████
+    TLN   ▲ +0.842  ████
+    ETR   ▲ +0.769  ███
+    AEP   ▲ +0.250  █
+    EIX   ▲ +0.156  
+    D     ▲ +0.024  
+    NRG   ▼ -0.219  █
+    CMS   ▼ -0.356  █
+    EXC   ▼ -0.359  █
+    XEL   ▼ -0.504  ██
+    DTE   ▼ -0.509  ██
+    WEC   ▼ -0.673  ███
+    PEG   ▼ -0.801  ████
+    CNP   ▼ -0.861  ████
+    PPL   ▼ -0.931  ████
+    PCG   ▼ -1.086  █████
+    VST   ▼ -1.845  █████████
 
 [7/7] Constructing portfolio and running backtest…
-[ic] dates: 93  |  5d: 90 pts  |  10d: 90 pts  |  21d: 90 pts  |  63d: 88 pts
+/Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3023: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/Users/sandhyapersad/acadia/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3024: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+[ic] dates: 88  |  5d: 84 pts  |  10d: 84 pts  |  21d: 84 pts  |  63d: 82 pts
 
 =======================================================
   GRID RESILIENCE STRATEGY — PERFORMANCE SUMMARY
 =======================================================
 
   Full Period:
-    ann_return     :    2.06%
-    ann_vol        :    9.09%
-    sharpe         :  -0.213
-    sortino        :  -0.289
-    max_dd         :  -19.63%
-    hit_rate       :    47.3%
+    ann_return     :   -0.83%
+    ann_vol        :   10.59%
+    sharpe         :  -0.456
+    sortino        :  -0.474
+    max_dd         :  -24.61%
+    hit_rate       :    44.9%
 
   Benchmark (XLU):
-    ann_return     :    7.90%
-    ann_vol        :   24.01%
-    sharpe         :   0.162
-    sortino        :   0.182
-    max_dd         :  -36.47%
-    hit_rate       :    48.4%
+    ann_return     :    6.35%
+    ann_vol        :   13.22%
+    sharpe         :   0.177
+    sortino        :   0.187
+    max_dd         :  -17.28%
+    hit_rate       :    32.3%
 
   EW Universe:
-    ann_return     :    8.42%
-    ann_vol        :   20.44%
-    sharpe         :   0.216
-    sortino        :   0.253
-    max_dd         :  -38.78%
-    hit_rate       :    55.2%
+    ann_return     :    7.22%
+    ann_vol        :   20.63%
+    sharpe         :   0.156
+    sortino        :   0.183
+    max_dd         :  -42.03%
+    hit_rate       :    54.0%
 
   Stress Periods:
-    ann_return     :    0.84%
-    ann_vol        :   10.17%
-    sharpe         :  -0.311
-    sortino        :  -0.427
-    max_dd         :  -20.04%
-    hit_rate       :    49.1%
+    ann_return     :   -3.63%
+    ann_vol        :   12.32%
+    sharpe         :  -0.619
+    sortino        :  -0.663
+    max_dd         :  -23.65%
+    hit_rate       :    48.1%
 
   Calm Periods:
-    ann_return     :    3.78%
-    ann_vol        :    7.32%
-    sharpe         :  -0.030
-    sortino        :  -0.041
-    max_dd         :   -8.57%
-    hit_rate       :    44.8%
+    ann_return     :    3.10%
+    ann_vol        :    7.52%
+    sharpe         :  -0.120
+    sortino        :  -0.124
+    max_dd         :  -11.23%
+    hit_rate       :    40.4%
 
   Stress days: 1173 / 2010 (58.4%)
 
   Stress vs Calm — significance tests:
     Test                         p-value  Sig
     --------------------------  --------  ---
-    Welch t (mean return)         0.6341     
+    Welch t (mean return)         0.3397     
     Levene  (volatility)          0.0000   ***
-    Mann-Whitney U (distrib)      0.6924      
+    Mann-Whitney U (distrib)      0.6787      
     Significance: * p<0.10  ** p<0.05  *** p<0.01
 =======================================================
 
@@ -109,28 +115,28 @@
 ==============================================================
   Horizon     Mean IC   Std IC   t-stat   % Pos     N
   ---------- -------- -------- -------- ------- -----
-  5d           0.0314   0.3448    0.864   51.1%    90
-  10d         -0.0007   0.3275   -0.021   48.9%    90
-  21d          0.0290   0.3583    0.766   55.6%    90
-  63d          0.0680   0.3176    2.008   56.8%    88
+  5d           0.0213   0.3043    0.640   53.6%    84
+  10d          0.0034   0.2891    0.108   50.0%    84
+  21d          0.0057   0.3347    0.157   52.4%    84
+  63d         -0.0209   0.3378   -0.560   48.8%    82
 
   Conditional IC by GSI regime:
   Horizon    Regime      Mean IC   t-stat     N
   ---------- ---------- -------- -------- -----
-  5d         stressed     0.0211    0.564    77
-  5d         calm         0.0922    0.758    13
-  10d        stressed    -0.0136   -0.375    77
-  10d        calm         0.0756    0.706    13
-  21d        stressed     0.0502    1.251    77
-  21d        calm        -0.0970   -0.913    13
-  63d        stressed     0.0643    1.700    75
-  63d        calm         0.0890    1.228    13
+  5d         stressed     0.0238    0.726    75
+  5d         calm         0.0003    0.002     9
+  10d        stressed    -0.0005   -0.014    75
+  10d        calm         0.0357    0.336     9
+  21d        stressed     0.0211    0.557    75
+  21d        calm        -0.1222   -0.959     9
+  63d        stressed    -0.0285   -0.734    73
+  63d        calm         0.0412    0.312     9
 
   Signal comparison (IC @ 21d fwd  |  EW/Bench IC = 0 by construction):
   Signal                       IC   t-stat   Sharpe   Ann Ret   Max DD
   ---------------------- -------- -------- -------- --------- --------
-  Factor (L/S)             0.0290    0.766   -0.213    2.06%  -19.63%
-  Benchmark (XLU)           0.0000       —    0.162    7.90%  -36.47%
-  EW Universe               0.0000       —    0.216    8.42%  -38.78%
+  Factor (L/S)             0.0057    0.157   -0.456   -0.83%  -24.61%
+  Benchmark (XLU)           0.0000       —    0.177    6.35%  -17.28%
+  EW Universe               0.0000       —    0.156    7.22%  -42.03%
 ==============================================================
 

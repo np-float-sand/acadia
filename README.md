@@ -142,16 +142,24 @@ python -m grid_resilience.main
                                                (default: dc-queue). dc-queue proxies data-center load growth from PJM's
                                                interconnection queue for PJM tickers, falling back to ICR elsewhere —
                                                see docs/superpowers/specs/2026-07-06-dc-load-signal-design.md.
-                                               dc-multi blends three layers — PJM generation-queue proxy, ERCOT
-                                               TSP-level large-load data, and disclosed hyperscaler colocation deals
-                                               (each cross-sectionally z-scored within its own covered tickers) —
-                                               falling back to ICR for tickers none of the three cover. Where more
-                                               than one layer covers a ticker with real data, hyperscaler deals take
-                                               precedence over the PJM generation-queue proxy, which takes precedence
-                                               over ERCOT TSP data. Currently resolves real (non-ICR) values for
-                                               ~9 tickers (6 PJM regulated names + CEG/TLN/VST from hyperscaler deals;
-                                               ERCOT's public TSP data doesn't yet yield usable per-ticker MW figures).
-                                               Also writes `dc_signal_cross_check.csv` (see Outputs) — see
+                                               dc-multi does not blend its layers: it SELECTS one per ticker per
+                                               rebalance date, by precedence, from three layers — PJM
+                                               generation-queue proxy, ERCOT TSP-level large-load data, and
+                                               disclosed hyperscaler colocation deals (each cross-sectionally
+                                               z-scored within its own covered tickers first) — falling back to
+                                               ICR for tickers none of the three cover on that date. Where more
+                                               than one layer has real data for the same ticker on the same date,
+                                               hyperscaler deals win over the PJM generation-queue proxy, which
+                                               wins over ERCOT TSP data. Precedence is resolved per date, so a
+                                               ticker can be sourced from the PJM proxy before its first disclosed
+                                               deal and from the hyperscaler layer after it. Currently resolves
+                                               real (non-ICR) values for 8 tickers (6 PJM regulated names plus
+                                               CEG/TLN; VST's only disclosed deal postdates BACKTEST_END, and
+                                               ERCOT's public TSP data doesn't yet yield usable per-ticker MW
+                                               figures). If the PJM queue or zonal-load fetch comes back empty the
+                                               whole option warns and falls back to `icr` for that run, exactly as
+                                               dc-queue does. Also writes `dc_signal_cross_check.csv` (see Outputs)
+                                               — see
                                                docs/superpowers/specs/2026-08-26-dc-demand-exposure-signal-design.md.
 --peer-group / --no-peer-group                 Build long/short baskets within business-model peer groups
                                                (merchant/mixed/regulated) instead of ranking the whole universe

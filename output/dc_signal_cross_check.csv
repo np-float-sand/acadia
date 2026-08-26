@@ -1,0 +1,9 @@
+ticker,latest_dc_queue_score,industries,mw_demand_2030,agrees
+AEP,0.5442098443826603,"['data center', 'industrial & crypto']",13996.2196907,True
+EXC,0.44293865712481106,"['data center', 'data center & industrial']",6843.566999999999,True
+PPL,0.347772304476812,['data center'],13343.6,True
+FE,0.7887748855819121,['data center & industrial & stadium'],4156.0,True
+CEG,0.4215395062006872,"['data center', 'data center & industrial']",6242.967,True
+TLN,0.347772304476812,['data center'],13343.6,True
+D,0.5066900618349541,"['data center', 'data center & voltage optimization']",14604.432847388813,True
+PEG,0.36935456289649665,['data center & port electrification'],2970.4750748384467,True

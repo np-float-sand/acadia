@@ -46,16 +46,16 @@ MISO Congestion 2023-01-11,congestion,2023-01-11,2023-01-20,2023-01-04,2023-01-2
 MISO Congestion 2023-02-01,congestion,2023-02-01,2023-02-27,2023-01-25,2023-03-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2023-02-06,congestion,2023-02-06,2023-05-15,2023-01-30,2023-05-22,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-03-05,congestion,2023-03-05,2023-03-26,2023-02-26,2023-04-02,['MISO'],Algo-detected: congestion_frac ≥ 30%
-MISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-22,2023-03-25,2023-04-29,['MISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-11,2023-03-25,2023-04-18,['CAISO'],Algo-detected: congestion_frac ≥ 30%
+MISO Congestion 2023-04-01,congestion,2023-04-01,2023-04-22,2023-03-25,2023-04-29,['MISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2023-05-21,congestion,2023-05-21,2023-05-30,2023-05-14,2023-06-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Heat Emergency Jun 2023,heat,2023-06-15,2023-06-28,2023-05-01,2023-08-01,['ERCOT'],"Multiple ERCOT conservation notices. HB_NORTH spiked above $5,000/MWh."
 CAISO Congestion 2023-06-17,congestion,2023-06-17,2023-06-26,2023-06-10,2023-07-03,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO LMP Spike 2023-07-21,lmp_spike,2023-07-21,2023-07-29,2023-07-07,2023-08-12,['CAISO'],Algo-detected: lmp_max ≥ 235 $/MWh
 ERCOT LMP Spike 2023-08-05,lmp_spike,2023-08-05,2023-08-07,2023-07-22,2023-08-21,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
 ERCOT LMP Spike 2023-08-10,lmp_spike,2023-08-10,2023-08-12,2023-07-27,2023-08-26,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
-CAISO LMP Spike 2023-08-14,lmp_spike,2023-08-14,2023-08-17,2023-07-31,2023-08-31,['CAISO'],Algo-detected: lmp_max ≥ 235 $/MWh
 ERCOT LMP Spike 2023-08-14,lmp_spike,2023-08-14,2023-08-19,2023-07-31,2023-09-02,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
+CAISO LMP Spike 2023-08-14,lmp_spike,2023-08-14,2023-08-17,2023-07-31,2023-08-31,['CAISO'],Algo-detected: lmp_max ≥ 235 $/MWh
 ERCOT LMP Spike 2023-08-24,lmp_spike,2023-08-24,2023-08-28,2023-08-10,2023-09-11,['ERCOT'],Algo-detected: lmp_max ≥ 766 $/MWh
 ERCOT Congestion 2023-08-27,congestion,2023-08-27,2023-09-08,2023-08-20,2023-09-15,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 CAISO LMP Spike 2023-08-28,lmp_spike,2023-08-28,2023-08-30,2023-08-14,2023-09-13,['CAISO'],Algo-detected: lmp_max ≥ 235 $/MWh
@@ -74,10 +74,10 @@ CAISO Congestion 2024-02-08,congestion,2024-02-08,2024-02-18,2024-02-01,2024-02-
 MISO Congestion 2024-02-12,congestion,2024-02-12,2024-02-28,2024-02-05,2024-03-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2024-03-01,congestion,2024-03-01,2024-03-30,2024-02-23,2024-04-06,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2024-03-10,congestion,2024-03-10,2024-03-30,2024-03-03,2024-04-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
-MISO Congestion 2024-04-01,congestion,2024-04-01,2024-04-29,2024-03-25,2024-05-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 CAISO Congestion 2024-04-01,congestion,2024-04-01,2024-04-29,2024-03-25,2024-05-06,['CAISO'],Algo-detected: congestion_frac ≥ 30%
-CAISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-17,2024-04-24,2024-05-24,['CAISO'],Algo-detected: congestion_frac ≥ 30%
+MISO Congestion 2024-04-01,congestion,2024-04-01,2024-04-29,2024-03-25,2024-05-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-13,2024-04-24,2024-05-20,['MISO'],Algo-detected: congestion_frac ≥ 30%
+CAISO Congestion 2024-05-01,congestion,2024-05-01,2024-05-17,2024-04-24,2024-05-24,['CAISO'],Algo-detected: congestion_frac ≥ 30%
 MISO Congestion 2024-05-17,congestion,2024-05-17,2024-05-30,2024-05-10,2024-06-06,['MISO'],Algo-detected: congestion_frac ≥ 30%
 ERCOT Congestion 2024-05-18,congestion,2024-05-18,2024-06-20,2024-05-11,2024-06-27,['ERCOT'],Algo-detected: congestion_frac ≥ 30%
 PJM LMP Spike 2024-07-08,lmp_spike,2024-07-08,2024-07-10,2024-06-24,2024-07-24,['PJM'],Algo-detected: lmp_max ≥ 213 $/MWh
