@@ -124,9 +124,14 @@ def ttm_gross_margin_signal(fund_df: pd.DataFrame, asof: pd.Timestamp) -> pd.Ser
             continue
         recent = g.iloc[-4:]
         prior = g.iloc[-8:-4]
-        m_recent = recent["gross_profit"].sum() / recent["revenue"].sum()
-        m_prior = prior["gross_profit"].sum() / prior["revenue"].sum()
-        out[tkr] = float(m_recent - m_prior) if prior["revenue"].sum() else float("nan")
+        rev_recent = recent["revenue"].sum()
+        rev_prior = prior["revenue"].sum()
+        if not (rev_recent and rev_prior):
+            out[tkr] = float("nan")
+            continue
+        m_recent = recent["gross_profit"].sum() / rev_recent
+        m_prior = prior["gross_profit"].sum() / rev_prior
+        out[tkr] = float(m_recent - m_prior)
     return pd.Series(out, dtype=float)
 
 

@@ -150,3 +150,33 @@ def test_ttm_revenue_sums_last_four_visible_quarters():
     from grid_equipment_basket import margin_data as md
     rev = md.ttm_revenue(df, pd.Timestamp("2024-09-15"))
     assert rev["AAA"] == pytest.approx(4000.0)
+
+
+def test_ttm_gross_margin_signal_recent_revenue_zero_is_nan_no_warning():
+    import warnings
+    # All 8 quarters visible, but the most recent 4 have revenue=0
+    qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
+          "2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30"]
+    av = ["2022-11-01", "2023-02-01", "2023-05-01", "2023-08-01",
+          "2023-11-01", "2024-02-01", "2024-05-01", "2024-08-01"]
+    quarters = [(qe[i], av[i], 1000.0, 200.0) if i < 4 else (qe[i], av[i], 0.0, 0.0)
+                for i in range(8)]
+    df = _fund_rows("AAA", quarters)
+    from grid_equipment_basket import margin_data as md
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2024-09-15"))
+    assert "AAA" not in sig.dropna().index
+
+
+def test_ttm_gross_margin_signal_span_out_of_range_is_nan():
+    # 8 clean quarters but quarter_end[-1]..quarter_end[-5] span > 430 days (gappy series)
+    qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
+          "2023-12-31", "2024-06-30", "2024-09-30", "2024-12-31"]  # gappy: 2023-09-30 skipped
+    av = ["2022-11-01", "2023-02-01", "2023-05-01", "2023-08-01",
+          "2024-02-01", "2024-08-01", "2024-11-01", "2025-02-01"]
+    df = _fund_rows("AAA", [(q, a, 1000.0, 200.0) for q, a in zip(qe, av)])
+    from grid_equipment_basket import margin_data as md
+    sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2025-03-15"))
+    # quarter_end[-1] = 2024-12-31, quarter_end[-5] = 2023-12-31 = 365 days, out of range
+    assert "AAA" not in sig.dropna().index
