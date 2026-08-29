@@ -34,3 +34,53 @@ def test_composite_rank_one_missing_component_uses_the_other():
     assert not np.isnan(out["Z"])                        # ranked on b alone
     assert np.isnan(vc.composite_rank(pd.Series(dtype=float),
                                      pd.Series(dtype=float), ["Z"])["Z"])
+
+
+_BL_HEADER = ("ticker,quarter_end,availability_date,metric_value,metric_unit,"
+              "disclosure_type,segment_scope,source_url,notes\n")
+
+
+def _backlog_df(rows):
+    from io import StringIO
+    from grid_equipment_basket.backlog_data import load_backlog_csv
+    return load_backlog_csv(StringIO(_BL_HEADER + "".join(rows)))
+
+
+def _bl_row(t, qe, av, val):
+    return f"{t},{qe},{av},{val},USD_million,xbrl_rpo,total,http://x,\n"
+
+
+def _fund_df(ticker, quarterly_rev):
+    # quarterly_rev: list of (quarter_end, availability_date, revenue)
+    return pd.DataFrame(
+        [(pd.Timestamp(qe), pd.Timestamp(av), float(rv), float(rv) * 0.2) for qe, av, rv in quarterly_rev],
+        columns=["quarter_end", "availability_date", "revenue", "gross_profit"],
+    ).assign(ticker=ticker)
+
+
+def test_coverage_ratio_is_latest_backlog_over_ttm_revenue():
+    bl = _backlog_df([
+        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),
+    ])
+    fund = _fund_df("PWR", [
+        ("2023-06-30", "2023-08-01", 1000), ("2023-09-30", "2023-11-01", 1000),
+        ("2023-12-31", "2024-02-01", 1000), ("2024-03-31", "2024-05-01", 1000),
+    ])
+    out = vc.coverage_ratio(bl, fund, pd.Timestamp("2024-06-01"))
+    assert out["PWR"] == pytest.approx(2.0)          # 8000 / 4000
+
+
+def test_coverage_change_signal_is_yoy_difference_in_coverage():
+    bl = _backlog_df([
+        _bl_row("PWR", "2023-03-31", "2023-05-01", 4000),
+        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),
+    ])
+    fund = _fund_df("PWR", [
+        ("2022-06-30", "2022-08-01", 1000), ("2022-09-30", "2022-11-01", 1000),
+        ("2022-12-31", "2023-02-01", 1000), ("2023-03-31", "2023-05-01", 1000),
+        ("2023-06-30", "2023-08-01", 1000), ("2023-09-30", "2023-11-01", 1000),
+        ("2023-12-31", "2024-02-01", 1000), ("2024-03-31", "2024-05-01", 1000),
+    ])
+    out = vc.coverage_change_signal(bl, fund, pd.Timestamp("2024-06-01"))
+    # coverage now 8000/4000 = 2.0 ; a year earlier 4000/4000 = 1.0 -> +1.0
+    assert out["PWR"] == pytest.approx(1.0)
