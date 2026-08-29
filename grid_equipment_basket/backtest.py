@@ -77,6 +77,13 @@ def run(start: str, end: str, universe=None, benchmarks=None,
 
     prices = price_fn(sorted(set(universe + benchmarks)), start, end)
     uni_cols = [t for t in universe if t in prices.columns]
+    missing_uni = [t for t in universe if t not in prices.columns]
+    if missing_uni:
+        import warnings
+        warnings.warn(
+            f"universe names absent from price data, excluded from basket: {missing_uni}",
+            RuntimeWarning, stacklevel=2,
+        )
     br = simulate_basket(
         prices[uni_cols], start, end,
         config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT, target_fn,

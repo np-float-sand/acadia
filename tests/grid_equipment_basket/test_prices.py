@@ -85,6 +85,33 @@ def test_fetch_prices_cold_cache_matches_uncached(monkeypatch, tmp_path):
     pd.testing.assert_frame_equal(warm, uncached, check_freq=False)
 
 
+def test_fetch_prices_omitted_ticker_not_refetched_forever(monkeypatch, tmp_path):
+    # yfinance sometimes omits a ticker entirely (no data anywhere in the span,
+    # e.g. GEV in a 2020-2022 run). The downloaded frame must still be reindexed
+    # to the full requested set so the omitted ticker's all-NaN column satisfies
+    # find_missing_months_wide and the window is not re-downloaded on every call.
+    monkeypatch.setattr(px, "_PRICE_CACHE_BASE", tmp_path / "prices.parquet")
+    monkeypatch.setattr(px, "_RETRY_DELAY_SECONDS", 0)
+    calls = []
+
+    def _fake_download(t, s, e):
+        calls.append((s, e))
+        present = [x for x in t if x != "GEV"]        # GEV omitted entirely
+        return _fake_frame(present, s, e)
+
+    monkeypatch.setattr(px, "_download", _fake_download)
+
+    tickers = ["VRT", "PWR", "GEV"]
+    out = px.fetch_prices(tickers, "2023-01-02", "2023-03-31", use_cache=True)
+    assert len(calls) > 0
+    assert out["GEV"].isna().all()                    # present as an all-NaN column
+    assert out[["PWR", "VRT"]].notna().all().all()    # real data for the rest
+
+    calls.clear()
+    px.fetch_prices(tickers, "2023-01-02", "2023-03-31", use_cache=True)
+    assert calls == []                                # omitted ticker no longer re-fetched
+
+
 def test_download_with_retry_retries_on_missing_column(monkeypatch):
     monkeypatch.setattr(px, "_RETRY_DELAY_SECONDS", 0)
     frames = [

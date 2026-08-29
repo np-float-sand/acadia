@@ -2,8 +2,8 @@
 
 **Status:** Approved design, not yet built.
 **Location:** new top-level directory `grid_equipment_basket/`, sibling to `grid_resilience/` and `dc_demand_basket/`.
-**Supersedes:** `grid_equipment_basket/2026-08-28-grid-equipment-suppliers-design.md` (the original draft spec). This
-document keeps that spec's thesis and universe but resolves two open decisions in it: (1) validation is a
+**Supersedes:** the earlier draft spec of the same date (the `grid_equipment_basket/` scoping note). This
+document keeps that draft's thesis and universe but resolves two open decisions in it: (1) validation is a
 short-window backtest over the AI-buildout regime, not forward-tracking-only; (2) construction is layered —
 prove the theme first, add a backlog tilt only if the theme clears a stated bar.
 

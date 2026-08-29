@@ -92,6 +92,8 @@ def load_backlog_csv(path: str | None = None) -> pd.DataFrame:
         raise ValueError(f"invalid disclosure_type(s): {sorted(bad)}")
     df["quarter_end"] = pd.to_datetime(df["quarter_end"])
     df["availability_date"] = pd.to_datetime(df["availability_date"])
+    if df.duplicated(["ticker", "quarter_end"]).any():
+        raise ValueError("duplicate (ticker, quarter_end) rows in backlog_quarterly.csv")
     return df.sort_values(["ticker", "quarter_end"]).reset_index(drop=True)
 
 
@@ -101,8 +103,11 @@ def backlog_growth_signal(df: pd.DataFrame, asof: pd.Timestamp) -> pd.Series:
     out: dict[str, float] = {}
     for tkr, g in vis.groupby("ticker"):
         g = g.sort_values("quarter_end")
-        if (g["disclosure_type"] == "book_to_bill_only").any():
-            out[tkr] = float(g.iloc[-1]["metric_value"]) - 1.0
+        b2b = g[g["disclosure_type"] == "book_to_bill_only"]
+        if len(b2b) == len(g):
+            # Fire only when the ticker discloses *exclusively* book-to-bill.
+            # A mixed ticker falls through to the non-B2B growth logic below.
+            out[tkr] = float(b2b.iloc[-1]["metric_value"]) - 1.0
             continue
         if len(g) < 5:
             out[tkr] = float("nan")
@@ -114,6 +119,11 @@ def backlog_growth_signal(df: pd.DataFrame, asof: pd.Timestamp) -> pd.Series:
             # Positional iloc[-5] only lands a true year ago on a clean, gap-free
             # quarterly series. A gappy series (e.g. VRT) would inflate the "YoY"
             # ratio here — NaN it instead of ranking it for the wrong reason.
+            out[tkr] = float("nan")
+            continue
+        if (pd.Timestamp(asof) - latest_row["quarter_end"]).days > 200:
+            # Latest disclosed quarter is too old to still describe the name —
+            # a stopped-disclosing series would otherwise be ranked on stale data.
             out[tkr] = float("nan")
             continue
         latest = float(latest_row["metric_value"])

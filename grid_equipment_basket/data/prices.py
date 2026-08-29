@@ -15,7 +15,6 @@ import yfinance as yf
 
 from grid_equipment_basket.config import CACHE_DIR
 from grid_resilience.data.cache_utils import (
-    chunk_path,
     find_missing_months_wide,
     month_bounds,
     read_monthly_cache_wide,
@@ -75,16 +74,14 @@ def fetch_prices(
             span_end = month_bounds(*missing[-1])[1]
             frame = _download_with_retry(tickers, span_start, span_end)
             if not frame.empty:
+                # Reindex to the full requested ticker set so every requested
+                # ticker gets at least an all-NaN column in each chunk it spans.
+                # Otherwise a ticker yfinance omits entirely (no data anywhere in
+                # the span, e.g. GEV in a 2020-2022 --prior-regime run) leaves
+                # every month of that window "missing" forever and re-downloads on
+                # every call. Downstream .ffill() / dropna handle the NaN columns.
+                frame = frame.reindex(columns=tickers)
                 save_monthly_chunks_wide(frame, _PRICE_CACHE_BASE)
-            # sentinel for any month that genuinely returned no rows, so a
-            # permanently-dataless month isn't re-fetched forever
-            for ym in missing:
-                p = chunk_path(_PRICE_CACHE_BASE, *ym)
-                if p.exists():
-                    continue
-                ms, me = month_bounds(*ym)
-                if frame.empty or frame.loc[ms:me].empty:
-                    pd.DataFrame().to_parquet(p, index=False)
 
         cached = read_monthly_cache_wide(_PRICE_CACHE_BASE, start, end)
         if cached.empty:

@@ -246,8 +246,17 @@ outside **300-430 days**.
 Effect on this run: VRT is left **untilted** (no rank) at the 2025-05-12, 2025-08-11 and
 2025-11-11 rebalances (span 547-548 days each). It is tilted **up** (x1.25, top half) at
 2026-02-11 and 2026-05-12, where its span is a legitimate 365 days and the ~108% YoY jump is
-real (Q4-25 backlog 9.5bn -> 15.0bn). Without the guard VRT would have been over-ranked into
-the top bucket across 2025 on an 18-month lookback.
+real (YoY basis `iloc[-5]` = 2024-12-31 backlog $7.2bn -> 2025-12-31 $15.0bn). Without the
+guard VRT would have been over-ranked into the top bucket across 2025 on an 18-month lookback.
+
+A companion **max-staleness guard** was added in the final whole-branch review: the signal is
+set to NaN whenever the latest disclosed quarter is more than **200 days** before the
+rebalance, so a name that stops disclosing is not ranked on a stale figure. On this
+2023-01-01 -> 2026-07-31 window it changes **no** rebalance decision and the Step 2 metrics
+below are unchanged: wherever VRT's latest row is that stale the 300-430-day span guard
+already NaNs it, and VRT's 2025-12-31 disclosure is only 132 days old at the final 2026-05-12
+rebalance, so VRT stays tilted **up** there. The guard is defence-in-depth for a longer
+history or a name that halts disclosure mid-series.
 
 ## Which names the tilt actually moved
 

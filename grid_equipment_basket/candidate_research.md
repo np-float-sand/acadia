@@ -196,11 +196,11 @@ All SEC requests sent with User-Agent `acadia-research sand.gh1902@gmail.com`. R
   https://www.sec.gov/Archives/edgar/data/1361538/000110465926018677/prim-20251231x10k.htm
 - business_verdict: **include (borderline — see both sides)**.
   - *For inclusion:* "We are a leading provider of critical infrastructure services … through our two
-    segments: Utilities and Energy. The Utilities segment … specializes in … the installation and maintenance
+    segments: Utilities and Energy. The Utilities segment … specializes in … the construction and maintenance
     of new and existing natural gas and electric utility distribution and transmission systems, and
     communications systems." Utilities revenue was $2,691.7M of $7,574.9M total FY2025 (**~36%**) and is
     entirely utility distribution/transmission work (electric power delivery, gas, communications). The Energy
-    segment's growth was "primarily due to increased renewable energy … activity" — Primoris is one of the
+    segment's growth was "primarily due to increased renewable energy and industrial activity" — Primoris is one of the
     largest US utility-scale solar + storage EPC contractors, and its customer list leads with "solar
     facility developers, power producers, gas and electric utilities." Electric-power / grid infrastructure
     construction is comfortably a *material* share of revenue on a plain reading.
@@ -254,6 +254,7 @@ at the top of the spec's "expected 6-9" range.
   name's disclosure is captured as-is. VRT and ETN(current) will need hand-collection from the filings /
   transcripts.
 - Price coverage: on a clean fetch (`fetch_prices(..., use_cache=False)`), all eight non-GEV names plus all
-  five benchmarks have 100% daily history over 2023-01-01→2025-07-31. GEV has data from 2024-04-02 only
-  (~52% of the primary window) — expected, handled by the equal-weight "present on the date" rule (spec §4)
-  and consistent with the spec §5 caveat that GEV covers less than half the window.
+  five benchmarks have 100% daily history over 2023-01-01→2026-07-31. GEV has data from 2024-04-02 only
+  (~63% of the primary window) — expected, handled by the equal-weight "present on the date" rule (spec §4)
+  and consistent with the spec §5 caveat about GEV's partial coverage of an already-short window (with the
+  realized 2026-07-31 cutoff it is slightly more than half, milder than the spec anticipated).

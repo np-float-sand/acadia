@@ -76,3 +76,25 @@ def test_run_with_synthetic_price_fn():
     assert np.isfinite(res["basket"]["sharpe"])
     tbl = bt.results_table(res)
     assert "CAGR" in tbl and "XLI" in tbl
+
+
+def test_run_warns_on_universe_name_missing_from_prices():
+    idx = pd.bdate_range("2023-01-02", periods=260)
+    rng = np.random.default_rng(2)
+    # 5-name universe, one name ("EEE") absent from the price frame -> 4 names
+    # remain (cap 0.25 stays feasible, so no apply_cap noise), and run() warns.
+
+    def _prices(tickers, start, end):
+        keep = [t for t in sorted(tickers) if t != "EEE"]
+        return pd.DataFrame(
+            {t: 100 * np.exp(np.cumsum(rng.normal(0.0005, 0.01, len(idx)))) for t in keep},
+            index=idx,
+        )
+
+    with pytest.warns(RuntimeWarning, match="absent from price data"):
+        res = bt.run(
+            "2023-01-02", str(idx[-1].date()),
+            universe=["AAA", "BBB", "CCC", "DDD", "EEE"], benchmarks=["XLI"],
+            price_fn=_prices,
+        )
+    assert np.isfinite(res["basket"]["sharpe"])

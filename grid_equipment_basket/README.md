@@ -81,8 +81,11 @@ Read alongside the mandatory caveats: the window is short (Sharpe standard error
 the gap is directional, not significant), GEV covers only the back ~60% of it, and the
 universe was chosen in 2026 knowing which names won. Bias mitigations: inclusion on business
 description only, FLNC (a known underperformer) kept in, equal-weight removes weight
-cherry-picking, and the GRID/PAVE comparison rules out the "this is just the theme" reading.
-Full numbers and caveats: `../docs/grid-equipment-basket-step1-results.md`.
+cherry-picking, and the GRID/PAVE comparison rules out only the weakest version of the "this
+is just the theme" reading — a hand-picked 2026-vintage universe can still out-run a
+rules-based one precisely because the winners were already known, so that check does not
+neutralise the hindsight bias. Full numbers and caveats:
+`../docs/grid-equipment-basket-step1-results.md`.
 
 ### Step 2 — backlog-growth weight tilt (evaluated, NOT adopted)
 
@@ -107,7 +110,11 @@ weighted FLNC (the basket's designated chronic underperformer) through late 2024
 on its fast backlog growth and under-weighted MYRG throughout; disclosed-backlog-growth rank
 did not track forward return over this window. HUBB and NVT are never tilted (annual-only
 backlog disclosure -> NaN signal), and VRT is left untilted at the 2025 rebalances by a
-lookback-span guard added for its gappy (6-of-9-quarters-missing) disclosure. Full Step 2
+lookback-span guard added for its gappy disclosure (9 rows present, 6 of the 15 quarters
+across 2023-26 missing). A companion max-staleness guard (signal -> NaN when the latest
+disclosed quarter is more than 200 days before the rebalance) was also added; it changes no
+rebalance on this window — wherever VRT's latest row is that stale the span guard already
+NaNs it — but hardens the signal against a name that stops disclosing. Full Step 2
 table, per-rebalance weight moves, and the keep-or-adopt reasoning:
 `../docs/grid-equipment-basket-step1-results.md`.
 
@@ -129,8 +136,9 @@ python -m grid_equipment_basket --tilt backlog          # Step 2 backlog tilt (b
 
 Outputs (to `--output`, default `./output_grid_equipment`): `metrics.csv`,
 `basket_returns.csv`, `performance.png`. Live yfinance fetch was validated during
-implementation (cold == warm == uncached, 124/124 rows on the Task 2 check; primary and
-prior-regime runs reproduce bit-for-bit off the warm cache).
+implementation (cold == warm == uncached, 124/124 rows on the price-fetcher check). A fresh
+clone fetches from yfinance on first run; subsequent runs read the warm parquet cache and
+reproduce the metrics exactly.
 
 ## Phase 2 — cross-sectional factor (NOT built here)
 
