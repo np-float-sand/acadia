@@ -2,6 +2,8 @@
 
 A quantitative long/short equity strategy that trades U.S. utility stocks based on their sensitivity to electricity grid stress events.
 
+> **Sibling strategy modules:** `grid_equipment_basket/` — a long-only thematic basket of grid / data-center equipment suppliers (see its own README and `docs/grid-equipment-basket-step1-results.md`).
+
 ## Executive Summary
 
 Most utility quant factors (valuation, yield, regulatory lag) are calendar-driven and well-arbitraged. This strategy exploits a different edge: **utilities with operations in stressed grid regions are systematically mispriced around grid stress events**, and their degree of sensitivity varies predictably by service territory, generation mix, and transmission exposure.
