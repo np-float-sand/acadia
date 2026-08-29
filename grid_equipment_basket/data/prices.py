@@ -9,7 +9,6 @@ maths in this package works in SIMPLE returns, not log returns — see README.
 
 import time
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import yfinance as yf
@@ -69,18 +68,23 @@ def fetch_prices(
     if use_cache and not force_refresh:
         missing = find_missing_months_wide(_PRICE_CACHE_BASE, start, end, tickers)
         if missing:
-            def _fetch_month(ym: tuple[int, int]) -> None:
+            # One whole-span download. Fanning out one yf.download per month
+            # across a ThreadPoolExecutor (each with threads=True) makes yfinance
+            # return partial rows, which then get cached and trusted forever.
+            span_start = f"{missing[0][0]:04d}-{missing[0][1]:02d}-01"
+            span_end = month_bounds(*missing[-1])[1]
+            frame = _download_with_retry(tickers, span_start, span_end)
+            if not frame.empty:
+                save_monthly_chunks_wide(frame, _PRICE_CACHE_BASE)
+            # sentinel for any month that genuinely returned no rows, so a
+            # permanently-dataless month isn't re-fetched forever
+            for ym in missing:
+                p = chunk_path(_PRICE_CACHE_BASE, *ym)
+                if p.exists():
+                    continue
                 ms, me = month_bounds(*ym)
-                frame = _download_with_retry(tickers, ms, me)
-                if not frame.empty:
-                    save_monthly_chunks_wide(frame, _PRICE_CACHE_BASE)
-                else:
-                    p = chunk_path(_PRICE_CACHE_BASE, *ym)
-                    if not p.exists():
-                        pd.DataFrame().to_parquet(p, index=False)
-
-            with ThreadPoolExecutor(max_workers=min(len(missing), 4)) as ex:
-                list(ex.map(_fetch_month, missing))
+                if frame.empty or frame.loc[ms:me].empty:
+                    pd.DataFrame().to_parquet(p, index=False)
 
         cached = read_monthly_cache_wide(_PRICE_CACHE_BASE, start, end)
         if cached.empty:

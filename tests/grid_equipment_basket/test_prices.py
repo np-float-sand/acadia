@@ -42,17 +42,47 @@ def test_fetch_prices_uses_cache_on_second_call(monkeypatch, tmp_path):
 
 def test_fetch_prices_gap_fills_only_new_months(monkeypatch, tmp_path):
     monkeypatch.setattr(px, "_PRICE_CACHE_BASE", tmp_path / "prices.parquet")
-    months = []
+    calls = []
 
     def _spy(t, s, e, **k):
-        months.append(s[:7])
+        calls.append((s, e))
         return _fake_frame(t, s, e)
 
     monkeypatch.setattr(px, "_download_with_retry", _spy)
     px.fetch_prices(["VRT"], "2023-01-02", "2023-02-28")
-    months.clear()
+    calls.clear()
     px.fetch_prices(["VRT"], "2023-01-02", "2023-04-28")
-    assert set(months) == {"2023-03", "2023-04"}
+    # one whole-span download covering only the new months, not one per month
+    assert len(calls) == 1
+    assert calls[0][0] == "2023-03-01"
+    assert "2023-04" in calls[0][1]
+
+
+def test_fetch_prices_cold_cache_matches_uncached(monkeypatch, tmp_path):
+    monkeypatch.setattr(px, "_PRICE_CACHE_BASE", tmp_path / "prices.parquet")
+    calls = []
+
+    def _fake_download(t, s, e):
+        calls.append((tuple(t), s, e))
+        return _fake_frame(list(t), s, e)
+
+    monkeypatch.setattr(px, "_download", _fake_download)
+
+    tickers = ["VRT", "PWR", "ETN"]
+    start, end = "2023-01-02", "2023-04-28"
+
+    uncached = px.fetch_prices(tickers, start, end, use_cache=False)
+    assert len(calls) == 1
+
+    calls.clear()
+    cold = px.fetch_prices(tickers, start, end, use_cache=True)
+    assert len(calls) == 1                       # one whole-span download
+    pd.testing.assert_frame_equal(cold, uncached, check_freq=False)
+
+    calls.clear()
+    warm = px.fetch_prices(tickers, start, end, use_cache=True)
+    assert calls == []                           # pure cache read-back
+    pd.testing.assert_frame_equal(warm, uncached, check_freq=False)
 
 
 def test_download_with_retry_retries_on_missing_column(monkeypatch):
