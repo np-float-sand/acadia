@@ -60,27 +60,90 @@ def _fund_df(ticker, quarterly_rev):
 
 def test_coverage_ratio_is_latest_backlog_over_ttm_revenue():
     bl = _backlog_df([
-        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),
+        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),  # USD_million
     ])
+    # TTM revenue needs to be in same scale as backlog (millions) when backlog is in USD_million
     fund = _fund_df("PWR", [
-        ("2023-06-30", "2023-08-01", 1000), ("2023-09-30", "2023-11-01", 1000),
-        ("2023-12-31", "2024-02-01", 1000), ("2024-03-31", "2024-05-01", 1000),
+        ("2023-06-30", "2023-08-01", 1000000000), ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000), ("2024-03-31", "2024-05-01", 1000000000),
     ])
     out = vc.coverage_ratio(bl, fund, pd.Timestamp("2024-06-01"))
-    assert out["PWR"] == pytest.approx(2.0)          # 8000 / 4000
+    assert out["PWR"] == pytest.approx(2.0)          # 8000*1e6 / (4*1e9) = 2.0
 
 
 def test_coverage_change_signal_is_yoy_difference_in_coverage():
     bl = _backlog_df([
-        _bl_row("PWR", "2023-03-31", "2023-05-01", 4000),
-        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),
+        _bl_row("PWR", "2023-03-31", "2023-05-01", 4000),  # USD_million
+        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),  # USD_million
     ])
+    # Consistent scale: backlog in USD_million, revenue in full dollars
     fund = _fund_df("PWR", [
-        ("2022-06-30", "2022-08-01", 1000), ("2022-09-30", "2022-11-01", 1000),
-        ("2022-12-31", "2023-02-01", 1000), ("2023-03-31", "2023-05-01", 1000),
-        ("2023-06-30", "2023-08-01", 1000), ("2023-09-30", "2023-11-01", 1000),
-        ("2023-12-31", "2024-02-01", 1000), ("2024-03-31", "2024-05-01", 1000),
+        ("2022-06-30", "2022-08-01", 1000000000), ("2022-09-30", "2022-11-01", 1000000000),
+        ("2022-12-31", "2023-02-01", 1000000000), ("2023-03-31", "2023-05-01", 1000000000),
+        ("2023-06-30", "2023-08-01", 1000000000), ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000), ("2024-03-31", "2024-05-01", 1000000000),
     ])
     out = vc.coverage_change_signal(bl, fund, pd.Timestamp("2024-06-01"))
-    # coverage now 8000/4000 = 2.0 ; a year earlier 4000/4000 = 1.0 -> +1.0
+    # coverage now 8000*1e6 / (4*1e9) = 2.0 ; a year earlier 4000*1e6 / (4*1e9) = 1.0 -> +1.0
     assert out["PWR"] == pytest.approx(1.0)
+
+
+def test_coverage_ratio_normalizes_metric_unit():
+    # Same economic coverage (2.0), different units: USD vs USD_million
+    # Ticker A: 8_000_000_000 USD / 4_000_000_000 TTM = 2.0
+    # Ticker B: 8000 USD_million / 4_000_000_000 TTM = (8000 * 1e6) / 4_000_000_000 = 2.0
+    from io import StringIO
+    from grid_equipment_basket.backlog_data import load_backlog_csv
+    bl_rows = [
+        "A,2024-03-31,2024-05-01,8000000000,USD,xbrl_rpo,total,http://x,\n",
+        "B,2024-03-31,2024-05-01,8000,USD_million,xbrl_rpo,total,http://x,\n",
+    ]
+    bl = load_backlog_csv(StringIO(_BL_HEADER + "".join(bl_rows)))
+
+    fund_a = _fund_df("A", [
+        ("2023-06-30", "2023-08-01", 1000000000),
+        ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000),
+        ("2024-03-31", "2024-05-01", 1000000000),
+    ])
+    fund_b = _fund_df("B", [
+        ("2023-06-30", "2023-08-01", 1000000000),
+        ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000),
+        ("2024-03-31", "2024-05-01", 1000000000),
+    ])
+    fund = pd.concat([fund_a, fund_b], ignore_index=True)
+
+    out = vc.coverage_ratio(bl, fund, pd.Timestamp("2024-06-01"))
+    # Both should normalize to 2.0
+    assert out["A"] == pytest.approx(2.0)
+    assert out["B"] == pytest.approx(2.0)
+
+    # Test unrecognized unit raises ValueError
+    bl_bad = load_backlog_csv(StringIO(_BL_HEADER +
+        "C,2024-03-31,2024-05-01,8000,USD_billion,xbrl_rpo,total,http://x,\n"))
+    fund_c = _fund_df("C", [
+        ("2023-06-30", "2023-08-01", 1000000000),
+        ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000),
+        ("2024-03-31", "2024-05-01", 1000000000),
+    ])
+    with pytest.raises(ValueError, match="unhandled metric_unit"):
+        vc.coverage_ratio(bl_bad, fund_c, pd.Timestamp("2024-06-01"))
+
+
+def test_coverage_ratio_skips_book_to_bill_rows():
+    # Ticker has Q1 xbrl_rpo dollar row and later Q2 book_to_bill_only row
+    # coverage_ratio should use Q1 dollar figure, not Q2 b2b ratio
+    bl = _backlog_df([
+        _bl_row("PWR", "2024-03-31", "2024-05-01", 8000),  # USD_million, xbrl_rpo
+        f"PWR,2024-06-30,2024-08-01,1.05,ratio,book_to_bill_only,total,http://x,\n",
+    ])
+    # Consistent scale: backlog in USD_million, revenue in full dollars
+    fund = _fund_df("PWR", [
+        ("2023-06-30", "2023-08-01", 1000000000), ("2023-09-30", "2023-11-01", 1000000000),
+        ("2023-12-31", "2024-02-01", 1000000000), ("2024-03-31", "2024-05-01", 1000000000),
+    ])
+    out = vc.coverage_ratio(bl, fund, pd.Timestamp("2024-09-01"))
+    # Should use Q1 xbrl_rpo dollar row (8000*1e6), not the b2b row
+    assert out["PWR"] == pytest.approx(2.0)  # 8000*1e6 / (4*1e9) = 2.0

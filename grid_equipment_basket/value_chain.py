@@ -40,8 +40,17 @@ def coverage_ratio(backlog_df: pd.DataFrame, fund_df: pd.DataFrame, asof: pd.Tim
             out[tkr] = float("nan")
             continue
         rev = ttm_rev.get(tkr, float("nan"))
-        latest_backlog = float(g["metric_value"].iloc[-1])
-        out[tkr] = latest_backlog / rev if rev and rev == rev else float("nan")
+        latest_row = g.iloc[-1]
+        latest_backlog = float(latest_row["metric_value"])
+        metric_unit = latest_row["metric_unit"]
+        if metric_unit == "USD":
+            scale = 1.0
+        elif metric_unit == "USD_million":
+            scale = 1e6
+        else:
+            raise ValueError(f"unhandled metric_unit {metric_unit!r} for {tkr}")
+        latest_backlog_usd = latest_backlog * scale
+        out[tkr] = latest_backlog_usd / rev if rev and rev == rev else float("nan")
     return pd.Series(out, dtype=float)
 
 
