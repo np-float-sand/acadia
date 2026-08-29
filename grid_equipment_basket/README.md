@@ -6,6 +6,8 @@ a direct-revenue bet on the power buildout, as opposed to the utility-demand bet
 
 Spec: ../docs/superpowers/specs/2026-08-28-grid-equipment-basket-design.md
 Step 1 results (full numbers): ../docs/grid-equipment-basket-step1-results.md
+Value-chain reframe spec: ../docs/superpowers/specs/2026-08-29-value-chain-reframe-design.md
+Value-chain reframe results (both gates, all caveats): ../docs/grid-equipment-value-chain-results.md
 
 ## Composition (as of 2026-08-29)
 
@@ -121,6 +123,90 @@ table, per-rebalance weight moves, and the keep-or-adopt reasoning:
 The Step 2 comparison inherits every Step 1 caveat — same ~43-month, survivorship-biased
 window, same ±0.5 Sharpe standard error, same GEV coverage gap.
 
+## Value-chain reframe (2026-08-29)
+
+A third construction option and an intra-theme hedge, from
+`../docs/superpowers/specs/2026-08-29-value-chain-reframe-design.md`. Does **not** change the
+Step 1 equal-weight basket or the Step 2 tilt path. Thesis: in a capex boom the excess return
+accrues to whoever holds the supply-constrained bottleneck **and can price it** — the equipment
+**makers** — not to the **contractors / assemblers** who compete on price for volume. The active
+bet overweights makers and underweights (long-only) or shorts (market-neutral) the price-takers,
+with a margin-change + backlog-coverage-change signal setting within-bucket amounts.
+
+**Frozen buckets** (from 10-K business descriptions, set in `config.py` before any backtest,
+never revised from results):
+
+| Makers (pricing power) | Contractors / assemblers (price-takers) |
+|---|---|
+| ETN, HUBB, GEV, VRT, NVT | PWR, MYRG, PRIM, FLNC |
+
+FLNC is the one borderline call — it sells a manufactured product but assembles third-party
+cells, bids competitively, and runs chronic negative gross margin (no pricing power), so the
+thesis places it with the price-takers. This 5/4 split lands close to a hand-split the handoff
+already flagged as *probably hindsight*; the overlap is real and disclosed. Mitigations: the
+split rule is business-model-based and frozen pre-backtest; the prior-regime panel and the
+drop-VRT/GEV pass test whether it is merely "we picked the winners"; and PWR (a large winner)
+sits in the *short* leg, so shorting it cost money.
+
+### Two constructions
+
+- `--construction value-chain-tilt` — long-only. Step 1 equal weights × maker ×1.25 /
+  contractor ×0.75 (base), × within-bucket ×1.10 / ×0.90 by the composite signal rank,
+  renormalized, 25% cap re-applied. Constants in `config.py` (`VC_BASE_MAKER`,
+  `VC_BASE_CONTRACTOR`, `VC_WITHIN_TOP`, `VC_WITHIN_BOTTOM`), documented, not fitted.
+- `--construction pair` — market-neutral, 100% gross long makers / 100% gross short
+  contractors, reported standalone, as a 30% overlay on the equal-weight basket, and
+  risk-matched to the conditional-QQQ-short comparator.
+
+Both options print the same combined report (`backtest.value_chain_report` /
+`value_chain_table`); the gate lines are the operative difference. `--drop-winners` drops
+VRT and GEV from the makers bucket for the robustness pass (value-chain constructions only).
+
+### Gate outcomes (primary window 2023-01-01 -> 2026-07-31)
+
+**GATE 1 (long-only tilt, spec §7.4): PASS — but weak.** Tilt Sharpe **1.441** vs equal-weight
+**1.360**; tilt CAGR **63.66%** vs **59.77%**. Both legs clear, so by the pre-registered rule the
+tilt clears its gate and is available behind the flag. Health warning: the gaps are inside the
+±0.5 Sharpe standard error; the pass is reproduced with the fundamental signal switched off (it
+is essentially the static maker/contractor bucket split); it does **not** survive `--drop-winners`
+(tilt CAGR 41.40% < equal-weight 42.26%); and the 2020–2022 prior-regime panel has the tilt
+losing (Sharpe 0.659 vs 0.690). **Equal-weight remains the headline recommended basket;** the
+tilt is a documented alternative, not demonstrated skill.
+
+**GATE 2 (the pair as a hedge, spec §7.4): FAIL — use the conditional QQQ short.** The pair 30%
+overlay did not protect the spec §7.3 drawdown episode (episodeDD **-41.04%** vs **-41.35%**
+naked); the conditional QQQ short did (**-37.34%**) at a carry cost of **-0.53%/yr**. Gate 2
+needs both protection and carry; the carry leg passes (pair standalone carry 11.45% > conditional
+short -0.53%) but the protection leg fails. Per spec §7.4 the recommendation on Gate-2 failure is
+"use the conditional QQQ short" (or "size down, no hedge"). **Adopt the conditional QQQ short**
+as the intra-theme drawdown hedge. The pair has positive standalone carry and *raised* return as
+a 30% overlay (CAGR 68.15% / Sharpe 1.514) — interesting as a return sleeve, but it is not a hedge.
+
+### New caveats (value-chain reframe — in addition to every Step 1 / Step 2 caveat above)
+
+- **The §4.1 gross-margin signal never fired** at any rebalance in either window. SEC XBRL does
+  not tag the December quarter as a discrete 3-month period, so every name's frame has a
+  1-quarter gap and the 300–430-day trailing-5-quarter span guard rejects all of them. The
+  shipped tilt is the static bucket split plus a §4.2 backlog-coverage nudge on ETN / FLNC / GEV /
+  NVT only (the four names with recent XBRL revenue); HUBB, VRT, PWR, MYRG, PRIM take the base
+  bucket multiplier at every rebalance. Backlog-coverage is live only from the 2024-02 rebalance.
+- **The 5/4 bucket split overlaps the handoff's hindsight-flagged hand-split.** The `--drop-winners`
+  failure shows much of Gate 1's pass rides on VRT and GEV being in the overweight bucket.
+- **Gross-margin dilution** for the diversified names (ETN, GEV, PRIM) is moot while §4.1 is
+  inert; company-wide and grid-segment operating-margin variants are logged as next steps (spec
+  §9, root `CLAUDE.md`), not built here.
+- **Short leg is not costless.** Pair results are gross. A borrow cost of **~11.98 pp/yr** on the
+  short leg would erase the pair's carry edge over the conditional short — concentrated in MYRG
+  (thin, ~$20–80M/day) and FLNC (hard/expensive to borrow).
+- **`--prior-regime` crashes for value-chain constructions** — `value_chain_report` builds the
+  Gate-2 episode from the hard-coded 2024-H2 window, which has no data in a 2020–2022 run. The
+  panel numbers in the results doc were produced by calling `simulate_basket` directly. Logged
+  as a next-step fix.
+
+Full tables (primary / prior-regime / drop-winners), both gate evaluations, the borrow-cost
+sensitivity, the parameter plateau, and the complete caveat list:
+`../docs/grid-equipment-value-chain-results.md`.
+
 ## Return convention
 
 All maths here uses **SIMPLE returns** (`pct_change`, `(1+r).prod()`), unlike `grid_resilience`
@@ -148,6 +234,9 @@ python -m grid_equipment_basket --construction pair --drop-winners # same value-
 `--construction` defaults to `equal-weight`. `--tilt backlog` is retained as a deprecated
 alias for `--construction backlog-tilt` (the `--tilt {none,backlog}` flag still parses).
 `--drop-winners` only affects the value-chain constructions (`value-chain-tilt`, `pair`).
+`--prior-regime` currently raises for the value-chain constructions (hard-coded 2024-H2
+drawdown-episode window has no data in 2020-2022) — use the primary window for those, or the
+direct-call approach shown in `../docs/grid-equipment-value-chain-results.md`.
 
 Outputs (to `--output`, default `./output_grid_equipment`):
 
@@ -157,7 +246,10 @@ Outputs (to `--output`, default `./output_grid_equipment`):
 
 Live yfinance fetch was validated during implementation (cold == warm == uncached, 124/124
 rows on the price-fetcher check). A fresh clone fetches from yfinance on first run; subsequent
-runs read the warm parquet cache and reproduce the metrics exactly.
+runs read the warm parquet cache and reproduce the metrics exactly. The value-chain
+constructions additionally fetch SEC XBRL quarterly fundamentals (`margin_data.fetch_fundamentals`,
+cached to `data/cache/fundamentals_<TICKER>.parquet`); this fetch was run live on 2026-08-29 and
+the realized per-name signal coverage is recorded in the results doc.
 
 ## Phase 2 — cross-sectional factor (NOT built here)
 

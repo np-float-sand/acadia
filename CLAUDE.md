@@ -45,3 +45,14 @@ See `output/grid_search_results.csv` for all 243 combinations ranked by Sharpe.
 - **Interest Coverage Ratio (ICR) factor component:** Implemented in `equity_prices.fetch_icr()` and wired into `resilience_score.build_factor()` as a 15% weight (beta drops to 70%, renewables 15%). Currently **off by default** (`USE_ICR = False` in `config.py`, `--icr` / `--no-icr` CLI flag). Turn on to validate: does low-ICR identify better short candidates during rate stress events? Limitation: yfinance only returns ~4–12 quarters of history per ticker, so ICR contribution is weakest in the pre-2022 backtest window. Consider EDGAR as a historical data source before drawing firm conclusions.
 
 - **RT/DA LMP spread (5th GSI sub-signal):** Real-time vs day-ahead price spread cleanly separates generators (benefit from RT spikes) from T&D utilities (hurt by congestion charges). Infrastructure ~90% ready — needs a new `ISO_RT_LOCATION_TYPE` config dict and a `fetch_lmp_rt()` variant. Highest-impact addition after ICR is validated.
+
+- **Value-chain signal — operating-margin variants:** the shipped signal uses company-wide
+  gross-margin change. Spec 2026-08-29 §9 logs two untried refinements: company-wide operating
+  margin (XBRL, all 9 names) and grid-segment operating margin (hand-collected). Try after the
+  gross-margin version is judged; check whether they sharpen or muddy the diversified names
+  (ETN, GEV, PRIM). Live-run finding (2026-08-29, `docs/grid-equipment-value-chain-results.md`):
+  the gross-margin component never fired — SEC XBRL does not tag the December quarter as a
+  discrete 3-month period, so every name's series has a 1-quarter gap that trips the
+  trailing-5-quarter span guard. An operating-margin (or gross-margin) rebuild needs to derive
+  Q4 by annual-minus-9-month subtraction, not rely on a discrete Q4 fact. Also fix
+  `value_chain_report` so `--prior-regime` doesn't crash on the hard-coded 2024-H2 episode window.

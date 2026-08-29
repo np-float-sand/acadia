@@ -3,6 +3,8 @@
 A quantitative long/short equity strategy that trades U.S. utility stocks based on their sensitivity to electricity grid stress events.
 
 > **Sibling strategy modules:** `grid_equipment_basket/` — a long-only thematic basket of grid / data-center equipment suppliers (see its own README and `docs/grid-equipment-basket-step1-results.md`).
+>
+> Beyond the equal-weight theme basket it also carries a value-chain reframe (`--construction value-chain-tilt` | `pair`): overweight the equipment makers, underweight/short the price-taking contractors, with a market-neutral pair + conditional-QQQ-short hedge — Gate 1 (long-only tilt) passes weakly, Gate 2 (pair as hedge) fails in favour of the conditional short. See `docs/grid-equipment-value-chain-results.md`.
 
 ## Executive Summary
 
