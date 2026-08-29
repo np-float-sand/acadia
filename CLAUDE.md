@@ -46,13 +46,17 @@ See `output/grid_search_results.csv` for all 243 combinations ranked by Sharpe.
 
 - **RT/DA LMP spread (5th GSI sub-signal):** Real-time vs day-ahead price spread cleanly separates generators (benefit from RT spikes) from T&D utilities (hurt by congestion charges). Infrastructure ~90% ready — needs a new `ISO_RT_LOCATION_TYPE` config dict and a `fetch_lmp_rt()` variant. Highest-impact addition after ICR is validated.
 
-- **Value-chain signal — operating-margin variants:** the shipped signal uses company-wide
-  gross-margin change. Spec 2026-08-29 §9 logs two untried refinements: company-wide operating
-  margin (XBRL, all 9 names) and grid-segment operating margin (hand-collected). Try after the
-  gross-margin version is judged; check whether they sharpen or muddy the diversified names
-  (ETN, GEV, PRIM). Live-run finding (2026-08-29, `docs/grid-equipment-value-chain-results.md`):
-  the gross-margin component never fired — SEC XBRL does not tag the December quarter as a
-  discrete 3-month period, so every name's series has a 1-quarter gap that trips the
-  trailing-5-quarter span guard. An operating-margin (or gross-margin) rebuild needs to derive
-  Q4 by annual-minus-9-month subtraction, not rely on a discrete Q4 fact. Also fix
-  `value_chain_report` so `--prior-regime` doesn't crash on the hard-coded 2024-H2 episode window.
+- **Value-chain signal — Q4 derivation + operating-margin variants:** the shipped signal uses
+  company-wide gross-margin change. Spec 2026-08-29 §9 logs two untried refinements: company-wide
+  operating margin (XBRL, all 9 names) and grid-segment operating margin (hand-collected). Try
+  after the gross-margin version is judged; check whether they sharpen or muddy the diversified
+  names (ETN, GEV, PRIM). Final-review status (2026-08-29, `docs/grid-equipment-value-chain-results.md`):
+  (1) **the revenue-tag selection bug is fixed** — `margin_data` now unions `Revenues` +
+  `RevenueFromContractWithCustomerExcludingAssessedTax` instead of first-nonempty, which lifted
+  backlog-coverage (§4.2) from 4/9 to 8/9 names; (2) **still open** — the gross-margin component
+  (§4.1) is live for only PRIM in the primary window because *most US filers* stopped tagging (or
+  never tagged) the December quarter as a discrete 3-month period (PRIM tags all four quarters;
+  FLNC tags Dec but skips Sept), so the trailing-5-quarter span guard NaN's the rest. The rebuild
+  needs to derive Q4 = FY − 9-month YTD rather than rely on a discrete Q4 fact, especially for the
+  genuinely annual-only names. `value_chain_report` no longer crashes under `--prior-regime` (Gate 2
+  is reported `n/a` for a window with no 2024-H2 episode).

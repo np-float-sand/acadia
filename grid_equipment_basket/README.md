@@ -165,43 +165,54 @@ VRT and GEV from the makers bucket for the robustness pass (value-chain construc
 ### Gate outcomes (primary window 2023-01-01 -> 2026-07-31)
 
 **GATE 1 (long-only tilt, spec §7.4): PASS — but weak.** Tilt Sharpe **1.441** vs equal-weight
-**1.360**; tilt CAGR **63.66%** vs **59.77%**. Both legs clear, so by the pre-registered rule the
+**1.360**; tilt CAGR **64.13%** vs **59.77%**. Both legs clear, so by the pre-registered rule the
 tilt clears its gate and is available behind the flag. Health warning: the gaps are inside the
 ±0.5 Sharpe standard error; the pass is reproduced with the fundamental signal switched off (it
-is essentially the static maker/contractor bucket split); it does **not** survive `--drop-winners`
-(tilt CAGR 41.40% < equal-weight 42.26%); and the 2020–2022 prior-regime panel has the tilt
-losing (Sharpe 0.659 vs 0.690). **Equal-weight remains the headline recommended basket;** the
-tilt is a documented alternative, not demonstrated skill.
+is essentially the static maker/contractor bucket split — plateau: signal-off 1.434 vs shipped
+1.441); it does **not** survive `--drop-winners` (tilt CAGR 41.53% < equal-weight 42.26%); and
+the 2020–2022 prior-regime panel has the tilt losing on both legs (Sharpe 0.678 vs 0.690, CAGR
+24.51% vs 25.42%). **Equal-weight remains the headline recommended basket;** the tilt is a
+documented alternative, not demonstrated skill.
 
 **GATE 2 (the pair as a hedge, spec §7.4): FAIL — use the conditional QQQ short.** The pair 30%
-overlay did not protect the spec §7.3 drawdown episode (episodeDD **-41.04%** vs **-41.35%**
-naked); the conditional QQQ short did (**-37.34%**) at a carry cost of **-0.53%/yr**. Gate 2
-needs both protection and carry; the carry leg passes (pair standalone carry 11.45% > conditional
+overlay made the spec §7.3 drawdown episode *deeper* (episodeDD **-43.08%** vs **-41.35%**
+un-hedged); the conditional QQQ short cut it (**-37.34%**) at a carry cost of **-0.53%/yr**. Gate 2
+needs both protection and carry; the carry leg passes (pair standalone carry 15.74% > conditional
 short -0.53%) but the protection leg fails. Per spec §7.4 the recommendation on Gate-2 failure is
 "use the conditional QQQ short" (or "size down, no hedge"). **Adopt the conditional QQQ short**
 as the intra-theme drawdown hedge. The pair has positive standalone carry and *raised* return as
-a 30% overlay (CAGR 68.15% / Sharpe 1.514) — interesting as a return sleeve, but it is not a hedge.
+a 30% overlay (CAGR 69.36% / Sharpe 1.508) — interesting as a return sleeve, but it is not a hedge.
+(The risk-matched overlay row now reports `k = NaN` on the primary window: the conditional short
+lowers portfolio vol below the un-hedged basket and the pair is vol-additive, so no non-negative
+pair weight can match it — see the results doc.)
 
 ### New caveats (value-chain reframe — in addition to every Step 1 / Step 2 caveat above)
 
-- **The §4.1 gross-margin signal never fired** at any rebalance in either window. SEC XBRL does
-  not tag the December quarter as a discrete 3-month period, so every name's frame has a
-  1-quarter gap and the 300–430-day trailing-5-quarter span guard rejects all of them. The
-  shipped tilt is the static bucket split plus a §4.2 backlog-coverage nudge on ETN / FLNC / GEV /
-  NVT only (the four names with recent XBRL revenue); HUBB, VRT, PWR, MYRG, PRIM take the base
-  bucket multiplier at every rebalance. Backlog-coverage is live only from the 2024-02 rebalance.
+- **The §4.1 gross-margin signal is live for only PRIM in the primary window** (14/14 rebalances —
+  PRIM tags all four discrete quarters). The other eight names are NaN'd by the 300–430-day
+  trailing-5-quarter span guard: ETN / GEV never tag a discrete December quarter; NVT / VRT / MYRG /
+  PWR tagged discrete Dec quarters through ~2021 then stopped; FLNC skips the September quarter;
+  HUBB files none of these concepts as quarterly XBRL. A rebuild that derives Q4 = FY − 9-month
+  YTD (spec §9, root `CLAUDE.md`) is the open follow-up. Either way the within-bucket signal is a
+  small perturbation on the static bucket split (plateau: signal-off Sharpe 1.434 vs shipped 1.441).
+- **Backlog-coverage (§4.2) is live for 8 of 9 names** (all but HUBB) from the 2024-05 rebalance
+  (FLNC from 2024-02, GEV from 2025-08). The final review fixed a revenue-tag bug in `margin_data`
+  (first-nonempty stopped at the stale legacy `Revenues` tag for MYRG / PRIM / PWR / VRT and never
+  read the modern ASC-606 tag); the fix unions the two tags, lifting coverage from 4/9 to 8/9
+  names. HUBB alone takes the base bucket multiplier at every rebalance.
 - **The 5/4 bucket split overlaps the handoff's hindsight-flagged hand-split.** The `--drop-winners`
   failure shows much of Gate 1's pass rides on VRT and GEV being in the overweight bucket.
-- **Gross-margin dilution** for the diversified names (ETN, GEV, PRIM) is moot while §4.1 is
-  inert; company-wide and grid-segment operating-margin variants are logged as next steps (spec
-  §9, root `CLAUDE.md`), not built here.
-- **Short leg is not costless.** Pair results are gross. A borrow cost of **~11.98 pp/yr** on the
+- **Gross-margin dilution** for the diversified names (ETN, GEV, PRIM) matters only where §4.1 is
+  live (PRIM); company-wide and grid-segment operating-margin variants are logged as next steps
+  (spec §9, root `CLAUDE.md`), not built here.
+- **Short leg is not costless.** Pair results are gross. A borrow cost of **~16.27 pp/yr** on the
   short leg would erase the pair's carry edge over the conditional short — concentrated in MYRG
   (thin, ~$20–80M/day) and FLNC (hard/expensive to borrow).
-- **`--prior-regime` crashes for value-chain constructions** — `value_chain_report` builds the
-  Gate-2 episode from the hard-coded 2024-H2 window, which has no data in a 2020–2022 run. The
-  panel numbers in the results doc were produced by calling `simulate_basket` directly. Logged
-  as a next-step fix.
+- **`--prior-regime` for value-chain constructions:** Gate 2 is pinned to a hard-coded 2024-H2
+  drawdown episode, which has no data in a 2020–2022 run. The final review replaced the crash with
+  a guard — the panel now runs through the real CLI / `value_chain_report` path and reports
+  `GATE 2: n/a (window has no 2024-H2 drawdown episode)`; Gate 1 and the standalone rows still
+  compute.
 
 Full tables (primary / prior-regime / drop-winners), both gate evaluations, the borrow-cost
 sensitivity, the parameter plateau, and the complete caveat list:
@@ -234,9 +245,9 @@ python -m grid_equipment_basket --construction pair --drop-winners # same value-
 `--construction` defaults to `equal-weight`. `--tilt backlog` is retained as a deprecated
 alias for `--construction backlog-tilt` (the `--tilt {none,backlog}` flag still parses).
 `--drop-winners` only affects the value-chain constructions (`value-chain-tilt`, `pair`).
-`--prior-regime` currently raises for the value-chain constructions (hard-coded 2024-H2
-drawdown-episode window has no data in 2020-2022) — use the primary window for those, or the
-direct-call approach shown in `../docs/grid-equipment-value-chain-results.md`.
+`--prior-regime` runs the 2020-2022 panel for the value-chain constructions too; Gate 2 is
+reported as `n/a` there (its drawdown episode is pinned to a 2024-H2 window with no data in
+2020-2022), while Gate 1 and the standalone rows still compute.
 
 Outputs (to `--output`, default `./output_grid_equipment`):
 
@@ -247,9 +258,13 @@ Outputs (to `--output`, default `./output_grid_equipment`):
 Live yfinance fetch was validated during implementation (cold == warm == uncached, 124/124
 rows on the price-fetcher check). A fresh clone fetches from yfinance on first run; subsequent
 runs read the warm parquet cache and reproduce the metrics exactly. The value-chain
-constructions additionally fetch SEC XBRL quarterly fundamentals (`margin_data.fetch_fundamentals`,
-cached to `data/cache/fundamentals_<TICKER>.parquet`); this fetch was run live on 2026-08-29 and
-the realized per-name signal coverage is recorded in the results doc.
+constructions additionally fetch SEC XBRL quarterly fundamentals (`margin_data.fetch_fundamentals`
+— revenue unioned across `Revenues` + `RevenueFromContractWithCustomerExcludingAssessedTax`,
+deduped per quarter with the earliest filing kept), cached to
+`data/cache/fundamentals_<TICKER>.parquet` (an empty parquet is written as a sentinel for a
+genuinely factless name so it is not re-fetched every run). This fetch was re-run live on
+2026-08-29 after the revenue-tag-union fix; the realized per-name signal coverage is recorded
+in the results doc (backlog-coverage now live for 8 of 9 names).
 
 ## Phase 2 — cross-sectional factor (NOT built here)
 
