@@ -79,3 +79,20 @@ def test_simulate_excludes_ticker_until_it_has_a_price():
     last_row = res.weights.iloc[-1]
     assert first_row.get("B", 0.0) == 0.0
     assert last_row["B"] > 0.0
+
+
+def test_simulate_rebalance_day_return_is_not_dropped():
+    idx = pd.to_datetime(["2023-05-10", "2023-05-11", "2023-05-12", "2023-05-15", "2023-05-16"])
+    prices = pd.DataFrame(
+        {"A": [10.0, 10.0, 20.0, 20.0, 20.0], "B": [10.0, 10.0, 10.0, 10.0, 40.0]},
+        index=idx,
+    )
+    res = bk.simulate_basket(prices, "2023-05-10", "2023-05-16", lag_days=42)
+    # 2023-05-12 is the Q1 quarter-end (2023-03-31) + 42d rebalance date.
+    assert res.rebalances == [pd.Timestamp("2023-05-12")]
+    # On the rebalance day the old 50/50 book holds A (10->20) and B (flat):
+    # value goes 1.0 -> 1.5, so the return must be +0.5, NOT 0.0.
+    assert res.returns.loc["2023-05-12"] == pytest.approx(0.5)
+    # After rebalancing into a fresh 50/50 at that day's prices, B quadruples
+    # 10->40 on 05-16: half the book *4 -> value 1.5 -> 3.75, return +1.5.
+    assert res.returns.loc["2023-05-16"] == pytest.approx(1.5)

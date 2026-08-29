@@ -88,6 +88,10 @@ def simulate_basket(
     cur_val = 1.0
 
     for i, day in enumerate(px.index):
+        if not shares.empty:
+            held = px.loc[day, shares.index].fillna(0.0)
+            cur_val = float((shares * held).sum())
+        value.iloc[i] = cur_val
         if day in form_dates:
             row = px.loc[day].dropna()
             available = [t for t in row.index if row[t] > 0]
@@ -96,10 +100,6 @@ def simulate_basket(
                 tgt = tgt / tgt.sum()
                 shares = (cur_val * tgt) / row.reindex(tgt.index)
                 weights_log[day] = tgt
-        if not shares.empty:
-            held = px.loc[day, shares.index].fillna(0.0)
-            cur_val = float((shares * held).sum())
-        value.iloc[i] = cur_val
 
     ret = value.pct_change().dropna()
     wdf = pd.DataFrame(weights_log).T.sort_index()
