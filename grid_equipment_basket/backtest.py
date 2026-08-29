@@ -3,6 +3,8 @@ from __future__ import annotations
 """Metrics, benchmark-relative stats, and full-run orchestration for the
 grid-equipment basket. Simple-return convention (see README)."""
 
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -79,7 +81,6 @@ def run(start: str, end: str, universe=None, benchmarks=None,
     uni_cols = [t for t in universe if t in prices.columns]
     missing_uni = [t for t in universe if t not in prices.columns]
     if missing_uni:
-        import warnings
         warnings.warn(
             f"universe names absent from price data, excluded from basket: {missing_uni}",
             RuntimeWarning, stacklevel=2,
@@ -180,8 +181,7 @@ def _load_vc_inputs(fund_df, backlog_df):
 
 def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool = False,
                        fund_df=None, backlog_df=None) -> dict:
-    from grid_equipment_basket import hedges, value_chain
-    from grid_equipment_basket.basket import simulate_basket
+    from grid_equipment_basket import hedges, value_chain   # lazy: hedges imports backtest
 
     price_fn = price_fn or _default_price_fn
     fund_df, backlog_df = _load_vc_inputs(fund_df, backlog_df)
@@ -191,6 +191,12 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
     tickers = sorted(set(universe + config.BENCHMARKS + [config.COND_SHORT_TICKER]))
     prices = price_fn(tickers, start, end)
     uni_cols = [t for t in universe if t in prices.columns]
+    missing = [t for t in universe if t not in prices.columns]
+    if missing:
+        warnings.warn(
+            f"universe names absent from price data, excluded: {missing}",
+            RuntimeWarning, stacklevel=2,
+        )
 
     rf, af = config.RISK_FREE_RATE, config.ANN_FACTOR
 
@@ -206,11 +212,19 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
     tilt = simulate_basket(prices[uni_cols], start, end,
                            config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT, _tilt_fn)
 
-    pair_prices = prices[[c for c in uni_cols]]
+    pair_prices = prices[uni_cols]
     pair = hedges.simulate_pair(pair_prices, start, end, fund_df, backlog_df,
                                 config.REBALANCE_LAG_DAYS)
 
-    qqq = prices[config.COND_SHORT_TICKER].pct_change().dropna() if config.COND_SHORT_TICKER in prices else pd.Series(dtype=float)
+    if config.COND_SHORT_TICKER in prices.columns:
+        qqq = prices[config.COND_SHORT_TICKER].pct_change().dropna()
+    else:
+        warnings.warn(
+            f"conditional-short ticker {config.COND_SHORT_TICKER!r} absent from price data; "
+            "conditional-short overlay is inert",
+            RuntimeWarning, stacklevel=2,
+        )
+        qqq = pd.Series(dtype=float)
     ew_curve_prices = (1.0 + ew.returns).cumprod()
     mask = hedges.conditional_short_mask(
         ew_curve_prices, config.COND_SHORT_MA_DAYS, config.COND_SHORT_VOL_DAYS, config.COND_SHORT_VOL_REF_DAYS)
@@ -220,13 +234,30 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
     k = hedges.risk_match_weight(ew.returns, pair, over_cond)
     over_pair_rm = hedges.pair_overlay(ew.returns, pair, k)
 
-    peak, trough = hedges.find_drawdown_episode(
-        ew.returns, config.DRAWDOWN_PEAK_WINDOW, config.DRAWDOWN_TROUGH_END)
+    # The Gate-2 drawdown episode is pinned to a hard-coded 2024-H2 window (spec §7.3);
+    # a window that does not span it (e.g. --prior-regime 2020-2022) has no episode, so
+    # Gate 2 is not applicable there. Gate 1 and the standalone rows still compute.
+    try:
+        peak, trough = hedges.find_drawdown_episode(
+            ew.returns, config.DRAWDOWN_PEAK_WINDOW, config.DRAWDOWN_TROUGH_END)
+    except ValueError:
+        peak = trough = None
+
+    def _epi_dd(r):
+        return float("nan") if peak is None else hedges.episode_drawdown(r, peak, trough)
 
     bench_ret = prices[[b for b in config.BENCHMARKS if b in prices.columns]].loc[start:end].pct_change().dropna(how="all")
 
     def M(r):
         return compute_metrics(r, rf, af)
+
+    cond_sleeve = (-config.COND_SHORT_WEIGHT
+                   * qqq.where(mask.reindex(qqq.index).fillna(False), 0.0)).dropna()
+    # A conditional short that never engages (all-zero / zero-variance sleeve, or no
+    # QQQ at all) has zero carry, not undefined — compute_metrics returns NaN cagr on
+    # a zero-variance series, which would auto-fail Gate 2's carry leg.
+    cond_carry = (hedges.annualized_carry(cond_sleeve)
+                  if len(cond_sleeve) >= 2 and cond_sleeve.std() > 0 else 0.0)
 
     report = {
         "start": start, "end": end, "drop_winners": drop_winners,
@@ -240,14 +271,14 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
         },
         "pair_standalone": {**M(pair), "carry": hedges.annualized_carry(pair)},
         "overlays": {
-            "pair_30": {**M(over_pair), "episode_dd": hedges.episode_drawdown(over_pair, peak, trough)},
-            "cond_short": {**M(over_cond), "episode_dd": hedges.episode_drawdown(over_cond, peak, trough),
-                           "carry": hedges.annualized_carry(-config.COND_SHORT_WEIGHT * qqq.where(mask.reindex(qqq.index).fillna(False), 0.0))},
-            "pair_risk_matched": {**M(over_pair_rm), "episode_dd": hedges.episode_drawdown(over_pair_rm, peak, trough),
+            "pair_30": {**M(over_pair), "episode_dd": _epi_dd(over_pair)},
+            "cond_short": {**M(over_cond), "episode_dd": _epi_dd(over_cond),
+                           "carry": cond_carry},
+            "pair_risk_matched": {**M(over_pair_rm), "episode_dd": _epi_dd(over_pair_rm),
                                   "match_weight": float(k)},
         },
         "episode": {"peak": peak, "trough": trough,
-                    "equal_weight_dd": hedges.episode_drawdown(ew.returns, peak, trough)},
+                    "equal_weight_dd": _epi_dd(ew.returns)},
     }
     g1 = {"tilt_sharpe": report["value_chain_tilt"]["sharpe"], "ew_sharpe": report["equal_weight"]["sharpe"],
           "tilt_cagr": report["value_chain_tilt"]["cagr"], "ew_cagr": report["equal_weight"]["cagr"]}
@@ -255,8 +286,11 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
     g2 = {"pair_episode_dd": report["overlays"]["pair_30"]["episode_dd"],
           "cond_episode_dd": report["overlays"]["cond_short"]["episode_dd"],
           "pair_carry": report["pair_standalone"]["carry"],
-          "cond_carry": report["overlays"]["cond_short"]["carry"]}
-    g2["passed"] = bool(g2["pair_episode_dd"] >= g2["cond_episode_dd"] and g2["pair_carry"] >= g2["cond_carry"])
+          "cond_carry": report["overlays"]["cond_short"]["carry"],
+          "applicable": peak is not None}
+    g2["passed"] = bool(peak is not None
+                        and g2["pair_episode_dd"] >= g2["cond_episode_dd"]
+                        and g2["pair_carry"] >= g2["cond_carry"])
     report["gate1"], report["gate2"] = g1, g2
     return report
 
@@ -281,6 +315,9 @@ def value_chain_table(report: dict) -> str:
     L.append("")
     L.append(f"GATE 1 (tilt vs equal-weight):  Sharpe {_f(g1['tilt_sharpe'])} vs {_f(g1['ew_sharpe'])} | "
              f"CAGR {_p(g1['tilt_cagr'])} vs {_p(g1['ew_cagr'])}  ->  {'PASS' if g1['passed'] else 'FAIL'}")
-    L.append(f"GATE 2 (pair vs conditional short):  episodeDD {_p(g2['pair_episode_dd'])} vs {_p(g2['cond_episode_dd'])} | "
-             f"carry {_p(g2['pair_carry'])} vs {_p(g2['cond_carry'])}  ->  {'PASS' if g2['passed'] else 'FAIL'}")
+    if report["episode"]["peak"] is None:
+        L.append("GATE 2: n/a (window has no 2024-H2 drawdown episode)")
+    else:
+        L.append(f"GATE 2 (pair vs conditional short):  episodeDD {_p(g2['pair_episode_dd'])} vs {_p(g2['cond_episode_dd'])} | "
+                 f"carry {_p(g2['pair_carry'])} vs {_p(g2['cond_carry'])}  ->  {'PASS' if g2['passed'] else 'FAIL'}")
     return "\n".join(L)

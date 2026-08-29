@@ -4,10 +4,10 @@ from __future__ import annotations
 gross-margin + backlog-coverage signal, and the two weight builders. Plain
 arithmetic on config constants — no z-scoring, no build_factor."""
 
-import numpy as np
 import pandas as pd
 
 from grid_equipment_basket import config, margin_data
+from grid_equipment_basket.basket import apply_cap
 
 _BUCKET = {t: "maker" for t in config.BUCKET_MAKERS}
 _BUCKET.update({t: "contractor" for t in config.BUCKET_CONTRACTORS})
@@ -35,12 +35,18 @@ def coverage_ratio(backlog_df: pd.DataFrame, fund_df: pd.DataFrame, asof: pd.Tim
     out: dict[str, float] = {}
     for tkr, g in vis.groupby("ticker"):
         g = g.sort_values("quarter_end")
-        latest_qe = g["quarter_end"].iloc[-1]
-        if (asof - latest_qe).days > config.VC_STALENESS_MAX_DAYS:
+        latest_row = g.iloc[-1]
+        latest_qe = latest_row["quarter_end"]
+        # Spec §4.2: an annual-only discloser (`nongaap_backlog_total`, yearly cadence —
+        # HUBB, NVT) carries its most recent annual figure forward between updates, so
+        # allow a wider staleness bound for those rows; `xbrl_rpo` stays quarterly-fresh.
+        max_stale = (config.VC_STALENESS_MAX_DAYS_ANNUAL
+                     if latest_row["disclosure_type"] == "nongaap_backlog_total"
+                     else config.VC_STALENESS_MAX_DAYS)
+        if (asof - latest_qe).days > max_stale:
             out[tkr] = float("nan")
             continue
         rev = ttm_rev.get(tkr, float("nan"))
-        latest_row = g.iloc[-1]
         latest_backlog = float(latest_row["metric_value"])
         metric_unit = latest_row["metric_unit"]
         if metric_unit == "USD":
@@ -63,9 +69,6 @@ def coverage_change_signal(backlog_df: pd.DataFrame, fund_df: pd.DataFrame,
     return (now.reindex(names) - prior.reindex(names))
 
 
-from grid_equipment_basket.basket import apply_cap
-
-
 def _signals(available, asof, fund_df, backlog_df):
     margin_sig = margin_data.ttm_gross_margin_signal(fund_df, asof).reindex(available)
     cover_sig = coverage_change_signal(backlog_df, fund_df, asof).reindex(available)
@@ -86,7 +89,7 @@ def _within_bucket_factor(comp: pd.Series, within_top: float, within_bottom: flo
 def value_chain_tilt_targets(available, asof, fund_df, backlog_df, *, cap: float = 0.25,
                              base_maker: float = 1.25, base_contractor: float = 0.75,
                              within_top: float = 1.10, within_bottom: float = 0.90) -> pd.Series:
-    names = sorted(available)
+    names = [t for t in sorted(available) if t in _BUCKET]   # ignore off-universe tickers
     if not names:
         return pd.Series(dtype=float)
     base = pd.Series(1.0 / len(names), index=names)
@@ -117,7 +120,7 @@ def _leg_weights(comp: pd.Series, invert: bool) -> pd.Series:
 
 
 def pair_weights(available, asof, fund_df, backlog_df):
-    names = sorted(available)
+    names = [t for t in sorted(available) if t in _BUCKET]   # ignore off-universe tickers
     margin_sig, cover_sig = _signals(names, asof, fund_df, backlog_df)
     makers = [t for t in names if bucket_of(t) == "maker"]
     contractors = [t for t in names if bucket_of(t) == "contractor"]

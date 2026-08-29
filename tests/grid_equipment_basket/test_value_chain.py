@@ -149,6 +149,36 @@ def test_coverage_ratio_skips_book_to_bill_rows():
     assert out["PWR"] == pytest.approx(2.0)  # 8000*1e6 / (4*1e9) = 2.0
 
 
+def test_coverage_ratio_carries_annual_discloser_forward_but_not_quarterly():
+    # Spec §4.2: an annual-only `nongaap_backlog_total` row is carried forward between
+    # updates (wider staleness bound); an `xbrl_rpo` row keeps the 200-day bound.
+    asof = pd.Timestamp("2025-10-15")   # 288 days after a 2024-12-31 quarter_end
+    fresh_fund = [
+        ("2024-09-30", "2024-11-01", 1000000000), ("2024-12-31", "2025-02-01", 1000000000),
+        ("2025-03-31", "2025-05-01", 1000000000), ("2025-06-30", "2025-08-01", 1000000000),
+    ]
+
+    bl_annual = _backlog_df([
+        "NVT,2024-12-31,2025-02-18,2000,USD_million,nongaap_backlog_total,total,http://x,\n",
+    ])
+    out_annual = vc.coverage_ratio(bl_annual, _fund_df("NVT", fresh_fund), asof)
+    assert not np.isnan(out_annual["NVT"])          # carried forward (288d < 400d)
+
+    bl_rpo = _backlog_df([
+        "PWR,2024-12-31,2025-02-20,8000,USD_million,xbrl_rpo,total,http://x,\n",
+    ])
+    out_rpo = vc.coverage_ratio(bl_rpo, _fund_df("PWR", fresh_fund), asof)
+    assert np.isnan(out_rpo["PWR"])                  # quarterly bound unchanged (288d > 200d)
+
+
+def test_leg_weights_uniform_when_whole_bucket_has_no_composite():
+    comp = pd.Series([np.nan, np.nan, np.nan], index=["ETN", "VRT", "NVT"])
+    w = vc._leg_weights(comp, invert=False)
+    assert w.tolist() == pytest.approx([1 / 3, 1 / 3, 1 / 3])
+    w_inv = vc._leg_weights(comp, invert=True)
+    assert w_inv.tolist() == pytest.approx([1 / 3, 1 / 3, 1 / 3])
+
+
 def _signal_fixture():
     # 8 clean quarters each; makers get rising margins, contractors flat/falling.
     qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
@@ -214,3 +244,20 @@ def test_pair_weights_empty_bucket_returns_empty_leg():
     long_w, short_w = vc.pair_weights(["ETN", "VRT"], pd.Timestamp("2024-09-15"), fund, bl)
     assert short_w.empty
     assert long_w.sum() == pytest.approx(1.0)
+
+
+def test_value_chain_tilt_targets_ignores_off_universe_ticker():
+    fund, bl = _signal_fixture()
+    names = ["ETN", "HUBB", "GEV", "VRT", "NVT", "PWR", "MYRG", "PRIM", "FLNC", "XLI"]
+    w = vc.value_chain_tilt_targets(names, pd.Timestamp("2024-09-15"), fund, bl, cap=0.25)
+    assert "XLI" not in w.index
+    assert w.sum() == pytest.approx(1.0)
+
+
+def test_pair_weights_ignores_off_universe_ticker():
+    fund, bl = _signal_fixture()
+    names = ["ETN", "HUBB", "GEV", "VRT", "NVT", "PWR", "MYRG", "PRIM", "FLNC", "XLI"]
+    long_w, short_w = vc.pair_weights(names, pd.Timestamp("2024-09-15"), fund, bl)
+    assert "XLI" not in long_w.index and "XLI" not in short_w.index
+    assert set(long_w.index) == set(config.BUCKET_MAKERS)
+    assert set(short_w.index) == set(config.BUCKET_CONTRACTORS)

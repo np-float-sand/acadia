@@ -52,9 +52,15 @@ VC_WITHIN_BOTTOM: float = 0.90
 VC_SIGNAL_MIN_QUARTERS: int = 8      # need 2 full TTM windows for a YoY margin change
 VC_SPAN_MIN_DAYS: int = 300          # quarter_end[-1]..quarter_end[-5] lower bound
 VC_SPAN_MAX_DAYS: int = 430          # ...upper bound (gappy series -> NaN)
-VC_STALENESS_MAX_DAYS: int = 200     # latest disclosed quarter must be this fresh vs asof
+VC_STALENESS_MAX_DAYS: int = 200     # latest disclosed *quarterly* (xbrl_rpo) row must be this fresh vs asof
+# Spec §4.2: annual-only disclosers (HUBB, NVT — yearly `nongaap_backlog_total`) carry the most
+# recent annual figure forward between updates, so their backlog rows get a wider staleness bound.
+VC_STALENESS_MAX_DAYS_ANNUAL: int = 400
 
 # Construction 2 + hedges.
+PAIR_GROSS: float = 1.00             # spec §6/§10: 100% gross long / 100% gross short (dollar-neutral).
+                                     # Implicit — each leg is renormalized to sum to 1 in simulate_pair —
+                                     # kept here for spec traceability.
 PAIR_OVERLAY_WEIGHT: float = 0.30
 COND_SHORT_TICKER: str = "QQQ"
 COND_SHORT_WEIGHT: float = 0.30

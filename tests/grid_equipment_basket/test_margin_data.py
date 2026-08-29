@@ -89,6 +89,79 @@ def test_fetch_fundamentals_uses_later_cost_filing_date_when_deriving_gross_prof
     assert df["gross_profit"].iloc[0] == pytest.approx(180.0)   # 1000 - 820
 
 
+def _q(qe):
+    # ~90-day span ending at quarter_end qe
+    end = pd.Timestamp(qe)
+    start = (end - pd.Timedelta(days=89)).strftime("%Y-%m-%d")
+    return start, qe
+
+
+def test_fetch_fundamentals_unions_revenue_tags_and_does_not_shadow_modern_tag(monkeypatch):
+    # `Revenues` returns 3 stale pre-ASC-606 facts; the modern
+    # `RevenueFromContractWithCustomerExcludingAssessedTax` returns 10 recent facts.
+    # fetch_fundamentals must return the UNION (>=10 rows, recent range), deduped, sorted.
+    old_qe = ["2016-12-31", "2017-03-31", "2017-06-30"]
+    modern_qe = ["2017-06-30",  # overlaps the old tag -> dedupe, earliest filing wins
+                 "2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30", "2024-09-30",
+                 "2024-12-31", "2025-03-31", "2025-06-30", "2025-09-30"]
+
+    def _rows(qes, filed_offset_days, base):
+        out = []
+        for i, qe in enumerate(qes):
+            s, e = _q(qe)
+            filed = (pd.Timestamp(qe) + pd.Timedelta(days=filed_offset_days)).strftime("%Y-%m-%d")
+            out.append((s, e, filed, base + i))
+        return out
+
+    revenues = _facts(_rows(old_qe, 40, 900))
+    # the overlapping 2017-06-30 fact is filed LATER in the modern tag -> the old
+    # tag's earlier filing must win after dedupe.
+    modern = _facts(_rows(modern_qe, 300, 1000))
+    gross = _facts(_rows(old_qe + modern_qe[1:], 40, 200))
+
+    def fake_get(url, headers=None, timeout=None):
+        if url.endswith("/Revenues.json"):
+            return _Resp(revenues)
+        if "RevenueFromContractWithCustomerExcludingAssessedTax" in url:
+            return _Resp(modern)
+        if "GrossProfit" in url:
+            return _Resp(gross)
+        return _Resp({"units": {}}, status=404)
+
+    monkeypatch.setattr(md.requests, "get", fake_get)
+    df = md.fetch_fundamentals("MYRG", use_cache=False)
+
+    assert len(df) >= 10
+    assert df["quarter_end"].is_monotonic_increasing
+    assert df["quarter_end"].duplicated().sum() == 0
+    # modern-only quarter present -> the modern tag was reached, not shadowed
+    assert pd.Timestamp("2025-09-30") in set(df["quarter_end"])
+    # old-only quarter present -> the union kept the stale tag too
+    assert pd.Timestamp("2016-12-31") in set(df["quarter_end"])
+    assert df["quarter_end"].max() == pd.Timestamp("2025-09-30")
+
+
+def test_fetch_fundamentals_caches_empty_result_as_sentinel(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_get(url, headers=None, timeout=None):
+        calls.append(url)
+        return _Resp({"units": {}}, status=404)
+
+    monkeypatch.setattr(md.requests, "get", fake_get)
+    monkeypatch.setattr(md, "CACHE_DIR", tmp_path)
+
+    df1 = md.fetch_fundamentals("HUBB")   # use_cache defaults True
+    assert df1.empty
+    n_after_first = len(calls)
+    assert n_after_first > 0
+    assert (tmp_path / "fundamentals_HUBB.parquet").exists()   # sentinel written
+
+    df2 = md.fetch_fundamentals("HUBB")
+    assert df2.empty
+    assert len(calls) == n_after_first   # sentinel hit -> no new SEC requests
+
+
 def test_combine_fundamentals_adds_ticker_column():
     a = pd.DataFrame({"quarter_end": [pd.Timestamp("2023-03-31")],
                       "availability_date": [pd.Timestamp("2023-05-01")],

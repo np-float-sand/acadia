@@ -14,6 +14,10 @@ from grid_equipment_basket.basket import simulate_basket
 def simulate_pair(prices: pd.DataFrame, start: str, end: str,
                   fund_df: pd.DataFrame, backlog_df: pd.DataFrame,
                   lag_days: int = 42) -> pd.Series:
+    """Market-neutral maker/contractor pair return series (spec §6): long makers,
+    short contractors, dollar-neutral. Gross exposure is ``config.PAIR_GROSS`` = 1.00
+    per leg — implicit here because each leg is renormalized to sum to 1 inside
+    ``simulate_basket`` and the pair is ``long_leg - short_leg``."""
     known = set(config.BUCKET_MAKERS) | set(config.BUCKET_CONTRACTORS)
     cols = [c for c in prices.columns if c in known]
     makers = [c for c in cols if value_chain.bucket_of(c) == "maker"]
@@ -93,16 +97,38 @@ def annualized_carry(returns: pd.Series) -> float:
 
 def risk_match_weight(base_returns: pd.Series, pair_returns: pd.Series,
                       target_returns: pd.Series, lo: float = 0.0, hi: float = 3.0) -> float:
+    """Smallest non-negative ``k`` with ``std(base + k*pair) == std(target)``.
+
+    ``vol(k)**2 = var(b) + 2k*cov(b,p) + k**2*var(p)`` is U-shaped in ``k``; when the
+    pair actually hedges the base (``cov(b,p) < 0``) its minimum sits at a positive
+    ``k`` and a pure bisection can converge to the upper (levered) root. So: coarse
+    grid-scan for the argmin, return NaN when ``target`` vol is below the achievable
+    minimum (unreachable — *not* silently 0), else bisect on the branch that holds
+    the economically intended (small-``k``) root.
+    """
     df = pd.concat([base_returns.rename("b"), pair_returns.rename("p")], axis=1).dropna()
     target_vol = float(target_returns.dropna().std())
 
     def vol(k):
         return float((df["b"] + k * df["p"]).std())
 
-    for _ in range(60):
-        mid = 0.5 * (lo + hi)
-        if vol(mid) < target_vol:
-            lo = mid
+    grid = np.linspace(lo, hi, 61)
+    vols = [vol(k) for k in grid]
+    j = int(np.argmin(vols))
+    k_min, vol_min = float(grid[j]), vols[j]
+
+    if target_vol <= vol_min:
+        return float("nan")
+
+    if vol(lo) >= target_vol:
+        a, b, decreasing = lo, k_min, True      # intended: root left of the vertex, vol falls in k
+    else:
+        a, b, decreasing = k_min, hi, False     # target only reachable right of the vertex, vol rises in k
+
+    for _ in range(80):
+        mid = 0.5 * (a + b)
+        if (vol(mid) < target_vol) == decreasing:
+            b = mid
         else:
-            hi = mid
-    return 0.5 * (lo + hi)
+            a = mid
+    return 0.5 * (a + b)

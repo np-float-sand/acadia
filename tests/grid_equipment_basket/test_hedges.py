@@ -135,3 +135,36 @@ def test_risk_match_weight_scales_pair_to_target_vol():
     k = hg.risk_match_weight(base, pair, target)
     lhs = (base + k * pair).std()
     assert lhs == pytest.approx(target.std(), rel=0.02)
+
+
+def test_risk_match_weight_u_shaped_returns_the_small_root():
+    # pair strongly NEGATIVELY correlated with base (corr ~ -0.9): vol(k) is U-shaped
+    # with its minimum at a positive k*. A pure bisection could land on the upper root;
+    # risk_match_weight must return the SMALL root (k < k*).
+    rng = np.random.default_rng(11)
+    base = pd.Series(rng.normal(0, 0.01, 4000))
+    noise = pd.Series(rng.normal(0, 0.004, 4000))
+    pair = -0.9 * base + noise
+    assert base.corr(pair) < -0.85
+
+    cov = float(np.cov(base, pair)[0, 1])
+    k_star = -cov / float(np.var(pair))          # vertex of the vol parabola, > 0
+    assert k_star > 0
+
+    vol0 = float(base.std())
+    vol_min = float((base + k_star * pair).std())
+    target = pd.Series(rng.normal(0, 0.5 * (vol0 + vol_min), 4000))   # between vol_min and vol(0)
+    assert vol_min < target.std() < vol0
+
+    k = hg.risk_match_weight(base, pair, target)
+    assert 0.0 < k < k_star                                          # the small root
+    assert float((base + k * pair).std()) == pytest.approx(target.std(), rel=0.02)
+
+
+def test_risk_match_weight_nan_when_target_below_achievable_min():
+    rng = np.random.default_rng(5)
+    base = pd.Series(rng.normal(0, 0.01, 2000))
+    pair = pd.Series(rng.normal(0, 0.008, 2000))
+    target = pd.Series(rng.normal(0, 0.001, 2000))   # std far below the achievable vol minimum
+    k = hg.risk_match_weight(base, pair, target)
+    assert np.isnan(k)

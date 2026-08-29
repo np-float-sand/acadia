@@ -12,11 +12,16 @@ import time
 import pandas as pd
 import requests
 
+from grid_equipment_basket import config as _cfg
 from grid_equipment_basket.backlog_data import CIK_BY_TICKER
 from grid_equipment_basket.config import CACHE_DIR
 
 _SEC_HEADERS = {"User-Agent": "acadia-research sand.gh1902@gmail.com"}
 _COLS = ["quarter_end", "availability_date", "revenue", "gross_profit"]
+# Revenue is UNIONED across both tags (not first-nonempty): a filer that has a few
+# stale pre-ASC-606 `Revenues` facts AND a modern
+# `RevenueFromContractWithCustomerExcludingAssessedTax` series (MYRG/PRIM/PWR/VRT)
+# would otherwise stop at the stale tag and never reach the modern one.
 _REVENUE_TAGS = ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax")
 _GROSS_TAGS = ("GrossProfit",)
 _COST_TAGS = ("CostOfGoodsAndServicesSold", "CostOfRevenue")
@@ -57,6 +62,26 @@ def _first_nonempty(cik: str, tags) -> pd.DataFrame:
     return pd.DataFrame(columns=["quarter_end", "availability_date", "val"])
 
 
+def _union_tags(cik: str, tags) -> pd.DataFrame:
+    """Union quarterly facts across every tag, deduped per quarter_end with the
+    earliest filing kept (point-in-time correct). Mirrors the two-concept merge in
+    ``backlog_data.fetch_rpo``."""
+    parts = []
+    for i, tag in enumerate(tags):
+        if i:
+            time.sleep(0.2)
+        df = _flow_facts(cik, tag)
+        if not df.empty:
+            parts.append(df)
+    if not parts:
+        return pd.DataFrame(columns=["quarter_end", "availability_date", "val"])
+    return (pd.concat(parts, ignore_index=True)
+              .sort_values("availability_date")
+              .drop_duplicates("quarter_end", keep="first")
+              .sort_values("quarter_end")
+              .reset_index(drop=True))
+
+
 def fetch_fundamentals(ticker: str, use_cache: bool = True) -> pd.DataFrame:
     cache = CACHE_DIR / f"fundamentals_{ticker}.parquet"
     if use_cache and cache.exists():
@@ -65,7 +90,7 @@ def fetch_fundamentals(ticker: str, use_cache: bool = True) -> pd.DataFrame:
     if cik is None:
         raise KeyError(f"no CIK for {ticker}; add it to backlog_data.CIK_BY_TICKER")
 
-    rev = _first_nonempty(cik, _REVENUE_TAGS).rename(columns={"val": "revenue"})
+    rev = _union_tags(cik, _REVENUE_TAGS).rename(columns={"val": "revenue"})
     gross = _flow_facts(cik, _GROSS_TAGS[0]).rename(columns={"val": "gross_profit"})
     if gross.empty:
         cost = _first_nonempty(cik, _COST_TAGS).rename(columns={"val": "cost"})
@@ -78,10 +103,17 @@ def fetch_fundamentals(ticker: str, use_cache: bool = True) -> pd.DataFrame:
     if rev.empty or gross.empty:
         out = pd.DataFrame(columns=_COLS)
     else:
-        out = rev[["quarter_end", "revenue"]].merge(gross[["quarter_end", "availability_date", "gross_profit"]], on="quarter_end", how="inner")
+        # availability_date is the LATER of the revenue filing and the gross-profit
+        # filing (same row-wise max the derived-gross branch already applies).
+        out = rev[["quarter_end", "availability_date", "revenue"]].merge(
+            gross[["quarter_end", "availability_date", "gross_profit"]],
+            on="quarter_end", how="inner", suffixes=("_rev", "_gross"))
+        out["availability_date"] = out[["availability_date_rev", "availability_date_gross"]].max(axis=1)
         out = out[_COLS].sort_values("quarter_end").reset_index(drop=True)
 
-    if use_cache and not out.empty:
+    if use_cache:
+        # Cache even an empty result — a genuinely factless name (e.g. HUBB) would
+        # otherwise re-hit SEC on every run. An empty parquet is the sentinel.
         out.to_parquet(cache)
     return out
 
@@ -97,9 +129,6 @@ def combine_fundamentals(by_ticker: dict[str, pd.DataFrame]) -> pd.DataFrame:
     if not parts:
         return pd.DataFrame(columns=_COLS + ["ticker"])
     return pd.concat(parts, ignore_index=True).sort_values(["ticker", "quarter_end"]).reset_index(drop=True)
-
-
-from grid_equipment_basket import config as _cfg
 
 
 def _visible(fund_df: pd.DataFrame, asof: pd.Timestamp) -> pd.DataFrame:

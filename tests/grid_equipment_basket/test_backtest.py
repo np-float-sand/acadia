@@ -114,6 +114,36 @@ def _vc_price_fn():
     return _prices, idx
 
 
+def _vc_price_fn_2020():
+    # 2020-01 .. 2022-12 window (prior-regime panel) — no 2024-H2 drawdown episode.
+    idx = pd.bdate_range("2020-01-02", periods=780)
+    rng = np.random.default_rng(13)
+
+    def _prices(tickers, start, end):
+        data = {}
+        for k, t in enumerate(sorted(tickers)):
+            drift = 0.0006 if t in ("ETN", "HUBB", "GEV", "VRT", "NVT") else 0.0003
+            data[t] = 100 * np.exp(np.cumsum(rng.normal(drift, 0.012, len(idx))))
+        return pd.DataFrame(data, index=idx).loc[start:end]
+
+    return _prices, idx
+
+
+def _vc_calm_uptrend_price_fn():
+    # Smooth compounding uptrend, ~zero realized vol -> close never below its MA and
+    # rv never exceeds its median -> the conditional-short mask never engages.
+    idx = pd.bdate_range("2023-01-02", periods=650)
+
+    def _prices(tickers, start, end):
+        data = {}
+        for k, t in enumerate(sorted(tickers)):
+            drift = 0.0005 + 0.00003 * k
+            data[t] = 100 * np.exp(np.cumsum(np.full(len(idx), drift)))
+        return pd.DataFrame(data, index=idx).loc[start:end]
+
+    return _prices, idx
+
+
 def _vc_fund_backlog():
     # 8 clean quarters for all 9 names; makers rising margin, contractors flat.
     from grid_equipment_basket import config
@@ -158,4 +188,35 @@ def test_value_chain_report_drop_winners_removes_vrt_gev_from_makers():
     rep = bt.value_chain_report("2023-01-02", str(idx[-1].date()), price_fn=price_fn,
                                 fund_df=fund, backlog_df=bl, drop_winners=True)
     assert rep["drop_winners"] is True
+    assert {"VRT", "GEV"}.isdisjoint(rep["makers"])
     assert np.isfinite(rep["value_chain_tilt"]["sharpe"])
+
+
+def test_value_chain_report_prior_regime_window_does_not_crash():
+    # --prior-regime (2020-2022) has no data in the hard-coded 2024-H2 episode window;
+    # Gate 1 + standalone rows must still compute, Gate 2 becomes not-applicable.
+    price_fn, _ = _vc_price_fn_2020()
+    fund, bl = _vc_fund_backlog()
+    rep = bt.value_chain_report("2020-01-01", "2022-12-31",
+                                price_fn=price_fn, fund_df=fund, backlog_df=bl)
+    assert np.isfinite(rep["gate1"]["tilt_sharpe"])
+    assert np.isfinite(rep["gate1"]["ew_cagr"])
+    assert isinstance(rep["gate1"]["passed"], bool)
+    assert rep["episode"]["peak"] is None
+    assert rep["gate2"]["passed"] is False
+    assert rep["gate2"]["applicable"] is False
+    tbl = bt.value_chain_table(rep)                       # must not raise
+    assert "GATE 1" in tbl and "GATE 2: n/a" in tbl
+
+
+def test_value_chain_report_conditional_short_never_engages_gives_zero_carry():
+    # All-False conditional-short mask -> zero-variance hedge sleeve. carry must be
+    # 0.0 (a hedge that never fires has zero carry), NOT NaN auto-failing Gate 2.
+    price_fn, idx = _vc_calm_uptrend_price_fn()
+    fund, bl = _vc_fund_backlog()
+    rep = bt.value_chain_report("2023-01-02", str(idx[-1].date()),
+                                price_fn=price_fn, fund_df=fund, backlog_df=bl)
+    assert rep["overlays"]["cond_short"]["carry"] == 0.0
+    assert rep["gate2"]["cond_carry"] == 0.0
+    assert not np.isnan(rep["gate2"]["cond_carry"])
+    assert isinstance(rep["gate2"]["passed"], bool)
