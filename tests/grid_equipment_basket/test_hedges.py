@@ -96,3 +96,42 @@ def test_conditional_short_overlay_subtracts_only_on_masked_days():
     mask = pd.Series([False, True, True, False], index=idx)
     out = hg.conditional_short_overlay(base, qqq, mask, 0.30)
     assert out.tolist() == pytest.approx([0.01, 0.01 - 0.006, 0.01 - 0.006, 0.01])
+
+
+def test_find_drawdown_episode_picks_peak_in_window_then_trough():
+    idx = pd.bdate_range("2024-01-01", "2025-08-01")
+    curve = pd.Series(1.0, index=idx)
+    curve.loc["2024-11-15"] = np.nan   # marker only; build returns instead
+    # Build a return series: flat, then +/- to make a clear Nov-2024 peak and Apr-2025 trough.
+    r = pd.Series(0.0, index=idx)
+    r.loc["2024-07-01":"2024-11-15"] = 0.001     # rise into a mid-Nov peak
+    r.loc["2024-11-18":"2025-04-10"] = -0.002    # fall into an April trough
+    r.loc["2025-04-11":] = 0.001                 # recover
+    peak, trough = hg.find_drawdown_episode(r, ("2024-07-01", "2024-12-31"), "2025-06-30")
+    assert pd.Timestamp("2024-11-01") <= peak <= pd.Timestamp("2024-11-30")
+    assert pd.Timestamp("2025-03-15") <= trough <= pd.Timestamp("2025-04-30")
+
+
+def test_episode_drawdown_is_min_over_the_fixed_span():
+    idx = pd.bdate_range("2024-10-01", "2025-05-01")
+    r = pd.Series(0.0, index=idx)
+    r.loc["2024-11-01":"2025-03-01"] = -0.01
+    dd = hg.episode_drawdown(r, pd.Timestamp("2024-11-01"), pd.Timestamp("2025-03-01"))
+    assert dd < -0.5 and dd > -0.95
+
+
+def test_annualized_carry_matches_closed_form():
+    r = pd.Series([0.001] * 252)
+    # compute_metrics rounds cagr to 4 dp, so match the closed form within that rounding
+    # (brief said rel=1e-6, which is tighter than compute_metrics' own precision).
+    assert hg.annualized_carry(r) == pytest.approx((1.001 ** 252) - 1, rel=1e-3)
+
+
+def test_risk_match_weight_scales_pair_to_target_vol():
+    rng = np.random.default_rng(3)
+    base = pd.Series(rng.normal(0, 0.01, 500))
+    pair = pd.Series(rng.normal(0, 0.008, 500))
+    target = base - 0.30 * pd.Series(rng.normal(0, 0.02, 500))   # some hedged series
+    k = hg.risk_match_weight(base, pair, target)
+    lhs = (base + k * pair).std()
+    assert lhs == pytest.approx(target.std(), rel=0.02)

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from grid_equipment_basket import config, value_chain
+from grid_equipment_basket.backtest import compute_metrics
 from grid_equipment_basket.basket import simulate_basket
 
 
@@ -64,3 +65,44 @@ def conditional_short_overlay(base_returns: pd.Series, hedge_returns: pd.Series,
     df = pd.concat([base_returns.rename("b"), hedge_returns.rename("h")], axis=1)
     m = mask.reindex(df.index).fillna(False)
     return (df["b"].fillna(0.0) - weight * df["h"].fillna(0.0).where(m, 0.0)).reindex(base_returns.index)
+
+
+def find_drawdown_episode(basket_returns: pd.Series, peak_window, trough_end):
+    curve = (1.0 + basket_returns.dropna()).cumprod()
+    lo, hi = pd.Timestamp(peak_window[0]), pd.Timestamp(peak_window[1])
+    peak_seg = curve.loc[lo:hi]
+    if peak_seg.empty:
+        raise ValueError(f"no data in peak window {peak_window}")
+    peak_ts = peak_seg.idxmax()
+    trough_seg = curve.loc[peak_ts:pd.Timestamp(trough_end)]
+    trough_ts = trough_seg.idxmin()
+    return peak_ts, trough_ts
+
+
+def episode_drawdown(returns: pd.Series, peak_ts, trough_ts) -> float:
+    seg = returns.loc[peak_ts:trough_ts].dropna()
+    if len(seg) < 2:
+        return float("nan")
+    curve = (1.0 + seg).cumprod()
+    return float((curve / curve.cummax() - 1.0).min())
+
+
+def annualized_carry(returns: pd.Series) -> float:
+    return float(compute_metrics(returns.dropna())["cagr"])
+
+
+def risk_match_weight(base_returns: pd.Series, pair_returns: pd.Series,
+                      target_returns: pd.Series, lo: float = 0.0, hi: float = 3.0) -> float:
+    df = pd.concat([base_returns.rename("b"), pair_returns.rename("p")], axis=1).dropna()
+    target_vol = float(target_returns.dropna().std())
+
+    def vol(k):
+        return float((df["b"] + k * df["p"]).std())
+
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if vol(mid) < target_vol:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
