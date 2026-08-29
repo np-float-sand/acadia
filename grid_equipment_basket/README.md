@@ -129,16 +129,35 @@ which uses log returns. A log-based recompute will not tie out exactly — that 
 ## Run
 
 ```
-python -m grid_equipment_basket --start 2023-01-01      # primary window
-python -m grid_equipment_basket --prior-regime          # 2020-2022 panel
-python -m grid_equipment_basket --tilt backlog          # Step 2 backlog tilt (built + evaluated; NOT the recommended basket, see below)
+python -m grid_equipment_basket [--start ...] [--end ...] [--prior-regime]
+    [--construction {equal-weight,backlog-tilt,value-chain-tilt,pair}]
+    [--drop-winners]        # value-chain constructions only: drop VRT, GEV from makers
+    [--output DIR] [--no-plot]
 ```
 
-Outputs (to `--output`, default `./output_grid_equipment`): `metrics.csv`,
-`basket_returns.csv`, `performance.png`. Live yfinance fetch was validated during
-implementation (cold == warm == uncached, 124/124 rows on the price-fetcher check). A fresh
-clone fetches from yfinance on first run; subsequent runs read the warm parquet cache and
-reproduce the metrics exactly.
+Examples:
+
+```
+python -m grid_equipment_basket --start 2023-01-01                 # primary window, equal-weight (recommended basket)
+python -m grid_equipment_basket --prior-regime                     # 2020-2022 panel
+python -m grid_equipment_basket --construction backlog-tilt        # Step 2 backlog tilt (built + evaluated; NOT the recommended basket, see below)
+python -m grid_equipment_basket --construction value-chain-tilt    # value-chain reframe: makers-vs-contractors tilt + pair/overlay report
+python -m grid_equipment_basket --construction pair --drop-winners # same value-chain report, VRT/GEV dropped from the makers bucket
+```
+
+`--construction` defaults to `equal-weight`. `--tilt backlog` is retained as a deprecated
+alias for `--construction backlog-tilt` (the `--tilt {none,backlog}` flag still parses).
+`--drop-winners` only affects the value-chain constructions (`value-chain-tilt`, `pair`).
+
+Outputs (to `--output`, default `./output_grid_equipment`):
+
+- `equal-weight` / `backlog-tilt`: `metrics.csv`, `basket_returns.csv`, `performance.png`
+  (`performance.png` skipped with `--no-plot`)
+- `value-chain-tilt` / `pair`: `value_chain_metrics.csv`, `value_chain_gates.json`
+
+Live yfinance fetch was validated during implementation (cold == warm == uncached, 124/124
+rows on the price-fetcher check). A fresh clone fetches from yfinance on first run; subsequent
+runs read the warm parquet cache and reproduce the metrics exactly.
 
 ## Phase 2 — cross-sectional factor (NOT built here)
 
