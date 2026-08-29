@@ -33,3 +33,34 @@ def simulate_pair(prices: pd.DataFrame, start: str, end: str,
 def pair_overlay(base_returns: pd.Series, pair_returns: pd.Series, weight: float) -> pd.Series:
     aligned = pd.concat([base_returns.rename("b"), pair_returns.rename("p")], axis=1)
     return (aligned["b"].fillna(0.0) + weight * aligned["p"].fillna(0.0)).reindex(base_returns.index)
+
+
+def conditional_short_mask(basket_prices: pd.Series, ma_days: int = 100,
+                           vol_days: int = 20, vol_ref_days: int = 252) -> pd.Series:
+    """Boolean daily mask for the conditional QQQ short (spec §7.2).
+
+    At each month-end on the basket's own price series the condition
+    ``(close < close.rolling(ma_days).mean()) AND (rv > rv.rolling(vol_ref_days).median())``
+    is evaluated, where ``rv = close.pct_change().rolling(vol_days).std()``. That
+    month-end verdict is held for every trading day of the *following* calendar
+    month (the decision is known at the prior month-end). Days before the first
+    evaluable month-end are ``False``.
+    """
+    close = basket_prices.dropna().astype(float).sort_index()
+    ma = close.rolling(ma_days).mean()
+    rv = close.pct_change().rolling(vol_days).std()
+    rv_ref = rv.rolling(vol_ref_days).median()
+    daily_cond = ((close < ma) & (rv > rv_ref)).fillna(False)
+
+    periods = close.index.to_period("M")
+    month_end_verdict = daily_cond.groupby(periods).last()
+    prior_month_verdict = month_end_verdict.shift(1).fillna(False)
+    return pd.Series(prior_month_verdict.reindex(periods).to_numpy(), index=close.index).astype(bool)
+
+
+def conditional_short_overlay(base_returns: pd.Series, hedge_returns: pd.Series,
+                              mask: pd.Series, weight: float) -> pd.Series:
+    """``base_returns - weight * hedge_returns`` on masked days, ``base_returns`` elsewhere."""
+    df = pd.concat([base_returns.rename("b"), hedge_returns.rename("h")], axis=1)
+    m = mask.reindex(df.index).fillna(False)
+    return (df["b"].fillna(0.0) - weight * df["h"].fillna(0.0).where(m, 0.0)).reindex(base_returns.index)

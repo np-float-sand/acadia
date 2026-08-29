@@ -64,3 +64,35 @@ def test_simulate_pair_ignores_off_bucket_columns(monkeypatch):
     got = hg.simulate_pair(with_extra, start, end, fund_df=None, backlog_df=None)
 
     pd.testing.assert_series_equal(got, baseline)
+
+
+def test_conditional_short_mask_true_only_when_trend_down_and_vol_high():
+    idx = pd.bdate_range("2022-01-03", periods=600)
+    # First ~15 months: steady uptrend, low vol. Then a sharp draw + noise spike.
+    up = np.linspace(100, 200, 320)
+    down = 200 + np.cumsum(np.random.default_rng(0).normal(-0.6, 4.0, len(idx) - 320))
+    close = pd.Series(np.concatenate([up, down]), index=idx)
+
+    mask = hg.conditional_short_mask(close, ma_days=100, vol_days=20, vol_ref_days=252)
+    assert mask.dtype == bool
+    assert not mask.loc["2022-06-01":"2022-09-30"].any()       # calm uptrend -> off
+    assert mask.loc["2023-06-01":"2023-12-31"].any()           # drawdown + vol spike -> on somewhere
+
+
+def test_conditional_short_mask_holds_month_end_verdict_through_next_month():
+    idx = pd.bdate_range("2022-01-03", periods=600)
+    close = pd.Series(np.linspace(200, 100, len(idx)), index=idx)   # persistent downtrend
+    mask = hg.conditional_short_mask(close)
+    # within any single month the mask value is constant
+    window = mask.loc["2023-01-01":"2023-06-30"]
+    for _, chunk in window.groupby(window.index.to_period("M")):
+        assert chunk.nunique() == 1
+
+
+def test_conditional_short_overlay_subtracts_only_on_masked_days():
+    idx = pd.bdate_range("2023-01-02", periods=4)
+    base = pd.Series([0.01, 0.01, 0.01, 0.01], index=idx)
+    qqq = pd.Series([0.02, 0.02, 0.02, 0.02], index=idx)
+    mask = pd.Series([False, True, True, False], index=idx)
+    out = hg.conditional_short_overlay(base, qqq, mask, 0.30)
+    assert out.tolist() == pytest.approx([0.01, 0.01 - 0.006, 0.01 - 0.006, 0.01])
