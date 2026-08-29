@@ -98,3 +98,64 @@ def test_run_warns_on_universe_name_missing_from_prices():
             price_fn=_prices,
         )
     assert np.isfinite(res["basket"]["sharpe"])
+
+
+def _vc_price_fn():
+    idx = pd.bdate_range("2023-01-02", periods=650)
+    rng = np.random.default_rng(7)
+
+    def _prices(tickers, start, end):
+        data = {}
+        for k, t in enumerate(sorted(tickers)):
+            drift = 0.0006 if t in ("ETN", "HUBB", "GEV", "VRT", "NVT") else 0.0003
+            data[t] = 100 * np.exp(np.cumsum(rng.normal(drift, 0.012, len(idx))))
+        return pd.DataFrame(data, index=idx).loc[start:end]
+
+    return _prices, idx
+
+
+def _vc_fund_backlog():
+    # 8 clean quarters for all 9 names; makers rising margin, contractors flat.
+    from grid_equipment_basket import config
+    from io import StringIO
+    from grid_equipment_basket.backlog_data import load_backlog_csv
+    qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
+          "2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30",
+          "2024-09-30", "2024-12-31", "2025-03-31", "2025-06-30"]
+    av = ["2022-11-01", "2023-02-01", "2023-05-01", "2023-08-01",
+          "2023-11-01", "2024-02-01", "2024-05-01", "2024-08-01",
+          "2024-11-01", "2025-02-01", "2025-05-01", "2025-08-01"]
+    rows = []
+    for t in config.BUCKET_MAKERS + config.BUCKET_CONTRACTORS:
+        rising = t in config.BUCKET_MAKERS
+        for i, (q, a) in enumerate(zip(qe, av)):
+            m = 0.20 + (0.01 * i if rising else 0.0)
+            rows.append((pd.Timestamp(q), pd.Timestamp(a), 1000.0, 1000.0 * m, t))
+    fund = pd.DataFrame(rows, columns=["quarter_end", "availability_date", "revenue", "gross_profit", "ticker"])
+    bl = load_backlog_csv(StringIO("ticker,quarter_end,availability_date,metric_value,metric_unit,"
+                                   "disclosure_type,segment_scope,source_url,notes\n"))
+    return fund, bl
+
+
+def test_value_chain_report_shape_and_gates():
+    price_fn, idx = _vc_price_fn()
+    fund, bl = _vc_fund_backlog()
+    rep = bt.value_chain_report("2023-01-02", str(idx[-1].date()),
+                                price_fn=price_fn, fund_df=fund, backlog_df=bl)
+    assert set(rep["benchmarks"]) <= {"XLI", "SPY", "XLU", "GRID", "PAVE"}
+    assert isinstance(rep["gate1"]["passed"], bool)
+    assert isinstance(rep["gate2"]["passed"], bool)
+    assert "peak" in rep["episode"] and "trough" in rep["episode"]
+    for key in ("pair_30", "cond_short", "pair_risk_matched"):
+        assert "episode_dd" in rep["overlays"][key]
+    tbl = bt.value_chain_table(rep)
+    assert "GATE 1" in tbl and "GATE 2" in tbl
+
+
+def test_value_chain_report_drop_winners_removes_vrt_gev_from_makers():
+    price_fn, idx = _vc_price_fn()
+    fund, bl = _vc_fund_backlog()
+    rep = bt.value_chain_report("2023-01-02", str(idx[-1].date()), price_fn=price_fn,
+                                fund_df=fund, backlog_df=bl, drop_winners=True)
+    assert rep["drop_winners"] is True
+    assert np.isfinite(rep["value_chain_tilt"]["sharpe"])
