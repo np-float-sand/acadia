@@ -61,3 +61,46 @@ def coverage_change_signal(backlog_df: pd.DataFrame, fund_df: pd.DataFrame,
     prior = coverage_ratio(backlog_df, fund_df, asof - pd.Timedelta(days=365))
     names = sorted(set(now.index) | set(prior.index))
     return (now.reindex(names) - prior.reindex(names))
+
+
+from grid_equipment_basket.basket import apply_cap
+
+
+def _signals(available, asof, fund_df, backlog_df):
+    margin_sig = margin_data.ttm_gross_margin_signal(fund_df, asof).reindex(available)
+    cover_sig = coverage_change_signal(backlog_df, fund_df, asof).reindex(available)
+    return margin_sig, cover_sig
+
+
+def _within_bucket_factor(comp: pd.Series, within_top: float, within_bottom: float) -> pd.Series:
+    factor = pd.Series(1.0, index=comp.index)
+    ranked = comp.dropna().sort_values()
+    k = len(ranked)
+    if k >= 2:
+        half = k // 2
+        factor.loc[ranked.index[:half]] = within_bottom
+        factor.loc[ranked.index[k - half:]] = within_top
+    return factor
+
+
+def value_chain_tilt_targets(available, asof, fund_df, backlog_df, *, cap: float = 0.25,
+                             base_maker: float = 1.25, base_contractor: float = 0.75,
+                             within_top: float = 1.10, within_bottom: float = 0.90) -> pd.Series:
+    names = sorted(available)
+    if not names:
+        return pd.Series(dtype=float)
+    base = pd.Series(1.0 / len(names), index=names)
+    margin_sig, cover_sig = _signals(names, asof, fund_df, backlog_df)
+
+    factor = pd.Series(1.0, index=names)
+    for bkt, base_mult in (("maker", base_maker), ("contractor", base_contractor)):
+        bkt_names = [t for t in names if bucket_of(t) == bkt]
+        if not bkt_names:
+            continue
+        comp = composite_rank(margin_sig, cover_sig, bkt_names)
+        within = _within_bucket_factor(comp, within_top, within_bottom)
+        factor.loc[bkt_names] = base_mult * within.reindex(bkt_names).fillna(1.0)
+
+    tilted = base * factor
+    tilted = tilted / tilted.sum()
+    return apply_cap(tilted, cap)

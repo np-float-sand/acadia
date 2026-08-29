@@ -147,3 +147,51 @@ def test_coverage_ratio_skips_book_to_bill_rows():
     out = vc.coverage_ratio(bl, fund, pd.Timestamp("2024-09-01"))
     # Should use Q1 xbrl_rpo dollar row (8000*1e6), not the b2b row
     assert out["PWR"] == pytest.approx(2.0)  # 8000*1e6 / (4*1e9) = 2.0
+
+
+def _signal_fixture():
+    # 8 clean quarters each; makers get rising margins, contractors flat/falling.
+    qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
+          "2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30"]
+    av = ["2022-11-01", "2023-02-01", "2023-05-01", "2023-08-01",
+          "2023-11-01", "2024-02-01", "2024-05-01", "2024-08-01"]
+
+    def rows(t, margins):
+        return pd.DataFrame(
+            [(pd.Timestamp(q), pd.Timestamp(a), 1000.0, 1000.0 * m) for q, a, m in zip(qe, av, margins)],
+            columns=["quarter_end", "availability_date", "revenue", "gross_profit"],
+        ).assign(ticker=t)
+
+    fund = pd.concat([
+        rows("ETN", [0.20, 0.20, 0.20, 0.20, 0.28, 0.28, 0.28, 0.28]),   # +0.08 strong maker
+        rows("HUBB", [0.20, 0.20, 0.20, 0.20, 0.22, 0.22, 0.22, 0.22]),  # +0.02 weak maker
+        rows("GEV", [0.20, 0.20, 0.20, 0.20, 0.24, 0.24, 0.24, 0.24]),
+        rows("VRT", [0.20, 0.20, 0.20, 0.20, 0.26, 0.26, 0.26, 0.26]),
+        rows("NVT", [0.20, 0.20, 0.20, 0.20, 0.21, 0.21, 0.21, 0.21]),
+        rows("PWR", [0.20, 0.20, 0.20, 0.20, 0.205, 0.205, 0.205, 0.205]),
+        rows("MYRG", [0.20, 0.20, 0.20, 0.20, 0.19, 0.19, 0.19, 0.19]),  # falling -> worst contractor
+        rows("PRIM", [0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]),
+        rows("FLNC", [0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]),
+    ], ignore_index=True)
+    return fund, _backlog_df([])   # empty backlog -> signal rides on gross margin alone
+
+
+def test_tilt_overweights_makers_and_sums_to_one():
+    fund, bl = _signal_fixture()
+    names = ["ETN", "HUBB", "GEV", "VRT", "NVT", "PWR", "MYRG", "PRIM", "FLNC"]
+    w = vc.value_chain_tilt_targets(names, pd.Timestamp("2024-09-15"), fund, bl, cap=0.25)
+    assert w.sum() == pytest.approx(1.0)
+    assert w.reindex(config.BUCKET_MAKERS).sum() > w.reindex(config.BUCKET_CONTRACTORS).sum()
+    assert w["ETN"] > w["HUBB"]                       # strong maker over weak maker
+    assert w["MYRG"] < w["PRIM"]                      # worst contractor cut hardest
+    assert w.max() <= 0.25 + 1e-9
+
+
+def test_tilt_no_signal_name_gets_base_bucket_multiplier_only():
+    fund, bl = _signal_fixture()
+    # Drop every GEV fundamental row -> GEV has no composite, takes base maker x1.0
+    fund = fund[fund["ticker"] != "GEV"]
+    names = ["ETN", "HUBB", "GEV", "VRT", "NVT", "PWR", "MYRG", "PRIM", "FLNC"]
+    w = vc.value_chain_tilt_targets(names, pd.Timestamp("2024-09-15"), fund, bl, cap=1.0)
+    # GEV weight == equal-weight * base_maker / normaliser ; still clearly a maker-side weight
+    assert w["GEV"] > w.reindex(config.BUCKET_CONTRACTORS).max()
