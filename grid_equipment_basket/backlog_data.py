@@ -107,8 +107,17 @@ def backlog_growth_signal(df: pd.DataFrame, asof: pd.Timestamp) -> pd.Series:
         if len(g) < 5:
             out[tkr] = float("nan")
             continue
-        latest = float(g.iloc[-1]["metric_value"])
-        year_ago = float(g.iloc[-5]["metric_value"])
+        latest_row = g.iloc[-1]
+        year_ago_row = g.iloc[-5]
+        span_days = (latest_row["quarter_end"] - year_ago_row["quarter_end"]).days
+        if not (300 <= span_days <= 430):
+            # Positional iloc[-5] only lands a true year ago on a clean, gap-free
+            # quarterly series. A gappy series (e.g. VRT) would inflate the "YoY"
+            # ratio here — NaN it instead of ranking it for the wrong reason.
+            out[tkr] = float("nan")
+            continue
+        latest = float(latest_row["metric_value"])
+        year_ago = float(year_ago_row["metric_value"])
         out[tkr] = (latest / year_ago - 1.0) if year_ago else float("nan")
     return pd.Series(out, dtype=float)
 

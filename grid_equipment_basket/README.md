@@ -53,7 +53,12 @@ parameter, not an optimized one.
 If a hand-picked basket cannot beat a rules-based thematic ETF that already exists, the edge
 is "the theme", not the construction — and the writeup says so plainly.
 
-## Step 1 result
+## Step 1 / Step 2 result
+
+**Recommended basket: equal-weight, no tilt.** Step 1 (the theme) cleared its decision gate;
+Step 2 (the backlog tilt) did not beat equal-weight and is not adopted.
+
+### Step 1 — equal-weight theme
 
 Window **2023-01-01 -> 2026-07-31** (~3.56 years, 43 monthly observations). Equal-weight,
 no tilt.
@@ -79,6 +84,36 @@ description only, FLNC (a known underperformer) kept in, equal-weight removes we
 cherry-picking, and the GRID/PAVE comparison rules out the "this is just the theme" reading.
 Full numbers and caveats: `../docs/grid-equipment-basket-step1-results.md`.
 
+### Step 2 — backlog-growth weight tilt (evaluated, NOT adopted)
+
+The gate passed, so the Step 2 tilt was built and re-validated (spec §6). The tilt starts
+from the Step 1 equal weights, ranks names by trailing-YoY growth in their own
+point-in-time-disclosed order backlog / RPO, multiplies the **top-half-ranked names by 1.25x
+and the bottom half by 0.75x** (median name and any name with no backlog signal left at
+1.0x), then renormalizes and re-applies the 25% cap. The 1.25 / 0.75 constants are fixed in
+`config.py`, not fitted. Run it with `--tilt backlog`.
+
+Same 2023-01-01 -> 2026-07-31 window:
+
+| Series | CAGR | Vol | Sharpe | Sortino | MaxDD |
+|---|---|---|---|---|---|
+| BASKET — equal-weight | 59.77% | 36.48% | 1.360 | 1.774 | -41.35% |
+| BASKET — backlog tilt | 59.16% | 35.98% | 1.363 | 1.784 | -43.01% |
+
+**§6 re-validation: the tilt must improve BOTH Sharpe and CAGR vs equal-weight. It does not**
+— Sharpe is +0.003 (inside the ±0.5 sampling noise) but **CAGR is -0.61 pp lower** and the
+max drawdown is 1.7 pp deeper. **Equal-weight remains the recommended basket.** The tilt over-
+weighted FLNC (the basket's designated chronic underperformer) through late 2024 / early 2025
+on its fast backlog growth and under-weighted MYRG throughout; disclosed-backlog-growth rank
+did not track forward return over this window. HUBB and NVT are never tilted (annual-only
+backlog disclosure -> NaN signal), and VRT is left untilted at the 2025 rebalances by a
+lookback-span guard added for its gappy (6-of-9-quarters-missing) disclosure. Full Step 2
+table, per-rebalance weight moves, and the keep-or-adopt reasoning:
+`../docs/grid-equipment-basket-step1-results.md`.
+
+The Step 2 comparison inherits every Step 1 caveat — same ~43-month, survivorship-biased
+window, same ±0.5 Sharpe standard error, same GEV coverage gap.
+
 ## Return convention
 
 All maths here uses **SIMPLE returns** (`pct_change`, `(1+r).prod()`), unlike `grid_resilience`
@@ -89,7 +124,7 @@ which uses log returns. A log-based recompute will not tie out exactly — that 
 ```
 python -m grid_equipment_basket --start 2023-01-01      # primary window
 python -m grid_equipment_basket --prior-regime          # 2020-2022 panel
-python -m grid_equipment_basket --tilt backlog          # Step 2 (only after the gate PASSED; module built in Tasks 6-8)
+python -m grid_equipment_basket --tilt backlog          # Step 2 backlog tilt (built + evaluated; NOT the recommended basket, see below)
 ```
 
 Outputs (to `--output`, default `./output_grid_equipment`): `metrics.csv`,

@@ -105,3 +105,33 @@ def simulate_basket(
     wdf = pd.DataFrame(weights_log).T.sort_index()
     wdf = wdf.reindex(columns=sorted(wdf.columns)).fillna(0.0)
     return BasketResult(ret, wdf, [d for d in form_dates if d != px.index[0]])
+
+
+def backlog_tilt_targets(
+    available, asof, backlog_df,
+    cap: float = 0.25, top: float = 1.25, bottom: float = 0.75,
+) -> pd.Series:
+    """Equal weight tilted by disclosed-backlog-growth rank (spec §6)."""
+    from grid_equipment_basket.backlog_data import backlog_growth_signal, backlog_ranks
+
+    names = sorted(available)
+    if not names:
+        return pd.Series(dtype=float)
+    base = pd.Series(1.0 / len(names), index=names)
+
+    ranks = backlog_ranks(backlog_growth_signal(backlog_df, asof)).reindex(names)
+    present = ranks.dropna()
+    factor = pd.Series(1.0, index=names)
+    if len(present) >= 2:
+        order = present.sort_values()
+        k = len(order)
+        half = k // 2
+        bottom_names = order.index[:half]
+        top_names = order.index[k - half:]
+        factor.loc[bottom_names] = bottom
+        factor.loc[top_names] = top
+        # middle name(s) with odd k stay 1.0
+
+    tilted = base * factor
+    tilted = tilted / tilted.sum()
+    return apply_cap(tilted, cap)

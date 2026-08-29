@@ -207,3 +207,138 @@ versus equal-weight, equal-weight remains the recommended basket.
 
 (Had the gate FAILED: stop here. The negative result plus `candidate_research.md` and the
 Step 1 code would have been the deliverable, and no backlog data would be collected.)
+
+---
+
+# Step 2 — backlog tilt
+
+Run date: 2026-08-29. Same price data, same **2023-01-01 -> 2026-07-31** window, same
+rebalance calendar as Step 1. Tilt path: `grid_equipment_basket/basket.py::backlog_tilt_targets`,
+invoked via `python -m grid_equipment_basket --start 2023-01-01 --tilt backlog`
+(`output_grid_equipment_tilt/`).
+
+## Construction
+
+Start from the Step 1 equal weights on each rebalance date. Compute
+`backlog_growth_signal(backlog_df, asof)` — trailing YoY growth in each name's own disclosed
+backlog / RPO figure, point-in-time on the filing / earnings date; book-to-bill-only names
+would be scored on (level - 1), though none are in the final data. Rank ascending; among the
+names with a non-NaN rank on that date, the top half are multiplied by **1.25x**, the bottom
+half by **0.75x**, and (on an odd count) the median name plus every name with no rank stay at
+**1.0x**. Renormalize to sum 1; re-apply the 25% single-name cap. The 1.25 / 0.75 constants
+live in `config.py` (`BACKLOG_TILT_TOP` / `BACKLOG_TILT_BOTTOM`) — fixed, documented, not
+fitted.
+
+The tilt is small and self-financing: with 9 names the equal weight is 11.11% and a tilted
+name moves to 13.89% (up) or 8.33% (down) — a +/-2.78 pp step. The top and bottom halves are
+equal in size, so the steps net to zero and the 25% cap never binds anywhere in the run.
+
+## VRT gappy-signal guard (carried from the Task 6 review)
+
+`backlog_growth_signal` picks the year-ago value positionally (`g.iloc[-5]`). That is a true
+year ago only on a clean consecutive-quarter series. VRT discloses backlog irregularly
+(9 rows, 6 quarters missing across 2023-26), so `iloc[-5]` can sit ~18 months back and
+inflate VRT's "YoY" growth — over-ranking a known 2023-26 winner into the +1.25x bucket for
+the wrong reason, a bias the §6 re-validation gate would not catch. A lookback-span guard now
+sets a name's signal to NaN whenever its `iloc[-5] -> iloc[-1]` quarter-end span falls
+outside **300-430 days**.
+
+Effect on this run: VRT is left **untilted** (no rank) at the 2025-05-12, 2025-08-11 and
+2025-11-11 rebalances (span 547-548 days each). It is tilted **up** (x1.25, top half) at
+2026-02-11 and 2026-05-12, where its span is a legitimate 365 days and the ~108% YoY jump is
+real (Q4-25 backlog 9.5bn -> 15.0bn). Without the guard VRT would have been over-ranked into
+the top bucket across 2025 on an 18-month lookback.
+
+## Which names the tilt actually moved
+
+| Name | Disclosure | Tilt behaviour over the window |
+|---|---|---|
+| ETN | xbrl_rpo, then non-GAAP total | tilted (both directions) from 2024-05-13 on |
+| FLNC | xbrl_rpo | tilted **up** 2024-08 -> 2025-02 (fastest disclosed-backlog growth in the set), down thereafter |
+| GEV | xbrl_rpo | no signal until 2025-05-12 (needs 5 quarters of post-spin history); tilted after |
+| MYRG | xbrl_rpo | tilted **down** at every active rebalance — slowest backlog growth in the set |
+| PRIM | xbrl_rpo | tilted (both directions) |
+| PWR | xbrl_rpo | tilted (mostly up) from 2024-05-13 on |
+| VRT | non-GAAP total (gappy) | untilted across 2024-25 (span guard); tilted up at the last two rebalances |
+| HUBB | non-GAAP total, **annual only** | **never tilted** — NaN signal at every rebalance |
+| NVT | non-GAAP total, **annual only** | **never tilted** — NaN signal at every rebalance |
+
+No tilt is applied at any 2023 rebalance or at 2024-02-12 (fewer than two names have a
+non-NaN rank). The first active tilt is **2024-05-13**; from there the basket carries a tilt
+at every rebalance to the end of the window.
+
+## Tilted vs equal-weight vs the five benchmarks
+
+Primary window 2023-01-01 -> 2026-07-31, 896 trading days (~3.56 y, 43 monthly obs). Exact
+values: `output_grid_equipment_tilt/metrics.csv` (tilt), `output_grid_equipment/metrics.csv`
+(equal-weight, from Task 5).
+
+| Series | CAGR | Vol | Sharpe | Sortino | MaxDD |
+|---|---|---|---|---|---|
+| **BASKET — equal-weight** | 59.77% | 36.48% | 1.360 | 1.774 | -41.35% |
+| **BASKET — backlog tilt** | 59.16% | 35.98% | 1.363 | 1.784 | -43.01% |
+| XLI | 20.20% | 16.53% | 0.954 | 1.415 | -18.49% |
+| SPY | 22.40% | 15.11% | 1.148 | 1.567 | -18.76% |
+| XLU | 9.89% | 16.46% | 0.412 | 0.595 | -20.20% |
+| GRID | 23.84% | 20.33% | 0.957 | 1.371 | -20.77% |
+| PAVE | 24.47% | 20.68% | 0.969 | 1.460 | -26.23% |
+
+Basket-vs-benchmark, **tilt** (equal-weight in parentheses):
+
+| vs | excess CAGR | corr | TE | IR |
+|---|---|---|---|---|
+| XLI | +38.96% (+39.57%) | 0.71 (0.70) | 26.9% (27.5%) | 1.24 (1.23) |
+| SPY | +36.76% (+37.37%) | 0.68 (0.68) | 28.0% (28.5%) | 1.13 (1.13) |
+| XLU | +49.27% (+49.88%) | 0.26 (0.26) | 35.4% (35.9%) | 1.19 (1.19) |
+| GRID | +35.32% (+35.93%) | 0.82 (0.82) | 22.4% (23.1%) | 1.32 (1.31) |
+| PAVE | +34.69% (+35.30%) | 0.77 (0.77) | 24.0% (24.6%) | 1.21 (1.20) |
+
+Calendar-year total return (%), tilt vs equal-weight:
+
+| Year | tilt | equal-weight | XLI | SPY | XLU | GRID | PAVE |
+|---|---|---|---|---|---|---|---|
+| 2023 | 79.2 | 79.2 | 17.9 | 26.7 | -7.2 | 21.6 | 31.0 |
+| 2024 | 52.0 | 52.2 | 17.3 | 24.9 | 23.3 | 15.2 | 17.9 |
+| 2025 | 44.7 | 51.6 | 19.4 | 17.7 | 16.0 | 29.6 | 19.4 |
+| 2026 (Jan-Jul, partial) | 32.5 | 27.9 | 16.6 | 10.1 | 5.3 | 17.8 | 18.1 |
+
+2023 is identical (no tilt before 2024-05-13). The tilt cost ~7 pp in 2025 — it consistently
+underweighted MYRG and, at points, PWR / GEV, all of which were strong that year — and
+recovered ~5 pp in 2026. Over the full window the tilt is a small **net negative** on total
+return.
+
+## §6 keep-or-adopt decision
+
+Spec §6: *"If the tilt does not improve **both** Sharpe and CAGR relative to equal-weight,
+equal-weight remains the recommended basket and the README says so explicitly."*
+
+| Gate metric | equal-weight | tilt | tilt better? |
+|---|---|---|---|
+| Sharpe | 1.360 | 1.363 | yes, by +0.003 |
+| CAGR | 59.77% | 59.16% | **no, -0.61 pp** |
+
+**Decision: keep equal-weight.** The tilt fails the §6 bar — CAGR is lower. The nominal
++0.003 Sharpe uplift comes entirely from slightly lower volatility (35.98% vs 36.48%) and is
+meaningless against the ±0.5 Sharpe standard error on a 43-observation sample (§5); the tilt
+also deepened the max drawdown by 1.7 pp. Mechanically the tilt did the wrong thing where it
+mattered: it over-weighted **FLNC** — the basket's designated chronic underperformer —
+through late 2024 / early 2025 because FLNC posted the fastest disclosed-backlog growth in
+the set, and it under-weighted **MYRG** throughout even though MYRG was a steady contributor.
+Backlog-growth rank did not line up with forward return over this window.
+
+This does **not** resolve whether a backlog tilt could work with a longer history, with clean
+segment-level disclosure across all nine names (HUBB and NVT contribute nothing today), or
+with a different signal definition (level vs growth, surprise vs raw). It says only that the
+fixed 1.25x / 0.75x growth-rank tilt does not beat equal-weight on this ~43-month,
+survivorship-biased sample.
+
+## Caveats unchanged (Spec §5, §7)
+
+The Step 2 comparison inherits every §5 and §7 caveat from Step 1 without exception: the same
+~3.56-year / 43-observation window, the same Sharpe standard error on the order of ±0.5 (so
+the tilt-vs-equal gaps are far inside the noise), the same GEV coverage gap (GEV in the
+basket only for the back ~60% of the window), and the same headline survivorship / hindsight
+bias from choosing the universe in 2026 knowing which names won. The tilt does not lengthen
+the sample or reduce the bias — it adds one more fitted-looking degree of freedom (the tilt
+direction) on top of the universe choice, which is a further reason to prefer the simpler
+equal-weight construction here.

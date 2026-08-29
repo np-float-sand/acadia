@@ -44,6 +44,25 @@ def test_backlog_growth_signal_yoy(tmp_path):
     assert sig["AAA"] == pytest.approx(0.30)
 
 
+def test_backlog_growth_signal_gappy_span_returns_nan(tmp_path):
+    # 5 rows, but iloc[-5] -> iloc[-1] spans ~30 months (>430 days) because the
+    # series is gappy. Positional iloc[-5] would inflate the "YoY" ratio, so the
+    # lookback-span guard must NaN this ticker instead.
+    body = "".join(
+        f"GAP,{qe},{av},{val},USD_million,xbrl_rpo,total,http://x,\n"
+        for qe, av, val in [
+            ("2022-12-31", "2023-02-15", 100),
+            ("2023-06-30", "2023-08-15", 110),
+            ("2024-06-30", "2024-08-15", 150),
+            ("2024-12-31", "2025-02-15", 170),
+            ("2025-06-30", "2025-08-15", 200),
+        ]
+    )
+    df = bd.load_backlog_csv(_write(tmp_path, body))
+    sig = bd.backlog_growth_signal(df, pd.Timestamp("2025-09-01"))
+    assert "GAP" not in sig.dropna().index
+
+
 def test_backlog_growth_signal_respects_availability_date(tmp_path):
     body = "".join(
         f"AAA,{qe},{av},{val},USD_million,xbrl_rpo,total,http://x,\n"
