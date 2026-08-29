@@ -10,8 +10,13 @@ ROOT = Path(__file__).parent
 CACHE_DIR = ROOT / "data" / "cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Provisional list — Task 6 (candidate_research.md) replaces this with the
-# verified include-set. Inclusion is decided on 10-K business description only.
+# Verified include-set — see candidate_research.md. Inclusion is decided on the
+# latest-10-K business description only, never on historical returns. All nine
+# spec §2 candidates passed the business test (PRIM is borderline but retained;
+# FLNC is retained despite weak returns). Foreign-listed names (ABB, Siemens
+# Energy, Prysmian, Nexans) are logged there and excluded — US access is thin
+# OTC ADRs only. GEV has price history only from 2024-04-02 and enters the
+# equal-weight basket on its first available date (spec §4).
 UNIVERSE: list[str] = ["ETN", "HUBB", "GEV", "VRT", "PWR", "MYRG", "NVT", "FLNC", "PRIM"]
 
 BENCHMARKS: list[str] = ["XLI", "SPY", "XLU", "GRID", "PAVE"]
