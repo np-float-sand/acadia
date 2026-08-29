@@ -1,5 +1,3 @@
-import json
-
 import pandas as pd
 import pytest
 
@@ -69,6 +67,25 @@ def test_fetch_fundamentals_derives_gross_profit_from_cost_when_untagged(monkeyp
 
     monkeypatch.setattr(md.requests, "get", fake_get)
     df = md.fetch_fundamentals("PWR", use_cache=False)
+    assert df["gross_profit"].iloc[0] == pytest.approx(180.0)   # 1000 - 820
+
+
+def test_fetch_fundamentals_uses_later_cost_filing_date_when_deriving_gross_profit(monkeypatch):
+    revenue = _facts([("2023-01-01", "2023-03-31", "2023-05-01", 1000)])
+    cogs = _facts([("2023-01-01", "2023-03-31", "2023-06-15", 820)])  # filed later
+
+    def fake_get(url, headers=None, timeout=None):
+        if "Revenues" in url:
+            return _Resp(revenue)
+        if "GrossProfit" in url:
+            return _Resp({"units": {}}, status=404)
+        if "CostOfGoodsAndServicesSold" in url:
+            return _Resp(cogs)
+        return _Resp({"units": {}}, status=404)
+
+    monkeypatch.setattr(md.requests, "get", fake_get)
+    df = md.fetch_fundamentals("PWR", use_cache=False)
+    assert df["availability_date"].iloc[0] == pd.Timestamp("2023-06-15")  # later date
     assert df["gross_profit"].iloc[0] == pytest.approx(180.0)   # 1000 - 820
 
 

@@ -66,18 +66,19 @@ def fetch_fundamentals(ticker: str, use_cache: bool = True) -> pd.DataFrame:
         raise KeyError(f"no CIK for {ticker}; add it to backlog_data.CIK_BY_TICKER")
 
     rev = _first_nonempty(cik, _REVENUE_TAGS).rename(columns={"val": "revenue"})
-    gross = _flow_facts(cik, "GrossProfit").rename(columns={"val": "gross_profit"})
+    gross = _flow_facts(cik, _GROSS_TAGS[0]).rename(columns={"val": "gross_profit"})
     if gross.empty:
         cost = _first_nonempty(cik, _COST_TAGS).rename(columns={"val": "cost"})
         if not cost.empty and not rev.empty:
-            gross = rev.merge(cost[["quarter_end", "cost"]], on="quarter_end", how="inner")
+            gross = rev.merge(cost[["quarter_end", "cost", "availability_date"]], on="quarter_end", how="inner", suffixes=("_rev", "_cost"))
             gross["gross_profit"] = gross["revenue"] - gross["cost"]
+            gross["availability_date"] = gross[["availability_date_rev", "availability_date_cost"]].max(axis=1)
             gross = gross[["quarter_end", "availability_date", "gross_profit"]]
 
     if rev.empty or gross.empty:
         out = pd.DataFrame(columns=_COLS)
     else:
-        out = rev.merge(gross[["quarter_end", "gross_profit"]], on="quarter_end", how="inner")
+        out = rev[["quarter_end", "revenue"]].merge(gross[["quarter_end", "availability_date", "gross_profit"]], on="quarter_end", how="inner")
         out = out[_COLS].sort_values("quarter_end").reset_index(drop=True)
 
     if use_cache and not out.empty:
