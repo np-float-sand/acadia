@@ -97,3 +97,49 @@ def combine_fundamentals(by_ticker: dict[str, pd.DataFrame]) -> pd.DataFrame:
     if not parts:
         return pd.DataFrame(columns=_COLS + ["ticker"])
     return pd.concat(parts, ignore_index=True).sort_values(["ticker", "quarter_end"]).reset_index(drop=True)
+
+
+from grid_equipment_basket import config as _cfg
+
+
+def _visible(fund_df: pd.DataFrame, asof: pd.Timestamp) -> pd.DataFrame:
+    asof = pd.Timestamp(asof)
+    return fund_df[fund_df["availability_date"] <= asof]
+
+
+def ttm_gross_margin_signal(fund_df: pd.DataFrame, asof: pd.Timestamp) -> pd.Series:
+    asof = pd.Timestamp(asof)
+    out: dict[str, float] = {}
+    for tkr, g in _visible(fund_df, asof).groupby("ticker"):
+        g = g.sort_values("quarter_end").reset_index(drop=True)
+        if len(g) < _cfg.VC_SIGNAL_MIN_QUARTERS:
+            out[tkr] = float("nan")
+            continue
+        span = (g["quarter_end"].iloc[-1] - g["quarter_end"].iloc[-5]).days
+        if not (_cfg.VC_SPAN_MIN_DAYS <= span <= _cfg.VC_SPAN_MAX_DAYS):
+            out[tkr] = float("nan")
+            continue
+        if (asof - g["quarter_end"].iloc[-1]).days > _cfg.VC_STALENESS_MAX_DAYS:
+            out[tkr] = float("nan")
+            continue
+        recent = g.iloc[-4:]
+        prior = g.iloc[-8:-4]
+        m_recent = recent["gross_profit"].sum() / recent["revenue"].sum()
+        m_prior = prior["gross_profit"].sum() / prior["revenue"].sum()
+        out[tkr] = float(m_recent - m_prior) if prior["revenue"].sum() else float("nan")
+    return pd.Series(out, dtype=float)
+
+
+def ttm_revenue(fund_df: pd.DataFrame, asof: pd.Timestamp) -> pd.Series:
+    asof = pd.Timestamp(asof)
+    out: dict[str, float] = {}
+    for tkr, g in _visible(fund_df, asof).groupby("ticker"):
+        g = g.sort_values("quarter_end").reset_index(drop=True)
+        if len(g) < 4:
+            out[tkr] = float("nan")
+            continue
+        if (asof - g["quarter_end"].iloc[-1]).days > _cfg.VC_STALENESS_MAX_DAYS:
+            out[tkr] = float("nan")
+            continue
+        out[tkr] = float(g.iloc[-4:]["revenue"].sum())
+    return pd.Series(out, dtype=float)

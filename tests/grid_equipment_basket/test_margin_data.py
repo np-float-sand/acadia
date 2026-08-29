@@ -96,3 +96,57 @@ def test_combine_fundamentals_adds_ticker_column():
     out = md.combine_fundamentals({"ETN": a, "PWR": a})
     assert set(out["ticker"]) == {"ETN", "PWR"}
     assert len(out) == 2
+
+
+def _fund_rows(ticker, quarters):
+    # quarters: list of (quarter_end, availability_date, revenue, gross_profit)
+    return pd.DataFrame(
+        [(pd.Timestamp(qe), pd.Timestamp(av), float(rv), float(gp)) for qe, av, rv, gp in quarters],
+        columns=["quarter_end", "availability_date", "revenue", "gross_profit"],
+    ).assign(ticker=ticker)
+
+
+def _eight_clean_quarters(ticker, margins):
+    # margins: 8 quarterly gross-margin fractions, oldest first. Revenue fixed at 1000.
+    qe = ["2022-09-30", "2022-12-31", "2023-03-31", "2023-06-30",
+          "2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30"]
+    av = ["2022-11-01", "2023-02-01", "2023-05-01", "2023-08-01",
+          "2023-11-01", "2024-02-01", "2024-05-01", "2024-08-01"]
+    return _fund_rows(ticker, [(q, a, 1000.0, 1000.0 * m) for q, a, m in zip(qe, av, margins)])
+
+
+def test_ttm_gross_margin_signal_yoy_change_in_ttm_margin():
+    # prior TTM (q1..q4) avg margin 0.20 ; recent TTM (q5..q8) avg margin 0.25 -> +0.05
+    df = _eight_clean_quarters("AAA", [0.20, 0.20, 0.20, 0.20, 0.25, 0.25, 0.25, 0.25])
+    from grid_equipment_basket import margin_data as md
+    sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2024-09-15"))
+    assert sig["AAA"] == pytest.approx(0.05)
+
+
+def test_ttm_gross_margin_signal_needs_eight_quarters():
+    df = _eight_clean_quarters("AAA", [0.2] * 8).iloc[:7]
+    from grid_equipment_basket import margin_data as md
+    sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2024-09-15"))
+    assert "AAA" not in sig.dropna().index
+
+
+def test_ttm_gross_margin_signal_respects_availability_date():
+    df = _eight_clean_quarters("AAA", [0.2] * 8)
+    from grid_equipment_basket import margin_data as md
+    # asof before the 8th quarter's 2024-08-01 filing -> only 7 visible -> NaN
+    sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2024-07-15"))
+    assert "AAA" not in sig.dropna().index
+
+
+def test_ttm_gross_margin_signal_stale_latest_quarter_is_nan():
+    df = _eight_clean_quarters("AAA", [0.2] * 8)
+    from grid_equipment_basket import margin_data as md
+    sig = md.ttm_gross_margin_signal(df, pd.Timestamp("2025-06-01"))   # >200d past 2024-06-30
+    assert "AAA" not in sig.dropna().index
+
+
+def test_ttm_revenue_sums_last_four_visible_quarters():
+    df = _eight_clean_quarters("AAA", [0.2] * 8)
+    from grid_equipment_basket import margin_data as md
+    rev = md.ttm_revenue(df, pd.Timestamp("2024-09-15"))
+    assert rev["AAA"] == pytest.approx(4000.0)
