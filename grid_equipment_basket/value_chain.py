@@ -104,3 +104,23 @@ def value_chain_tilt_targets(available, asof, fund_df, backlog_df, *, cap: float
     tilted = base * factor
     tilted = tilted / tilted.sum()
     return apply_cap(tilted, cap)
+
+
+def _leg_weights(comp: pd.Series, invert: bool) -> pd.Series:
+    if comp.empty:
+        return pd.Series(dtype=float)
+    filled = comp.fillna(comp.mean())
+    if filled.isna().all():                       # no composite anywhere in the bucket
+        filled = pd.Series(1.0, index=comp.index)
+    score = (filled.max() + 1.0 - filled) if invert else filled
+    return score / score.sum()
+
+
+def pair_weights(available, asof, fund_df, backlog_df):
+    names = sorted(available)
+    margin_sig, cover_sig = _signals(names, asof, fund_df, backlog_df)
+    makers = [t for t in names if bucket_of(t) == "maker"]
+    contractors = [t for t in names if bucket_of(t) == "contractor"]
+    long_w = _leg_weights(composite_rank(margin_sig, cover_sig, makers), invert=False)
+    short_w = _leg_weights(composite_rank(margin_sig, cover_sig, contractors), invert=True)
+    return long_w, short_w

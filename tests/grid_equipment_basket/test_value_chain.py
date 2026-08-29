@@ -195,3 +195,22 @@ def test_tilt_no_signal_name_gets_base_bucket_multiplier_only():
     w = vc.value_chain_tilt_targets(names, pd.Timestamp("2024-09-15"), fund, bl, cap=1.0)
     # GEV weight == equal-weight * base_maker / normaliser ; still clearly a maker-side weight
     assert w["GEV"] > w.reindex(config.BUCKET_CONTRACTORS).max()
+
+
+def test_pair_weights_long_favours_strong_maker_short_favours_weak_contractor():
+    fund, bl = _signal_fixture()
+    names = ["ETN", "HUBB", "GEV", "VRT", "NVT", "PWR", "MYRG", "PRIM", "FLNC"]
+    long_w, short_w = vc.pair_weights(names, pd.Timestamp("2024-09-15"), fund, bl)
+    assert long_w.sum() == pytest.approx(1.0)
+    assert short_w.sum() == pytest.approx(1.0)
+    assert set(long_w.index) == set(config.BUCKET_MAKERS)
+    assert set(short_w.index) == set(config.BUCKET_CONTRACTORS)
+    assert long_w["ETN"] == long_w.max()             # strongest maker, biggest long
+    assert short_w["MYRG"] == short_w.max()          # weakest contractor, biggest short
+
+
+def test_pair_weights_empty_bucket_returns_empty_leg():
+    fund, bl = _signal_fixture()
+    long_w, short_w = vc.pair_weights(["ETN", "VRT"], pd.Timestamp("2024-09-15"), fund, bl)
+    assert short_w.empty
+    assert long_w.sum() == pytest.approx(1.0)
