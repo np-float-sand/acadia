@@ -139,3 +139,10 @@ multiple years of quarterly history does a cross-sectional backlog-growth-surpri
 become defensible. That needs its own spec — do **not** reintroduce `build_factor()` /
 z-scoring / IC machinery into this basket. This is scoped as a thematic basket, matching
 `dc_demand_basket`.
+
+A purely **descriptive** check of as-of backlog growth against each name's own subsequent
+63-/126-day return (`backlog_forward_check.py`) was run once to inform that question. On this
+tiny sample (4–9 as-of points per name; HUBB / NVT / VRT have too few to include) the signs
+are mixed and lean the wrong way — 4 of 6 names show a negative association — so it gives **no
+encouragement** to open a Phase-2 spec now. Descriptive only: no IC metric, no z-scoring, no
+significance claimed. Full table and read: `../docs/grid-equipment-basket-step1-results.md`.

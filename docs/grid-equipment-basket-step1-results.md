@@ -342,3 +342,46 @@ bias from choosing the universe in 2026 knowing which names won. The tilt does n
 the sample or reduce the bias — it adds one more fitted-looking degree of freedom (the tilt
 direction) on top of the universe choice, which is a further reason to prefer the simpler
 equal-weight construction here.
+
+---
+
+## Descriptive backlog-growth vs forward-return check
+
+Run date: 2026-08-29. Purely exploratory — **descriptive only: not a backtest, not an IC claim, not
+a strategy input.** It exists to inform the spec §8 Phase-2-factor question and nothing else.
+
+Method (`grid_equipment_basket/backlog_forward_check.py`): for each name, take every point-in-time
+`backlog_growth_signal` value on its own filing / earnings availability dates (the same signal and
+the same 300-430-day span guard the Step 2 tilt uses), pair each with that same name's subsequent
+63- and 126-trading-day total return, and report the Pearson correlation of the paired values. This
+is a per-name time-series correlation — **not** the cross-sectional rank the Step 2 tilt is built on.
+
+| Ticker | corr (63d) | corr (126d) | n |
+|---|---|---|---|
+| ETN  | -0.31 | -0.39 | 9 |
+| FLNC | -0.19 | -0.21 | 9 |
+| GEV  | -0.42 | -0.16 | 4 |
+| MYRG | +0.79 | +0.53 | 9 |
+| PRIM | +0.46 | +0.61 | 9 |
+| PWR  | -0.29 | -0.08 | 9 |
+
+`n` is the number of (as-of backlog growth, forward return) pairs at the 126-day horizon; the 63-day
+count is one higher (10, or 5 for GEV). HUBB and NVT are absent from the table — annual-only backlog
+disclosure gives them no YoY growth signal. VRT is absent — after the span guard it retains only one
+valid as-of point, below the >=3 minimum the check requires. Pooled scatter:
+`output_grid_equipment_tilt/backlog_forward_check.png` (gitignored).
+
+**Read — does the spec §8 Phase-2 cross-sectional factor look worth a future spec? Not on this
+evidence.** The signs are mixed and, for the names with the most disclosure, lean the wrong way:
+four of the six names (ETN, FLNC, GEV, PWR) show a *negative* association between a name's own as-of
+backlog growth and its next-quarter / next-two-quarter return, and only MYRG and PRIM are positive.
+There is no consistent direction here, let alone a consistent positive one. That is consistent with
+the Step 2 finding: the fixed 1.25x / 0.75x growth-rank tilt over-weighted FLNC (the fastest
+disclosed-backlog growth in the set, yet a name whose own backlog-growth-to-return correlation is
+negative) and under-weighted MYRG, and it lost to equal-weight — backlog-growth rank did not track
+forward return on this sample. **n is tiny** — most names have only 9-11 as-of points, GEV has 4-6,
+and three names have none — so no statistical significance is claimed and these correlations must
+not be over-read; several of them (MYRG's +0.79 especially) are the kind of figure that moves hard
+when a single observation shifts. The honest conclusion is that this descriptive check gives no
+encouragement to open a Phase-2 factor spec now; that option stays parked in spec §8 pending a
+longer history and clean segment-level backlog disclosure across the full universe.
