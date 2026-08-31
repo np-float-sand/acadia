@@ -102,3 +102,49 @@ REGIME_LO: float = 0.6            # discrete-mode multiplier when easing
 REGIME_K: float = 0.35            # continuous-mode slope: clip(1 + k*composite, 0.5, 1.5)
 REGIME_W_CONG: float = 1.0         # rung-1 sub-signal weights (congestion only)
 REGIME_W_RESERVE: float = 0.0
+
+# Signal is z-scored over this full span (long warm-up); basket returns are
+# evaluated only on the two windows below (which is why the prior test is
+# effectively 2021-2022 -- see spec s11).
+REGIME_SIGNAL_START: str = "2018-01-01"
+REGIME_PRIMARY_WINDOW: tuple[str, str] = ("2023-01-01", "2025-12-31")
+REGIME_PRIOR_WINDOW: tuple[str, str] = ("2020-01-01", "2022-12-31")   # matches layer-1's panel
+
+# The frozen pre-registered ladder (spec s5). Run top to bottom; stop at the
+# first rung whose verdict is "PASS" (gates + plateau, non-marginal). Each rung
+# changes exactly one thing from the one above; `neighbours` are the plateau
+# probes (must also clear G1 & G2). NOTHING here is revised from results.
+REGIME_LADDER: list[dict] = [
+    {"name": "1: discrete, PJM-4, congestion-only",
+     "mode": "discrete", "zones": REGIME_ZONES_CORE, "w_cong": 1.0, "w_reserve": 0.0,
+     "zone_weight": "equal", "thresh": 0.5,
+     "neighbours": [{"thresh": 0.25}, {"thresh": 0.75},
+                    {"zones": ["DOM", "AEP", "COMED"]},
+                    {"zones": ["DOM", "AEP", "COMED", "PPL", "PSEG"]}]},
+    {"name": "2: + reserve-tightness",
+     "mode": "discrete", "zones": REGIME_ZONES_CORE, "w_cong": 0.7, "w_reserve": 0.3,
+     "zone_weight": "equal", "thresh": 0.5,
+     "neighbours": [{"thresh": 0.25}, {"thresh": 0.75},
+                    {"w_cong": 0.55, "w_reserve": 0.45}, {"w_cong": 0.85, "w_reserve": 0.15}]},
+    {"name": "3: continuous multiplier",
+     "mode": "continuous", "zones": REGIME_ZONES_CORE, "w_cong": 0.7, "w_reserve": 0.3,
+     "zone_weight": "equal", "k": 0.35,
+     "neighbours": [{"k": 0.25}, {"k": 0.45}]},
+    {"name": "4: widen zones to 6",
+     "mode": "continuous", "zones": REGIME_ZONES_WIDE, "w_cong": 0.7, "w_reserve": 0.3,
+     "zone_weight": "equal", "k": 0.35,
+     "neighbours": [{"k": 0.25}, {"k": 0.45},
+                    {"zones": ["DOM", "AEP", "COMED", "PPL", "PSEG"]}]},
+    {"name": "5: load-weighted zones",
+     "mode": "continuous", "zones": REGIME_ZONES_WIDE, "w_cong": 0.7, "w_reserve": 0.3,
+     "zone_weight": "load", "k": 0.35,
+     "neighbours": [{"k": 0.25}, {"k": 0.45}]},
+    {"name": "6: + ERCOT West spread proxy",
+     "mode": "continuous", "zones": REGIME_ZONES_WIDE, "w_cong": 0.7, "w_reserve": 0.3,
+     "zone_weight": "load", "k": 0.35, "ercot_west": True,
+     "neighbours": [{"k": 0.25}, {"k": 0.45}]},
+    {"name": "7: + RT/DA spread sub-signal",
+     "deferred": True,
+     "reason": "needs a fetch_lmp_rt() + a live gridstatus RT-LMP availability probe "
+               "over 2018-2025 (spec s7); not wired this pass."},
+]

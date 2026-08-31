@@ -28,8 +28,11 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from grid_equipment_basket import config
+from grid_equipment_basket import config, overlay
+from grid_equipment_basket.backtest import calendar_year_returns, compute_metrics
 from grid_equipment_basket.overlay import _month_hold
+
+_ANN = config.ANN_FACTOR
 
 
 # ── per-zone daily signals ───────────────────────────────────────────────────
@@ -202,3 +205,272 @@ def regime_multiplier(composite: pd.Series, *, mode: str = "discrete",
         raise ValueError(f"mode must be 'discrete' or 'continuous', got {mode!r}")
 
     return _month_hold(raw, comp.index, fill=1.0).rename("regime_mult")
+
+
+# ── the pre-registered gate (spec s6) ────────────────────────────────────────
+#
+# A ladder rung PASSES iff all four hold:
+#   G1  beats layer-1-only on Sharpe AND Calmar, primary window (2023-2025)
+#   G2  beats layer-1-only on Sharpe AND Calmar, prior window   (2018-2022)
+#   G3  no bigger drag than layer 1 -- mean(BH_yr - rung_yr) <= mean(BH_yr - L1_yr)
+#       on BOTH windows (BH_yr cancels: this is rung's mean annual return >= L1's)
+#   G4  plateau -- every parameter neighbour also satisfies G1 and G2
+# A pass where any G1/G2 gap is < GATE_MARGIN is reported "marginal" and does
+# NOT stop the ladder; only a non-marginal plateau-pass stops it.
+
+GATE_MARGIN: float = 0.05
+
+
+def _calmar(m: dict) -> float:
+    dd = abs(float(m.get("max_dd", float("nan"))))
+    if dd == 0 or dd != dd:
+        return float("inf") if float(m.get("cagr", 0.0)) > 0 else float("nan")
+    return float(m["cagr"]) / dd
+
+
+def _mean_annual(block: dict) -> float:
+    cal = block.get("calendar")
+    if cal is None or len(cal) == 0:
+        return float("nan")
+    return float(pd.Series(cal).mean())
+
+
+def _beats(rung: dict, l1: dict) -> tuple[bool, float, float]:
+    """(rung beats l1 on Sharpe AND Calmar, sharpe_gap, calmar_gap)."""
+    s_gap = float(rung["metrics"]["sharpe"]) - float(l1["metrics"]["sharpe"])
+    c_gap = _calmar(rung["metrics"]) - _calmar(l1["metrics"])
+    return (s_gap > 0 and c_gap > 0), s_gap, c_gap
+
+
+def gate_check(rung_primary: dict, rung_prior: dict,
+               l1_primary: dict, l1_prior: dict,
+               bh_primary: dict, bh_prior: dict) -> dict:
+    """G1-G3 + the marginal flag for one ladder rung. G4 (plateau) is folded in
+    later by `final_verdict` from the neighbour runs."""
+    g1, s1, c1 = _beats(rung_primary, l1_primary)
+    g2, s2, c2 = _beats(rung_prior, l1_prior)
+
+    # G3: mean(BH_yr - rung_yr) <= mean(BH_yr - L1_yr) on both windows.
+    def _no_worse_drag(rung, l1, bh):
+        return (_mean_annual(bh) - _mean_annual(rung)) <= (_mean_annual(bh) - _mean_annual(l1)) + 1e-12
+    g3 = _no_worse_drag(rung_primary, l1_primary, bh_primary) and \
+         _no_worse_drag(rung_prior, l1_prior, bh_prior)
+
+    gaps = {"sharpe_primary": s1, "calmar_primary": c1,
+            "sharpe_prior": s2, "calmar_prior": c2}
+    passing_gaps = [g for k, g in gaps.items()
+                    if (k.endswith("primary") and g1) or (k.endswith("prior") and g2)]
+    marginal = any(0 < g < GATE_MARGIN for g in passing_gaps)
+
+    return {"G1": bool(g1), "G2": bool(g2), "G3": bool(g3),
+            "gaps": gaps, "marginal": bool(marginal)}
+
+
+def final_verdict(gate: dict, neighbours_pass: list[bool]) -> str:
+    """Fold the plateau requirement (G4) and the marginal flag into a verdict:
+    'FAIL' if any of G1-G3 is false; 'knife-edge' if a neighbour fails G1/G2;
+    'marginal' if the gaps are tiny; else 'PASS' (this rung stops the ladder)."""
+    if not (gate["G1"] and gate["G2"] and gate["G3"]):
+        return "FAIL"
+    if not all(neighbours_pass):
+        return "knife-edge"
+    if gate.get("marginal"):
+        return "marginal"
+    return "PASS"
+
+
+# ── ERCOT West spread proxy (rung 6 sub-signal) ─────────────────────────────
+
+def _default_ercot_fn(start, end):
+    from grid_resilience.data.grid_data import fetch_lmp
+    return fetch_lmp("ERCOT", start, end, use_cache=True)
+
+
+def _ercot_west_spread_z(start: str, end: str, *, window: int, min_periods: int,
+                         winsor: float, ercot_fn=None) -> pd.Series:
+    """Daily |LZ_WEST - LZ_NORTH| price spread as a congestion proxy (ERCOT LMP
+    has no cached component breakdown), normalised and trailing-z-scored. Empty
+    series when the two zones aren't both present."""
+    ercot_fn = ercot_fn or _default_ercot_fn
+    df = ercot_fn(start, end)
+    if df is None or df.empty or "location" not in df.columns:
+        return pd.Series(dtype=float)
+    df = df[df["location"].isin(["LZ_WEST", "LZ_NORTH"])].copy()
+    df["_date"] = pd.to_datetime(df["time"]).dt.normalize()
+    piv = df.pivot_table(index="_date", columns="location", values="lmp", aggfunc="mean")
+    if not {"LZ_WEST", "LZ_NORTH"} <= set(piv.columns):
+        return pd.Series(dtype=float)
+    denom = piv[["LZ_WEST", "LZ_NORTH"]].abs().mean(axis=1) + 1e-6
+    spread_frac = (piv["LZ_WEST"] - piv["LZ_NORTH"]).abs() / denom
+    spread_frac.index.name = "date"
+    return _trailing_zscore(spread_frac, window, min_periods, winsor)
+
+
+# ── the pre-registered ladder runner (spec s5, s9) ─────────────────────────
+
+def _rung_composite(rung: dict, start: str, end: str, composite_fn, ercot_fn,
+                    zscore_window: int, zscore_minp: int, winsor: float) -> pd.Series:
+    pjm = composite_fn(start, end, zones=list(rung["zones"]),
+                       w_cong=rung["w_cong"], w_reserve=rung["w_reserve"],
+                       zone_weight=rung.get("zone_weight", "equal"))
+    if not rung.get("ercot_west"):
+        return pjm
+    ercot = _ercot_west_spread_z(start, end, window=zscore_window,
+                                 min_periods=zscore_minp, winsor=winsor, ercot_fn=ercot_fn)
+    if ercot.empty:
+        warnings.warn("grid_regime rung 6: no ERCOT LZ_WEST/LZ_NORTH data; "
+                      "falling back to the PJM composite alone.", RuntimeWarning, stacklevel=2)
+        return pjm
+    return _combine_subsignals({"pjm": (pjm, 0.5), "ercot": (ercot, 0.5)})
+
+
+def _rung_multiplier(rung: dict, composite: pd.Series,
+                     month_lookback: int) -> pd.Series:
+    return regime_multiplier(composite, mode=rung["mode"],
+                             thresh=rung.get("thresh", config.REGIME_THRESH),
+                             hi=config.REGIME_HI, lo=config.REGIME_LO,
+                             k=rung.get("k", config.REGIME_K),
+                             month_lookback=month_lookback)
+
+
+def _mechanics(mult: pd.Series, ret: pd.Series) -> dict:
+    m = mult.reindex(ret.index).astype(float).fillna(1.0)
+    return {"avg_mult": round(float(m.mean()), 3),
+            "min_mult": round(float(m.min()), 3),
+            "max_mult": round(float(m.max()), 3),
+            "pct_leaned_in": round(float((m > 1.0).mean()), 3),
+            "pct_stepped_back": round(float((m < 1.0).mean()), 3),
+            "flips": int((m.diff().abs() > 1e-9).sum())}
+
+
+def regime_report(price_fn=None, composite_fn=None, ercot_fn=None,
+                  signal_start: str = config.REGIME_SIGNAL_START,
+                  primary: tuple[str, str] = config.REGIME_PRIMARY_WINDOW,
+                  prior: tuple[str, str] = config.REGIME_PRIOR_WINDOW,
+                  zscore_window: int = config.REGIME_ZSCORE_WINDOW,
+                  zscore_minp: int = config.REGIME_ZSCORE_MINP,
+                  winsor: float = config.REGIME_ZSCORE_WINSOR,
+                  month_lookback: int = config.REGIME_MONTH_LOOKBACK) -> dict:
+    """Run the frozen ladder (`config.REGIME_LADDER`) top-to-bottom over both
+    windows; stop at the first rung whose verdict is 'PASS'. Returns a dict of
+    baselines + per-rung metrics/gate/verdict/mechanics + `stopped_at`.
+
+    The regime signal is z-scored over `signal_start`..`primary[1]` so the
+    primary window sees a fully-warm signal; basket returns are evaluated only
+    on `primary` and `prior`. `price_fn` / `composite_fn` / `ercot_fn` are
+    injectable for tests; defaults read the cached parquet (zero network I/O).
+    """
+    price_fn = price_fn or overlay._default_price_fn
+    composite_fn = composite_fn or regime_composite
+    rf = config.RISK_FREE_RATE
+    full_end = primary[1]
+
+    ret, lvl = overlay._basket_series(prior[0], full_end, price_fn)
+    windows = {"primary": tuple(primary), "prior": tuple(prior)}
+
+    def _block(series: pd.Series) -> dict:
+        out = {}
+        for wk, (ws, we) in windows.items():
+            seg = series.loc[ws:we].dropna()
+            out[wk] = {"metrics": compute_metrics(seg, rf, _ANN),
+                       "calendar": calendar_year_returns(seg)}
+        return out
+
+    bh = _block(ret)
+    vt_only = _block(overlay.apply_overlay(ret, lvl, rf, ma_days=10 ** 9))
+    l1 = _block(overlay.apply_overlay(ret, lvl, rf))
+
+    def _eval(rung: dict) -> tuple[dict, pd.Series]:
+        comp = _rung_composite(rung, signal_start, full_end, composite_fn, ercot_fn,
+                               zscore_window, zscore_minp, winsor)
+        mult = _rung_multiplier(rung, comp, month_lookback)
+        return _block(overlay.apply_overlay_l2(ret, mult, rf)), mult
+
+    rungs_out: list[dict] = []
+    stopped_at = None
+    for rung in config.REGIME_LADDER:
+        if rung.get("deferred"):
+            rungs_out.append({"name": rung["name"], "status": "deferred",
+                              "reason": rung.get("reason", "")})
+            continue
+
+        block, mult = _eval(rung)
+        gate = gate_check(block["primary"], block["prior"],
+                          l1["primary"], l1["prior"], bh["primary"], bh["prior"])
+        nb_pass = []
+        for override in rung.get("neighbours", []):
+            nblock, _ = _eval({**rung, **override})
+            ng = gate_check(nblock["primary"], nblock["prior"],
+                            l1["primary"], l1["prior"], bh["primary"], bh["prior"])
+            nb_pass.append(bool(ng["G1"] and ng["G2"]))
+        verdict = final_verdict(gate, nb_pass or [True])
+
+        rungs_out.append({"name": rung["name"], "params": {k: rung[k] for k in rung
+                                                           if k not in ("neighbours",)},
+                          "block": block, "gate": gate, "neighbours_pass": nb_pass,
+                          "verdict": verdict, "mechanics": _mechanics(mult, ret)})
+        if verdict == "PASS":
+            stopped_at = rung["name"]
+            break
+
+    return {"signal_start": signal_start, "windows": windows,
+            "baselines": {"buy_and_hold": bh, "vol_target_only": vt_only, "layer1_only": l1},
+            "rungs": rungs_out, "stopped_at": stopped_at}
+
+
+_REGIME_CAVEAT = (
+    "Regime honesty: ~36 primary / ~24 active-prior monthly obs, one macro cycle. "
+    "A trailing z-score flags the congestion *transition* then decays as the new "
+    "level becomes the norm. Prior window is effectively 2021-2022 after warm-up. "
+    "No rung passing => ship layer-1-only or a smaller un-overlaid basket."
+)
+
+
+def regime_table(report: dict) -> str:
+    def _row(label: str, blk: dict) -> str:
+        p, q = blk["primary"]["metrics"], blk["prior"]["metrics"]
+        return (f"  {label:<34}"
+                f"{_pct(p['cagr']):>8}{_f(p['sharpe']):>7}{_calmar_s(p):>7}{_pct(p['max_dd']):>8}   |"
+                f"{_pct(q['cagr']):>8}{_f(q['sharpe']):>7}{_calmar_s(q):>7}{_pct(q['max_dd']):>8}")
+
+    L = [f"LAYER-2 GRID-REGIME LADDER   signal z-scored from {report['signal_start']}",
+         f"  primary {report['windows']['primary'][0]}..{report['windows']['primary'][1]}   "
+         f"prior {report['windows']['prior'][0]}..{report['windows']['prior'][1]}",
+         "",
+         f"  {'':<34}{'CAGR':>8}{'Shrp':>7}{'Clmr':>7}{'MaxDD':>8}   |{'CAGR':>8}{'Shrp':>7}{'Clmr':>7}{'MaxDD':>8}"]
+    for key, lab in [("buy_and_hold", "buy & hold"), ("vol_target_only", "vol-target only"),
+                     ("layer1_only", "layer-1 only (trend gate + VT)")]:
+        L.append(_row(lab, report["baselines"][key]))
+    L.append("")
+    for r in report["rungs"]:
+        if r.get("status") == "deferred":
+            L.append(f"  {r['name']:<34}DEFERRED -- {r['reason']}")
+            continue
+        L.append(_row(r["name"], r["block"]))
+        g = r["gate"]
+        me = r["mechanics"]
+        L.append(f"  {'':<34}G1 {_b(g['G1'])}  G2 {_b(g['G2'])}  G3 {_b(g['G3'])}  "
+                 f"plateau {sum(r['neighbours_pass'])}/{len(r['neighbours_pass'])}  "
+                 f"-> {r['verdict']}   [avg x{me['avg_mult']}, in {me['pct_leaned_in']*100:.0f}%/"
+                 f"back {me['pct_stepped_back']*100:.0f}%, {me['flips']} flips]")
+    L.append("")
+    L.append(f"  stopped at: {report['stopped_at'] or 'NONE -- no rung passed the gate'}")
+    L.append("  " + _REGIME_CAVEAT)
+    return "\n".join(L)
+
+
+def _pct(x) -> str:
+    return "n/a" if x != x else f"{x * 100:.1f}%"
+
+
+def _f(x) -> str:
+    return "n/a" if x != x else f"{x:.2f}"
+
+
+def _calmar_s(m: dict) -> str:
+    c = _calmar(m)
+    return "n/a" if c != c else (">9" if c == float("inf") else f"{c:.2f}")
+
+
+def _b(v: bool) -> str:
+    return "PASS" if v else "fail"
