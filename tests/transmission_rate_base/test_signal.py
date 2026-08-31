@@ -82,3 +82,40 @@ def test_primary_signal_filer_count_change_nans_the_year():
     p.loc[(p.ticker == "FAST") & (p.year == 2018), "n_filers"] = 2
     out = sig.primary_signal(p).set_index(["ticker", "year"])
     assert np.isnan(out.loc[("FAST", 2018), "raw_signal"])
+
+
+# ── Task 7: neutralisation + segment-mix loader ──────────────────────────────
+
+def test_load_segment_mix_computes_nonreg_share(tmp_path):
+    p = tmp_path / "sm.csv"
+    p.write_text("ticker,fy,reg_elec_op_rev,total_op_rev\nAEP,2020,80,100\nD,2020,50,100\n")
+    sm = sig.load_segment_mix(p)
+    assert set(sm.columns) == {"ticker", "fy", "nonreg_rev_share"}
+    assert sm.set_index("ticker").loc["AEP", "nonreg_rev_share"] == pytest.approx(0.2)
+    assert sm.set_index("ticker").loc["D", "nonreg_rev_share"] == pytest.approx(0.5)
+
+
+def test_neutralize_removes_planted_size_effect():
+    rng = np.random.default_rng(0)
+    tickers = [f"T{i:02d}" for i in range(20)]
+    size = np.linspace(1e9, 5e10, 20)
+    raw = np.log(size) + 0.01 * rng.standard_normal(20)
+    sig_df = pd.DataFrame(dict(ticker=tickers, year=2020, g3_net_tx=raw, d3_tx_share=raw,
+                               raw_signal=raw))
+    panel = pd.DataFrame(dict(ticker=tickers, year=2020, net_tx=size / 3, net_total=size,
+                              tx_share=0.33, n_filers=1))
+    sm = pd.DataFrame(columns=["ticker", "fy", "nonreg_rev_share"])
+    out = sig.neutralize(sig_df, panel, sm)
+    corr = np.corrcoef(out["neutral_signal"], np.log(size))[0, 1]
+    assert abs(corr) < 0.15
+
+
+def test_neutralize_small_year_skips_regression():
+    tickers = ["A", "B", "C"]
+    sig_df = pd.DataFrame(dict(ticker=tickers, year=2020, g3_net_tx=[1.0, 2.0, 3.0],
+                               d3_tx_share=[1.0, 2.0, 3.0], raw_signal=[1.0, 2.0, 3.0]))
+    panel = pd.DataFrame(dict(ticker=tickers, year=2020, net_tx=[1.0, 2.0, 3.0],
+                              net_total=[10.0, 20.0, 30.0], tx_share=0.1, n_filers=1))
+    out = sig.neutralize(sig_df, panel, pd.DataFrame(columns=["ticker", "fy", "nonreg_rev_share"]))
+    assert out["neutral_signal"].notna().all()
+    assert out.set_index("ticker").loc["C", "neutral_signal"] > out.set_index("ticker").loc["A", "neutral_signal"]
