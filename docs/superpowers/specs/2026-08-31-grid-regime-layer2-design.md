@@ -1,7 +1,9 @@
 # Design Spec — Grid-Congestion Regime Signal (Layer 2) for the Grid-Equipment Basket
 
-**Status:** BUILT — pre-registered gate **FAILED** (negative result).
-Results: `docs/grid-regime-layer2-results.md`. Ship layer-1-only.
+**Status:** BUILT — pre-registered gate **not passed** (Sharpe beats layer-1-only on both windows,
+primary-window Calmar does not: 2.16 vs 2.32). **Rung 1 adopted as the recommended overlay by PM
+decision** (generalisation + physical-grid differentiator; deeper drawdown accepted).
+`config.REGIME_ENABLED = True`. Results / adoption rationale: `docs/grid-regime-layer2-results.md`.
 **Date:** 2026-08-31
 
 **Post-build corrections to this spec (kept for provenance):**

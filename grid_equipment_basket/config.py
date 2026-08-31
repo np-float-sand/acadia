@@ -85,15 +85,19 @@ OVERLAY_TARGET_VOL: float = 0.20
 OVERLAY_MAX_LEVERAGE: float = 1.5
 
 # ── Layer-2 grid-congestion regime signal (2026-08-31) ─────────────────────
-# Frozen, documented. Replaces layer-1's price trend gate with a physical
-# "is the grid bottleneck tightening or easing" read:
-#   exposure = regime_multiplier x vol_target_scalar
-# NEGATIVE RESULT: the pre-registered ladder was run and NO rung passed the
-# gate (docs/grid-regime-layer2-results.md). These constants stay for
-# reproducibility and possible follow-ups; there is deliberately NO
-# REGIME_ENABLED flag -- layer-1-only remains the shipped overlay.
-# See grid_regime.py and
-# docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md.
+# Replaces layer-1's price trend gate with a physical "is the grid bottleneck
+# tightening or easing" read:  exposure = regime_multiplier x vol_target_scalar
+#
+# Gate outcome: the pre-registered ladder was run and NO rung strictly passed
+# -- every rung beats layer-1-only on Sharpe but not on primary-window Calmar
+# (2.16 vs 2.32). ADOPTED ANYWAY as the recommended overlay by PM decision
+# (2026-08-31): the rationale is generalisation (rung 1 is Sharpe-positive on
+# BOTH windows -- 0.61 prior vs layer-1's 0.20 -- fixing layer 1's 2020-2022
+# collapse) plus the physical-grid differentiator, accepting a ~5pp deeper
+# primary-window drawdown. The shipped config is ladder rung 1 (discrete,
+# PJM-4 DC-heavy zones, congestion only) -- see grid_regime.shipped_config().
+# Full write-up: docs/grid-regime-layer2-results.md.
+REGIME_ENABLED: bool = True        # layer 2 (rung 1) is the recommended overlay
 REGIME_ZONES_CORE: list[str] = ["DOM", "AEP", "COMED", "PPL"]   # DC-heavy PJM zones
 REGIME_ZONES_WIDE: list[str] = ["DOM", "AEP", "COMED", "PPL", "PSEG", "ATSI"]
 REGIME_ZSCORE_WINDOW: int = 756      # ~3y trailing window for the per-zone z-scores

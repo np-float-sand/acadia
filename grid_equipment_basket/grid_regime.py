@@ -419,6 +419,41 @@ def regime_report(price_fn=None, composite_fn=None, ercot_fn=None,
             "rungs": rungs_out, "stopped_at": stopped_at}
 
 
+# ── the shipped live overlay (ladder rung 1, adopted 2026-08-31) ────────────
+
+def shipped_config() -> dict:
+    """The frozen live layer-2 config = ladder rung 1: discrete 3-state, the
+    four DC-heavy PJM zones (DOM/AEP/COMED/PPL), congestion component only.
+    Adopted as the recommended overlay by PM decision despite the strict gate
+    failing on primary-window Calmar -- see docs/grid-regime-layer2-results.md."""
+    cfg = dict(config.REGIME_LADDER[0])
+    cfg.pop("neighbours", None)
+    return cfg
+
+
+def live_multiplier(signal_start: str = config.REGIME_SIGNAL_START,
+                    end: str | None = None, *, composite_fn=None,
+                    zscore_window: int = config.REGIME_ZSCORE_WINDOW,
+                    zscore_minp: int = config.REGIME_ZSCORE_MINP,
+                    winsor: float = config.REGIME_ZSCORE_WINSOR,
+                    month_lookback: int = config.REGIME_MONTH_LOOKBACK) -> pd.Series:
+    """Daily exposure multiplier for the shipped layer-2 overlay (rung 1).
+
+    Compose it with the layer-1 vol target via
+    ``overlay.apply_overlay_l2(basket_returns, grid_regime.live_multiplier(...))``.
+    The signal is z-scored from ``signal_start`` (long warm-up); ``end`` defaults
+    to the primary-window end. ``composite_fn`` is injectable for tests.
+    """
+    end = end or config.REGIME_PRIMARY_WINDOW[1]
+    cfg = shipped_config()
+    comp = (composite_fn or regime_composite)(
+        signal_start, end, zones=list(cfg["zones"]),
+        w_cong=cfg["w_cong"], w_reserve=cfg["w_reserve"],
+        zone_weight=cfg.get("zone_weight", "equal"),
+        zscore_window=zscore_window, zscore_minp=zscore_minp, winsor=winsor)
+    return _rung_multiplier(cfg, comp, month_lookback)
+
+
 _REGIME_CAVEAT = (
     "Regime honesty: ~36 primary / ~24 active-prior monthly obs, one macro cycle. "
     "A trailing z-score flags the congestion *transition* then decays as the new "

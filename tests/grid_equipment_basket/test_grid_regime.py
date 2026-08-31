@@ -182,6 +182,39 @@ def test_regime_composite_fires_on_a_congestion_step_vs_recent_norm():
     assert comp.loc["2021-09-02":"2021-10-15"].max() > config.REGIME_THRESH
 
 
+# ── shipped live config (rung 1, adopted 2026-08-31) ────────────────────────
+
+def test_regime_enabled_flag_is_true():
+    assert config.REGIME_ENABLED is True
+
+
+def test_shipped_config_is_ladder_rung_1_without_neighbours():
+    cfg = gr.shipped_config()
+    assert cfg["mode"] == "discrete"
+    assert list(cfg["zones"]) == config.REGIME_ZONES_CORE
+    assert cfg["w_cong"] == 1.0 and cfg["w_reserve"] == 0.0
+    assert "neighbours" not in cfg
+
+
+def test_live_multiplier_uses_frozen_rung1_params_and_is_month_held():
+    seen = {}
+
+    def composite_fn(start, end, *, zones, w_cong, w_reserve, zone_weight, **kw):
+        seen.update(zones=list(zones), w_cong=w_cong, w_reserve=w_reserve)
+        idx = pd.bdate_range(start, end)
+        v = pd.Series(0.0, index=idx)
+        v.loc["2024-01"] = 3.0            # one tight month
+        v.loc["2024-03"] = -3.0           # one loose month
+        return v
+
+    m = gr.live_multiplier("2023-06-01", "2024-06-30", composite_fn=composite_fn)
+    assert seen["zones"] == config.REGIME_ZONES_CORE
+    assert seen["w_cong"] == 1.0 and seen["w_reserve"] == 0.0
+    assert set(m.dropna().unique()) <= {config.REGIME_LO, 1.0, config.REGIME_HI}
+    assert (m.loc["2024-02"] == config.REGIME_HI).all()      # Jan tight -> Feb levered
+    assert (m.loc["2024-04"] == config.REGIME_LO).all()      # Mar loose -> Apr de-risked
+
+
 def test_regime_composite_reserve_weight_blends_in_load_tightness():
     lmp_fn = _fake_lmp_fn({"DOM": 3.0})
 

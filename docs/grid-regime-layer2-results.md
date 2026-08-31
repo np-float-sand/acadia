@@ -1,6 +1,9 @@
 # Results — Grid-Congestion Regime Signal (Layer 2)
 
-**Status:** BUILT + gate **FAILED** (pre-registered negative result).
+**Status:** BUILT. Pre-registered gate **not passed** (every rung beats layer-1-only on Sharpe but
+not on primary-window Calmar, 2.16 vs 2.32). **ADOPTED as the recommended overlay by PM decision
+(2026-08-31)** — see §1a. Shipped config = ladder **rung 1** (`grid_regime.shipped_config()`),
+`config.REGIME_ENABLED = True`.
 **Date:** 2026-08-31
 **Spec:** `docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md`
 **Module:** `grid_equipment_basket/grid_regime.py` (+ `overlay.py` seam, `--overlay-l2`).
@@ -8,23 +11,44 @@
 `grid_resilience` parquet cache (PJM zone LMP + zonal load 2018-01→2025-12; ERCOT settlement-point
 LMP for rung 6).
 
+## 1a. Adoption decision (post-hoc, deliberate)
+
+The pre-registered gate (beat layer-1-only on Sharpe **and** Calmar on **both** windows, on a
+plateau) was **not met** — see §2/§3. The basket owner reviewed the result and adopted rung 1 as
+the recommended overlay anyway. Rationale, recorded honestly as a judgment call rather than a gate
+pass:
+
+- **Generalisation.** Rung 1 is the only rule across this entire line of work (layer 1, five
+  cross-sectional attempts, this ladder) that is Sharpe-positive on *both* the 2023–25 and 2020–22
+  regimes (0.61 prior vs layer-1's 0.20). It fixes layer 1's documented failure mode — the price
+  gate overfits the one DeepSeek drawdown and hurts on the prior window.
+- **Differentiator.** The input is measured PJM transmission congestion in the data-center zones —
+  physical, non-price, non-consensus — which is the part of the thesis that is not just crowded
+  picks-and-shovels beta.
+- **Cost accepted.** ~5 percentage points deeper primary-window drawdown (−23% vs −18%) and a
+  slightly worse Calmar. In a future AI-capex scare where power demand has not yet rolled over,
+  layer 2 will ride it down further than layer 1 would.
+
+This does not change the evidentiary record below: the strict gate did not pass, the sample is one
+macro cycle, and the prior-window "win" predates real data-center congestion (§5).
+
 ---
 
 ## 1. One-paragraph verdict
 
 The grid-congestion regime signal (zonal transmission-congestion $ + reserve-tightness in the
-DC-heavy PJM zones, trailing-3y z-scored, → a monthly basket-exposure multiplier) does **not** beat
-the layer-1 price trend gate at setting basket exposure, under the pre-registered gate. It is not a
-knife-edge miss — **no rung, and no rung's parameter neighbours, cleared G1**. The reason is
+DC-heavy PJM zones, trailing-3y z-scored, → a monthly basket-exposure multiplier) does **not**
+strictly beat the layer-1 price trend gate under the pre-registered gate: **no rung, and no rung's
+parameter neighbours, cleared G1** (Sharpe beats layer-1-only, Calmar does not). The reason is
 specific and informative: the congestion signal and the price gate are **complementary, not
 substitutes**. The congestion signal recovers most of the prior-window (2020–2022) Sharpe that the
 price gate destroys (0.61 vs 0.20), but during the one clean equity-led drawdown in the primary
 window — the Nov-2024→Apr-2025 "DeepSeek" scare — physical congestion was genuinely *high*, so the
 regime signal stayed levered in (multiplier 1.0–1.25 every month Jan–May 2025) and took a −23%
-drawdown where the price MA-cross cut it to −18%. Better Sharpe, worse Calmar, so it fails the
-"beat on Sharpe **and** Calmar, on **both** windows" bar. **Shipped recommendation: keep
-layer-1-only** (trend gate + vol target), or run a smaller un-overlaid basket. `REGIME_*` config
-stays present but unused; no `REGIME_ENABLED` flag is added.
+drawdown where the price MA-cross cut it to −18%. Better Sharpe on both windows, worse
+primary-window Calmar. Per §1a the basket owner **adopted rung 1 as the recommended overlay**
+(`config.REGIME_ENABLED = True`), on the generalisation + differentiator argument, accepting the
+deeper drawdown; layer 1 stays available via `--overlay`.
 
 ---
 
@@ -135,31 +159,34 @@ owns the clean equity-led drawdown; the congestion signal owns the messier macro
 
 ## 6. What we keep / what's next
 
-**Keep (merged):**
-- `grid_equipment_basket/grid_regime.py` — the signal, the gate (`gate_check` / `final_verdict`),
-  the ladder runner (`regime_report` / `regime_table`), the ERCOT spread proxy, the RT/DA
-  `_combine_subsignals` hook.
+**Shipped live (merged, `config.REGIME_ENABLED = True`):**
+- **Rung 1** as the recommended overlay: `grid_regime.shipped_config()` (discrete, PJM-4 DC-heavy
+  zones, congestion only), applied as
+  `overlay.apply_overlay_l2(basket_returns, grid_regime.live_multiplier(...))`.
+  `live_multiplier` on real data 2018–2025: avg exposure ×1.03, leaned-in 19% of days,
+  stepped-back 4%; by year — 2020 ×0.95, 2021 ×1.08, 2022 ×1.10, 2023–24 ×0.99, 2025 ×1.13.
+- Layer 1 stays available and unchanged via `--overlay`.
+
+**Also merged:**
+- `grid_regime.py` — signal, gate (`gate_check` / `final_verdict`), ladder runner
+  (`regime_report` / `regime_table`), ERCOT spread proxy, RT/DA `_combine_subsignals` hook.
 - `overlay.py` layer-2 seam (`regime_exposure`, `apply_overlay_l2`, `exposure_series_l2`) — layer-1
   untouched.
-- `--overlay-l2` CLI + `config.REGIME_*` (present, unused, documented as a negative result).
-- 37 new tests (7 overlay seam + 14 signal + 11 gate + 4 ladder runner + 1 CLI).
+- `--overlay-l2` CLI (runs the full evidence ladder) + `config.REGIME_*` frozen constants.
+- 40 new tests (7 overlay seam + 17 signal incl. shipped-config + 11 gate + 4 ladder runner + 1 CLI).
 
 **Do NOT:**
-- enable the regime multiplier live (no rung passed);
-- re-run the ladder hoping for a pass — it's pre-registered and closed;
-- add rung 7 (RT/DA) as a rescue attempt without its own spec — the failure mode here (physical
-  signal disagrees with price on the decisive episode) is not obviously fixed by a *different*
-  physical signal.
+- re-tune rung 1 or re-run the ladder hoping for a strict pass — it's pre-registered and closed;
+  adoption was a documented judgment call, not a moved goalpost;
+- read the 2020–2022 G2 pass as evidence a *data-center* congestion regime works — there was no
+  such regime then (§5);
+- add rung 7 (RT/DA) as a rescue without its own spec.
 
-**Possible follow-ups (each its own spec, not a rerun of this one):**
-1. **Combine, don't substitute.** The finding is that price and congestion are complementary. A
-   test worth pre-registering: layer-1 trend gate AND a congestion *veto in one direction only*
-   ("if physical congestion is easing hard, step back even if price is still above its MA") — i.e.
-   the spec's option (c), which this build did not try because the scope answer was "replace the
-   gate."
-2. **Rung 1 as a standalone robustness overlay.** It's the only rule in this whole line of work
-   that is Sharpe-positive on both windows. Not gate-passing, but a candidate for "run the basket
-   at rung-1 exposure" as a lower-variance alternative to layer 1, judged on blended/robustness
-   metrics rather than beat-layer-1.
-3. **A longer / out-of-sample window.** The gate is decided by one episode (DeepSeek). Re-running
-   once 2026+ data is cached would add the first genuinely out-of-sample observations.
+**Possible follow-ups (each its own spec):**
+1. **Combine, don't substitute.** Pre-register: layer-1 trend gate AND a congestion *veto in one
+   direction only* ("if physical congestion is easing hard, step back even if price is still above
+   its MA") — the spec's option (c), untried because scope said "replace the gate." This is the
+   natural next step given the complementary finding.
+2. **A longer / out-of-sample window.** The Calmar miss is decided by one episode (DeepSeek).
+   Re-running once 2026+ data is cached adds the first genuinely out-of-sample observations and is
+   the cleanest way to confirm or retire the adoption.
