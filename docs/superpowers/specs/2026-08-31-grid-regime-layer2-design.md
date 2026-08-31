@@ -1,7 +1,21 @@
 # Design Spec — Grid-Congestion Regime Signal (Layer 2) for the Grid-Equipment Basket
 
-**Status:** Approved design, not yet built.
+**Status:** BUILT — pre-registered gate **FAILED** (negative result).
+Results: `docs/grid-regime-layer2-results.md`. Ship layer-1-only.
 **Date:** 2026-08-31
+
+**Post-build corrections to this spec (kept for provenance):**
+1. `overlay.py` seam signature is `regime_exposure(basket_returns, regime_mult, ...)` /
+   `apply_overlay_l2(basket_returns, regime_mult, ...)` — returns first, matching `apply_overlay`'s
+   convention (§8 sketch had the args reversed).
+2. G3 as written — `mean(BH_yr − rung_yr) ≤ mean(BH_yr − L1_yr)` — cancels the BH term and reduces
+   to `mean(rung annual return) ≥ mean(L1 annual return)` per window. Implemented as written;
+   `bh_*` args are retained for traceability / a future max-year variant.
+3. Prior window is **2020-01-01 → 2022-12-31** (= `config.PRIOR_REGIME_*`, the panel layer 1 uses),
+   not 2018–2022. The signal is still z-scored from 2018 for warm-up; §3.3 / §6 "2018–2022" should
+   read 2020–2022 for the *basket-return* evaluation.
+4. The frozen ladder lives in `config.REGIME_LADDER` (list of dicts, one per rung, with a
+   `neighbours` list of param-override dicts). Rungs 1–6 ran; rung 7 (RT/DA) is `deferred: True`.
 **Location:** new module `grid_equipment_basket/grid_regime.py` + edits to `overlay.py`, `config.py`, `__main__.py`, `README.md`.
 **Follows:** `docs/handoff_2026-08-31-two-layer-overlay.md`, `docs/handoff_2026-08-29-grid-equipment-basket.md`.
 **Prior context (memory):** `grid-equipment-overlay.md`, `transmission-rate-base-negative.md` — five pre-registered

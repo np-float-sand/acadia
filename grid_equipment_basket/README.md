@@ -229,6 +229,8 @@ which uses log returns. A log-based recompute will not tie out exactly — that 
 python -m grid_equipment_basket [--start ...] [--end ...] [--prior-regime]
     [--construction {equal-weight,backlog-tilt,value-chain-tilt,pair}]
     [--drop-winners]        # value-chain constructions only: drop VRT, GEV from makers
+    [--overlay]             # also print the layer-1 risk overlay (trend gate + vol target) report
+    [--overlay-l2]          # also run the layer-2 grid-congestion regime ladder (both windows)
     [--output DIR] [--no-plot]
 ```
 
@@ -254,6 +256,27 @@ Outputs (to `--output`, default `./output_grid_equipment`):
 - `equal-weight` / `backlog-tilt`: `metrics.csv`, `basket_returns.csv`, `performance.png`
   (`performance.png` skipped with `--no-plot`)
 - `value-chain-tilt` / `pair`: `value_chain_metrics.csv`, `value_chain_gates.json`
+- `--overlay-l2`: `regime_metrics.csv` (baselines + per-rung metrics/gate/verdict, both windows),
+  `regime_timeline.csv` (per-rung daily exposure multiplier)
+
+## Layer-2 grid-congestion regime signal (2026-08-31 — NEGATIVE RESULT)
+
+`grid_regime.py` + the `overlay.py` seam (`regime_exposure`, `apply_overlay_l2`,
+`exposure_series_l2`; layer-1 functions untouched). Idea: replace layer-1's *price* trend gate
+with a *physical* read — zonal transmission-congestion $ and reserve-tightness in the DC-heavy PJM
+zones (DOM, AEP, COMED, PPL), trailing-3y z-scored, reduced to a monthly basket-exposure
+multiplier — so `exposure = regime_multiplier × vol_target_scalar`. Data is the cached
+`grid_resilience` PJM zone LMP + zonal load (2018-01→2025-12); the gated run does **zero network
+I/O**. `--refresh-regime` is not implemented (frozen-window run only).
+
+A pre-registered ladder of 6 variants (`config.REGIME_LADDER`; rung 7 RT/DA deferred) was run with
+a frozen gate: beat layer-1-only on **Sharpe AND Calmar** on **both** the primary (2023-01→2025-12)
+and prior (2020-01→2022-12) windows, on a plateau. **No rung passed** — every rung beats layer-1-only
+on Sharpe but not Calmar (it keeps more upside, takes a deeper DeepSeek drawdown: the physical
+congestion signal was genuinely high in early 2025 and stayed levered in). It *does* clear the prior
+window (rung 1 Sharpe 0.61 vs layer-1's 0.20), so the two signals are complementary, not
+substitutes. **Shipped overlay stays layer-1-only.** `config.REGIME_*` is present but unused; there
+is deliberately no `REGIME_ENABLED` flag. Full write-up: `docs/grid-regime-layer2-results.md`.
 
 Live yfinance fetch was validated during implementation (cold == warm == uncached, 124/124
 rows on the price-fetcher check). A fresh clone fetches from yfinance on first run; subsequent

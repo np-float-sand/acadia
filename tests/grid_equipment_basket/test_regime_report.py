@@ -4,6 +4,11 @@ import pytest
 
 from grid_equipment_basket import grid_regime as gr
 
+# rung 6 is deliberately fed an empty ERCOT frame in these structural tests; the
+# "fall back to the PJM composite" warning is the path under test, not a defect.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:grid_regime rung 6.*:RuntimeWarning")
+
 
 # ── stubs ───────────────────────────────────────────────────────────────────
 

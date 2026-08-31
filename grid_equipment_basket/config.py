@@ -85,9 +85,13 @@ OVERLAY_TARGET_VOL: float = 0.20
 OVERLAY_MAX_LEVERAGE: float = 1.5
 
 # ── Layer-2 grid-congestion regime signal (2026-08-31) ─────────────────────
-# Frozen, documented, plateau-GATED (not yet validated). Replaces layer-1's
-# price trend gate with a physical "is the grid bottleneck tightening or
-# easing" read: exposure = regime_multiplier x vol_target_scalar.
+# Frozen, documented. Replaces layer-1's price trend gate with a physical
+# "is the grid bottleneck tightening or easing" read:
+#   exposure = regime_multiplier x vol_target_scalar
+# NEGATIVE RESULT: the pre-registered ladder was run and NO rung passed the
+# gate (docs/grid-regime-layer2-results.md). These constants stay for
+# reproducibility and possible follow-ups; there is deliberately NO
+# REGIME_ENABLED flag -- layer-1-only remains the shipped overlay.
 # See grid_regime.py and
 # docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md.
 REGIME_ZONES_CORE: list[str] = ["DOM", "AEP", "COMED", "PPL"]   # DC-heavy PJM zones
