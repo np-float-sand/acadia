@@ -5,6 +5,8 @@ A quantitative long/short equity strategy that trades U.S. utility stocks based 
 > **Sibling strategy modules:** `grid_equipment_basket/` — a long-only thematic basket of grid / data-center equipment suppliers (see its own README and `docs/grid-equipment-basket-step1-results.md`).
 >
 > Beyond the equal-weight theme basket it also carries a value-chain reframe (`--construction value-chain-tilt` | `pair`): overweight the equipment makers, underweight/short the price-taking contractors, with a market-neutral pair + conditional-QQQ-short hedge — Gate 1 (long-only tilt) passes weakly, Gate 2 (pair as hedge) fails in favour of the conditional short. See `docs/grid-equipment-value-chain-results.md`.
+>
+> `grid_demand_factor/` — a **triage probe** (not a shipped strategy) for "rank stocks by return-sensitivity to a grid-demand nowcast, trade the tails". Pre-registered gate **FAILED** robustly: monthly Δnowcast is near-orthogonal to equity returns, so the sensitivity sort carries no cross-sectional information. Run: `python -m grid_demand_factor.probe --price-glob 'backlog_factor/data/cache/prices_*.parquet'`. See `docs/triage_2026-08-31-proposals-bda.md`.
 
 - `backlog_factor/` -- breadth-first event study: does a quarterly backlog/RPO growth *surprise* drift into industry-adjusted returns across ~109 order-driven industrials? Pre-registered gate FAILED (non-monotone, ~1-week bump that reverses); negative result, no factor built. See docs/backlog-surprise-factor-results.md.
 

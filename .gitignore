@@ -9,3 +9,4 @@ dist/
 .venv/
 output_grid_equipment*/
 output_backlog_factor*/
+output_grid_demand/
