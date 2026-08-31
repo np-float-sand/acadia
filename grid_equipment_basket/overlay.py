@@ -89,6 +89,46 @@ def exposure_series(basket_returns: pd.Series, basket_prices: pd.Series,
     return (gate * vscal.reindex(basket_returns.index).fillna(1.0)).rename("exposure")
 
 
+# ── layer 2: grid-congestion regime replaces the price trend gate ─────────────
+# `exposure = regime_multiplier * vol_target_scalar`, product clamped at
+# `max_leverage` (the layer-1 ceiling). `regime_mult` is an already daily,
+# month-held series produced by `grid_regime.regime_multiplier`; a NaN or
+# missing day means "signal not active" -> treated as 1.0 (fully invested),
+# exactly as `trend_gate` defaults before its MA is warm. See
+# docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md.
+
+
+def regime_exposure(basket_returns: pd.Series, regime_mult: pd.Series,
+                    vol_lookback: int = config.OVERLAY_VOL_LOOKBACK,
+                    target_vol: float = config.OVERLAY_TARGET_VOL,
+                    max_leverage: float = config.OVERLAY_MAX_LEVERAGE) -> pd.Series:
+    """`min(regime_mult * vol_target_scalar, max_leverage)`, aligned to
+    `basket_returns.index`; NaN/absent regime days default to 1.0."""
+    m = regime_mult.reindex(basket_returns.index).astype(float).fillna(1.0)
+    vscal = vol_target_scalar(basket_returns, vol_lookback, target_vol, max_leverage)
+    vscal = vscal.reindex(basket_returns.index).fillna(1.0)
+    return (m * vscal).clip(upper=max_leverage).rename("exposure")
+
+
+# exposure_series_l2 is the public name for the mechanics/report path; identical
+# maths to regime_exposure, kept as a separate name to mirror exposure_series.
+exposure_series_l2 = regime_exposure
+
+
+def apply_overlay_l2(basket_returns: pd.Series, regime_mult: pd.Series,
+                     rf_annual: float = config.RISK_FREE_RATE,
+                     vol_lookback: int = config.OVERLAY_VOL_LOOKBACK,
+                     target_vol: float = config.OVERLAY_TARGET_VOL,
+                     max_leverage: float = config.OVERLAY_MAX_LEVERAGE) -> pd.Series:
+    """Daily overlaid return with the layer-2 regime multiplier in place of the
+    trend gate: `exposure * basket_ret + (1 - exposure) * rf_daily`,
+    `exposure = regime_exposure(...)`. Aligned to `basket_returns.index`."""
+    exposure = regime_exposure(basket_returns, regime_mult, vol_lookback, target_vol, max_leverage)
+    rf_daily = rf_annual / _ANN
+    return (exposure * basket_returns.fillna(0.0) + (1.0 - exposure) * rf_daily).reindex(
+        basket_returns.index)
+
+
 # ── report ───────────────────────────────────────────────────────────────────
 
 _PLATEAU_MA = (50, 75, 100, 125, 150)

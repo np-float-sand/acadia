@@ -83,3 +83,22 @@ OVERLAY_MA_DAYS: int = 100
 OVERLAY_VOL_LOOKBACK: int = 20
 OVERLAY_TARGET_VOL: float = 0.20
 OVERLAY_MAX_LEVERAGE: float = 1.5
+
+# ── Layer-2 grid-congestion regime signal (2026-08-31) ─────────────────────
+# Frozen, documented, plateau-GATED (not yet validated). Replaces layer-1's
+# price trend gate with a physical "is the grid bottleneck tightening or
+# easing" read: exposure = regime_multiplier x vol_target_scalar.
+# See grid_regime.py and
+# docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md.
+REGIME_ZONES_CORE: list[str] = ["DOM", "AEP", "COMED", "PPL"]   # DC-heavy PJM zones
+REGIME_ZONES_WIDE: list[str] = ["DOM", "AEP", "COMED", "PPL", "PSEG", "ATSI"]
+REGIME_ZSCORE_WINDOW: int = 756      # ~3y trailing window for the per-zone z-scores
+REGIME_ZSCORE_MINP: int = 252       # ~1y minimum obs before the signal is active
+REGIME_ZSCORE_WINSOR: float = 3.0   # clip z-scores to +/- this
+REGIME_MONTH_LOOKBACK: int = 20     # trailing trading days averaged at each month-end
+REGIME_THRESH: float = 0.5         # discrete-mode: |composite| >= this leaves neutral
+REGIME_HI: float = 1.25            # discrete-mode multiplier when tightening
+REGIME_LO: float = 0.6            # discrete-mode multiplier when easing
+REGIME_K: float = 0.35            # continuous-mode slope: clip(1 + k*composite, 0.5, 1.5)
+REGIME_W_CONG: float = 1.0         # rung-1 sub-signal weights (congestion only)
+REGIME_W_RESERVE: float = 0.0
