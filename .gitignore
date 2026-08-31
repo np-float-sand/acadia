@@ -8,3 +8,5 @@ dist/
 *.egg-info/
 .venv/
 output_grid_equipment*/
+output_grid_demand/
+output_backlog_factor/
