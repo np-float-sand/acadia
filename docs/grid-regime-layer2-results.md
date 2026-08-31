@@ -268,3 +268,41 @@ demonstrable data-center-congestion edge in this sample — neither timing (A) n
 bars. The shipped absolute rung 1 stays adopted on the disclosed §1a judgment call, with these two
 negatives as the ceiling on that call. Realistic next moves are unchanged: option (c) combine (not
 substitute), a seasonally-adjusted relative signal, or wait for out-of-sample 2026+ data.
+
+---
+
+## 9. Out-of-sample update — Jan–Aug 2026 (2026-08-31)
+
+PJM zone LMP for 2026-01…2026-08 fetched live; basket prices already cached to 2026-08. The signal
+and overlay parameters were frozen before any of this data existed, so the 8-month slice is a
+genuine out-of-sample test.
+
+**OOS-only window, 2026-01-01 → 2026-08-31:**
+
+| | total return | Sharpe | Max DD |
+|---|---|---|---|
+| buy & hold basket | +23.8% | 0.86 | −28.8% |
+| layer-1 only (price gate) | +18.0% | **1.16** | −10.8% |
+| shipped overlay (absolute congestion) | +17.5% | 1.03 | −11.4% |
+| option A (relative signal) | +14.2% | 0.85 | −11.4% |
+
+**Extended primary, 2023-01-01 → 2026-08-31** (was 2023-01 → 2025-12):
+
+| | Sharpe | Calmar | Max DD |
+|---|---|---|---|
+| layer-1 only | 1.51 | **2.18** | −18.4% |
+| shipped overlay (absolute) | **1.54** | 1.98 | −23.3% |
+| option A (relative) | 1.54 | 1.92 | −24.2% |
+
+**Findings.**
+- **Drawdown protection is robust OOS** — both overlays turned a −29% basket drawdown into ~−11%,
+  exactly as designed.
+- **The congestion signal did not beat the plain price gate OOS.** Layer-1-only had the best
+  8-month Sharpe (1.16); the shipped overlay lagged it slightly; option A lagged both — its
+  relative signal called "step back" (0.6×) in Apr and Aug 2026, costing ~4 points of return.
+- **Extended primary: the strict gate is still not met but the gaps narrowed.** Shipped overlay now
+  edges layer-1-only on Sharpe (1.54 vs 1.51) and still trails on Calmar (1.98 vs 2.18).
+- **Net effect on the thesis:** the risk-management value is confirmed; the congestion signal's
+  marginal timing edge is *weakened* — it now has one OOS strike against it. The direction of the
+  recommendation is unchanged, and option (c) (keep the price gate as the base, add congestion as a
+  one-way override) looks better justified than before.
