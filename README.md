@@ -8,7 +8,7 @@ A quantitative long/short equity strategy that trades U.S. utility stocks based 
 >
 > `grid_demand_factor/` — a **triage probe** (not a shipped strategy) for "rank stocks by return-sensitivity to a grid-demand nowcast, trade the tails". Pre-registered gate **FAILED** robustly: monthly Δnowcast is near-orthogonal to equity returns, so the sensitivity sort carries no cross-sectional information. Run: `python -m grid_demand_factor.probe --price-glob 'backlog_factor/data/cache/prices_*.parquet'`. See `docs/triage_2026-08-31-proposals-bda.md`.
 >
-> `transmission_rate_base/` — proposal B: a gated, sector-neutral factor over ~40 US regulated electric utilities, long the fast FERC transmission-rate-base compounders / short the flat ones (FERC Form 1 via PUDL). Run: `python -m transmission_rate_base --offline`. Status: **built, verdict pending** — see `docs/transmission-rate-base-results.md`.
+> `transmission_rate_base/` — proposal B: rank ~34 US regulated electric utilities by FERC transmission-rate-base growth (FERC Form 1 via PUDL), long the fast compounders / short the flat ones. Pre-registered gate **FAILED** on all three hard conditions: the five signal quintiles all earned ~the utility-sector return (rank-IC −0.02, Q5−Q1 Sharpe −0.6, no residual alpha). Negative result, **no strategy module**. Run: `python -m transmission_rate_base --offline`. See `docs/transmission-rate-base-results.md`.
 
 - `backlog_factor/` -- breadth-first event study: does a quarterly backlog/RPO growth *surprise* drift into industry-adjusted returns across ~109 order-driven industrials? Pre-registered gate FAILED (non-monotone, ~1-week bump that reverses); negative result, no factor built. See docs/backlog-surprise-factor-results.md.
 
