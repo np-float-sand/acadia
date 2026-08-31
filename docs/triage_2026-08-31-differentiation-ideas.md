@@ -122,3 +122,42 @@ Realistic paths, honestly:
 3. **Move the search to a less picked-over area.** Eight-plus honest attempts in
    one theme with one macro cycle of data is a strong prior that the edge, if it
    exists, is not reachable with this data.
+
+---
+
+## 4. Big-four capex deceleration as a one-directional de-risk trigger — FAILED
+
+Follow-up to idea 1. `grid_equipment_basket/capex_signal.py` (3 tests). Aggregate
+discrete-quarter capex of MSFT + Alphabet + Amazon + Meta from SEC XBRL
+(GOOGL/META tag only Q1 as a discrete quarter, so the rest is derived from the
+YTD ladder; verified against known annual totals — big-4 CY2024 $228B, CY2025
+$376B). Signal: when the most recently *filed* print shows yoy capex growth
+< 15% **and** a negative 2-quarter change, scale the basket to 0.5×; recover on
+the next print that clears the floor. Point-in-time via a ~50-day filing lag.
+
+**Result — FAILED. It fires roughly a year late.**
+
+| known print | yoy growth | fires? | what the basket did next |
+|---|---|---|---|
+| 2023-02 (2022Q4) → 2024-02 | +8% falling to −9% | **yes, de-risked all year** | **2023 was the basket's best year, +77%** |
+| Nov 2024 – Apr 2025 (DeepSeek drawdown) | **+59% → +68%, accelerating** | **no** | basket −41% |
+| 2020-02 (2019Q4) | +1% | yes (briefly) | COVID crash — but 2019Q4 capex was flat for pre-AI reasons; luck, not signal |
+
+| full 2020-08 | CAGR | Sharpe | MaxDD |
+|---|---|---|---|
+| buy & hold | 40.5% | 1.00 | −45.4% |
+| price gate + VT | 23.6% | 0.87 | −41.5% |
+| capex de-risk + VT | 28.8% | 1.11 | −26.7% |
+| price gate + capex | 24.4% | 1.03 | −24.8% |
+
+On the DeepSeek episode specifically the capex de-risk got Sharpe **0.24 /
+MaxDD −22%** — *worse* than the plain price gate (0.41 / −14%) — because it never
+fired. "Price gate + capex" is identical to the price gate alone on both the
+2022 and DeepSeek drawdowns; the capex leg is inert exactly when it's needed.
+Its one useful fire (Feb 2020) is a coincidence.
+
+**Structural reason:** capex is reported with a ~6-week lag and moves slowly;
+the equipment stocks price the capex *cycle* 6–12 months ahead. By the time
+deceleration is in the 10-Qs, the stocks have already repriced. It is lagging
+confirmation, not a leading signal — the same failure mode as every other
+attempt in this theme. Kept as tested research code; not wired to anything.
