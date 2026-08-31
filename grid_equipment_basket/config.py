@@ -74,3 +74,12 @@ DRAWDOWN_TROUGH_END: str = "2025-06-30"
 
 # Robustness pass (spec §7.1): makers to drop when --drop-winners is set.
 VC_DROP_WINNERS: list[str] = ["VRT", "GEV"]
+
+# ── Layer-1 risk overlay (2026-08-31) — trend gate + vol target ────────────
+# Frozen, documented, plateau-justified (MA 50-150 x target-vol 15-25% all give
+# Sharpe 1.7-2.0 in-sample; not a knife-edge). See overlay.py for the honesty
+# caveat and docs/handoff_2026-08-29-grid-equipment-basket.md for provenance.
+OVERLAY_MA_DAYS: int = 100
+OVERLAY_VOL_LOOKBACK: int = 20
+OVERLAY_TARGET_VOL: float = 0.20
+OVERLAY_MAX_LEVERAGE: float = 1.5

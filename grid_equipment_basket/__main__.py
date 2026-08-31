@@ -51,6 +51,8 @@ def main() -> None:
                     help="deprecated alias: --tilt backlog == --construction backlog-tilt")
     ap.add_argument("--drop-winners", action="store_true",
                     help="value-chain constructions only: drop VRT, GEV from the makers bucket")
+    ap.add_argument("--overlay", action="store_true",
+                    help="also print the layer-1 risk overlay (trend gate + vol target) report")
     ap.add_argument("--output", default="./output_grid_equipment")
     ap.add_argument("--no-plot", action="store_true")
     args = ap.parse_args()
@@ -75,6 +77,13 @@ def main() -> None:
     target_fn = _backlog_target_fn() if construction == "backlog-tilt" else None
     res = backtest.run(start, end, target_fn=target_fn)
     print(backtest.results_table(res))
+
+    if args.overlay:
+        from grid_equipment_basket import overlay
+        orep = overlay.overlay_report(start, end)
+        print("\n" + overlay.overlay_table(orep))
+        orep_pr = overlay.overlay_report(start, end, prior_regime=True)
+        print("\n" + overlay.overlay_table(orep_pr))
     rows = [{"name": "BASKET", **res["basket"]}]
     for b, blk in res["benchmarks"].items():
         rows.append({"name": b, **blk["metrics"]})
