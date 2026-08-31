@@ -7,10 +7,13 @@ from transmission_rate_base.config import GATE
 
 def quintile_inversions(quintile_means: list[float]) -> int:
     """Adjacent-pair inversions against the better-fitting monotone direction
-    (so a cleanly decreasing sequence also scores 0)."""
+    (so a cleanly decreasing sequence also scores 0). A NaN bucket mean means
+    the spread could not be formed -> return a large count so the gate fails."""
     a = np.asarray(quintile_means, dtype=float)
+    if not np.isfinite(a).all():
+        return 99
     d = np.diff(a)
-    return int(min(np.nansum(d < 0), np.nansum(d > 0)))
+    return int(min((d < 0).sum(), (d > 0).sum()))
 
 
 def evaluate_gate(ic: dict, spread: dict, additivity: dict, pre_thesis: dict) -> dict:

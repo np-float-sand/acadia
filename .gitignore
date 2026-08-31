@@ -10,3 +10,4 @@ dist/
 output_grid_equipment*/
 output_backlog_factor*/
 output_grid_demand/
+output_transmission_rate_base/
