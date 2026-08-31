@@ -6,6 +6,8 @@ A quantitative long/short equity strategy that trades U.S. utility stocks based 
 >
 > Beyond the equal-weight theme basket it also carries a value-chain reframe (`--construction value-chain-tilt` | `pair`): overweight the equipment makers, underweight/short the price-taking contractors, with a market-neutral pair + conditional-QQQ-short hedge — Gate 1 (long-only tilt) passes weakly, Gate 2 (pair as hedge) fails in favour of the conditional short. See `docs/grid-equipment-value-chain-results.md`.
 
+- `backlog_factor/` -- breadth-first event study: does a quarterly backlog/RPO growth *surprise* drift into industry-adjusted returns across ~109 order-driven industrials? Pre-registered gate FAILED (non-monotone, ~1-week bump that reverses); negative result, no factor built. See docs/backlog-surprise-factor-results.md.
+
 ## Executive Summary
 
 Most utility quant factors (valuation, yield, regulatory lag) are calendar-driven and well-arbitraged. This strategy exploits a different edge: **utilities with operations in stressed grid regions are systematically mispriced around grid stress events**, and their degree of sensitivity varies predictably by service territory, generation mix, and transmission exposure.
