@@ -56,6 +56,25 @@ def _daily_zone_congestion(lmp_df: pd.DataFrame) -> pd.DataFrame:
     return daily
 
 
+# PJM zone codes in the LMP cache that are aggregates / non-zone entities, not
+# load zones -- excluded from the "rest of PJM" congestion benchmark (option A).
+_PJM_NON_ZONE = {"PJM-RTO", "MID-ATL/APS", "OVEC"}
+
+
+def _rest_of_pjm_congestion(lmp_df: pd.DataFrame, dc_zones: list[str]) -> pd.Series:
+    """Daily mean ``|congestion $|`` across every PJM zone that is *not* one of
+    ``dc_zones`` and not an aggregate (`_PJM_NON_ZONE`). This is the common-mode
+    benchmark: a system-wide demand swing (COVID, a mild March) moves it and the
+    DC zones together, so the DC-minus-rest spread nets it out."""
+    daily = _daily_zone_congestion(lmp_df)
+    if daily.empty:
+        return pd.Series(dtype=float, name="rest_cong")
+    keep = [c for c in daily.columns if c not in set(dc_zones) and c not in _PJM_NON_ZONE]
+    if not keep:
+        return pd.Series(dtype=float, name="rest_cong")
+    return daily[keep].mean(axis=1).rename("rest_cong")
+
+
 def _daily_zone_peak_load(load_df: pd.DataFrame) -> pd.DataFrame:
     """Hourly per-zone load rows -> daily peak MW per zone (date x zone)."""
     if load_df is None or load_df.empty:
@@ -176,6 +195,130 @@ def regime_composite(start: str, end: str, *, zones: list[str],
         wt = {z: 1.0 / len(zone_cols) for z in zone_cols}
 
     return _combine_subsignals({z: (per_zone[z], wt[z]) for z in zone_cols}).rename("regime_composite")
+
+
+# ── option A: DC-zone congestion RELATIVE to the rest of PJM ────────────────
+
+def relative_regime_composite(start: str, end: str, *,
+                              dc_zones: list[str] = None,
+                              zscore_window: int = config.REGIME_ZSCORE_WINDOW,
+                              zscore_minp: int = config.REGIME_ZSCORE_MINP,
+                              winsor: float = config.REGIME_ZSCORE_WINSOR,
+                              lmp_fn=None) -> pd.Series:
+    """Daily z-score of ``mean|congestion $|(DC zones) - mean|congestion $|(rest
+    of PJM)`` (spec option A). A demand collapse that drags every zone's
+    congestion down together leaves this ~unchanged; only congestion
+    *concentrating* in the data-center zones moves it. Feeds `regime_multiplier`
+    unchanged."""
+    dc_zones = list(dc_zones or config.REGIME_DC_ZONES)
+    lmp_fn = lmp_fn or _default_lmp_fn_all
+    df = lmp_fn(start, end)
+    dc = _daily_zone_congestion(df)
+    if dc.empty:
+        warnings.warn("grid_regime.relative: no PJM zone LMP for the window.",
+                      RuntimeWarning, stacklevel=2)
+        return pd.Series(dtype=float, name="rel_composite")
+    dc_mean = dc[[c for c in dc_zones if c in dc.columns]].mean(axis=1)
+    rest_mean = _rest_of_pjm_congestion(df, dc_zones)
+    spread = (dc_mean - rest_mean.reindex(dc_mean.index)).rename("dc_minus_rest")
+    return _trailing_zscore(spread, zscore_window, zscore_minp, winsor).rename("rel_composite")
+
+
+def _default_lmp_fn_all(start, end):
+    """All PJM zones (no zone filter) -- the relative signal needs the rest-of-PJM set."""
+    from grid_resilience.data.grid_data import fetch_lmp
+    return fetch_lmp("PJM", start, end, location_type="ZONE", use_cache=True)
+
+
+def _eval_windows(series: pd.Series, primary, prior, rf: float) -> dict:
+    out = {}
+    for wk, (ws, we) in (("primary", primary), ("prior", prior)):
+        seg = series.loc[ws:we].dropna()
+        out[wk] = {"metrics": compute_metrics(seg, rf, _ANN),
+                   "calendar": calendar_year_returns(seg)}
+    return out
+
+
+def relative_signal_report(price_fn=None, lmp_fn=None,
+                           signal_start: str = config.REGIME_SIGNAL_START,
+                           primary=config.REGIME_PRIMARY_WINDOW,
+                           prior=config.REGIME_PRIOR_WINDOW,
+                           thresh: float = config.REGIME_THRESH,
+                           zscore_window: int = config.REGIME_ZSCORE_WINDOW,
+                           zscore_minp: int = config.REGIME_ZSCORE_MINP,
+                           winsor: float = config.REGIME_ZSCORE_WINSOR,
+                           month_lookback: int = config.REGIME_MONTH_LOOKBACK) -> dict:
+    """Option A: rung-1 overlay driven by the DC-minus-rest-of-PJM congestion
+    spread instead of the absolute DC-zone composite. Reports baselines, the
+    current ABSOLUTE rung-1, and the RELATIVE version on both windows, with the
+    frozen gate and a threshold plateau."""
+    price_fn = price_fn or overlay._default_price_fn
+    rf = config.RISK_FREE_RATE
+    ret, lvl = overlay._basket_series(prior[0], primary[1], price_fn)
+
+    bh = _eval_windows(ret, primary, prior, rf)
+    vt = _eval_windows(overlay.apply_overlay(ret, lvl, rf, ma_days=10 ** 9), primary, prior, rf)
+    l1 = _eval_windows(overlay.apply_overlay(ret, lvl, rf), primary, prior, rf)
+
+    abs_comp = regime_composite(signal_start, primary[1], zones=list(config.REGIME_DC_ZONES),
+                                w_cong=1.0, w_reserve=0.0, zone_weight="equal",
+                                zscore_window=zscore_window, zscore_minp=zscore_minp,
+                                winsor=winsor, lmp_fn=(lambda z, s, e: lmp_fn(s, e)) if lmp_fn else None)
+    rel_comp = relative_regime_composite(signal_start, primary[1],
+                                         dc_zones=list(config.REGIME_DC_ZONES),
+                                         zscore_window=zscore_window, zscore_minp=zscore_minp,
+                                         winsor=winsor, lmp_fn=lmp_fn)
+
+    def _run(comp, th):
+        m = regime_multiplier(comp, mode="discrete", thresh=th, month_lookback=month_lookback)
+        return _eval_windows(overlay.apply_overlay_l2(ret, m, rf), primary, prior, rf), m
+
+    out = {"windows": {"primary": tuple(primary), "prior": tuple(prior)},
+           "baselines": {"buy_and_hold": bh, "vol_target_only": vt, "layer1_only": l1}}
+    for key, comp in (("absolute", abs_comp), ("relative", rel_comp)):
+        block, m = _run(comp, thresh)
+        gate = gate_check(block["primary"], block["prior"],
+                          l1["primary"], l1["prior"], bh["primary"], bh["prior"])
+        nb = []
+        for th in (0.25, 0.75):
+            nblk, _ = _run(comp, th)
+            ng = gate_check(nblk["primary"], nblk["prior"], l1["primary"], l1["prior"],
+                            bh["primary"], bh["prior"])
+            nb.append(bool(ng["G1"] and ng["G2"]))
+        out[key] = {"block": block, "gate": gate, "neighbours_pass": nb,
+                    "mechanics": _mechanics(m, ret)}
+
+    rg = out["relative"]["gate"]
+    rel_dd_p = out["relative"]["block"]["prior"]["metrics"]["max_dd"]
+    abs_dd_p = out["absolute"]["block"]["prior"]["metrics"]["max_dd"]
+    out["fixes_prior_dd"] = bool(rel_dd_p >= abs_dd_p)          # less negative = shallower
+    out["verdict"] = final_verdict(rg, out["relative"]["neighbours_pass"])
+    return out
+
+
+def relative_signal_table(rep: dict) -> str:
+    def row(lab, blk):
+        p, q = blk["primary"]["metrics"], blk["prior"]["metrics"]
+        return (f"  {lab:<26}{_pct(p['cagr']):>8}{_f(p['sharpe']):>7}{_calmar_s(p):>7}{_pct(p['max_dd']):>8}   |"
+                f"{_pct(q['cagr']):>8}{_f(q['sharpe']):>7}{_calmar_s(q):>7}{_pct(q['max_dd']):>8}")
+    L = ["OPTION A -- DC-zone congestion RELATIVE to rest of PJM",
+         f"  primary {rep['windows']['primary'][0]}..{rep['windows']['primary'][1]}   "
+         f"prior {rep['windows']['prior'][0]}..{rep['windows']['prior'][1]}", "",
+         f"  {'':<26}{'CAGR':>8}{'Shrp':>7}{'Clmr':>7}{'MaxDD':>8}   |{'CAGR':>8}{'Shrp':>7}{'Clmr':>7}{'MaxDD':>8}"]
+    for k, lab in [("buy_and_hold", "buy & hold"), ("vol_target_only", "vol-target only"),
+                   ("layer1_only", "layer-1 only")]:
+        L.append(row(lab, rep["baselines"][k]))
+    L.append("")
+    for k in ("absolute", "relative"):
+        e = rep[k]
+        L.append(row(f"rung-1 ({k})", e["block"]))
+        g = e["gate"]
+        L.append(f"  {'':<26}G1 {_b(g['G1'])}  G2 {_b(g['G2'])}  G3 {_b(g['G3'])}  "
+                 f"plateau {sum(e['neighbours_pass'])}/{len(e['neighbours_pass'])}   "
+                 f"[avg x{e['mechanics']['avg_mult']}, back {e['mechanics']['pct_stepped_back']*100:.0f}%]")
+    L += ["", f"  fixes prior-window drawdown vs absolute: {rep['fixes_prior_dd']}",
+          f"  verdict: {rep['verdict']}"]
+    return "\n".join(L)
 
 
 # ── daily -> monthly exposure multiplier ─────────────────────────────────────

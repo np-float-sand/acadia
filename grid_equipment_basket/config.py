@@ -100,6 +100,7 @@ OVERLAY_MAX_LEVERAGE: float = 1.5
 REGIME_ENABLED: bool = True        # layer 2 (rung 1) is the recommended overlay
 REGIME_ZONES_CORE: list[str] = ["DOM", "AEP", "COMED", "PPL"]   # DC-heavy PJM zones
 REGIME_ZONES_WIDE: list[str] = ["DOM", "AEP", "COMED", "PPL", "PSEG", "ATSI"]
+REGIME_DC_ZONES: list[str] = ["DOM", "AEP", "COMED", "PPL"]     # data-center set for the option-A relative signal
 REGIME_ZSCORE_WINDOW: int = 756      # ~3y trailing window for the per-zone z-scores
 REGIME_ZSCORE_MINP: int = 252       # ~1y minimum obs before the signal is active
 REGIME_ZSCORE_WINSOR: float = 3.0   # clip z-scores to +/- this

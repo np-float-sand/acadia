@@ -190,3 +190,40 @@ owns the clean equity-led drawdown; the congestion signal owns the messier macro
 2. **A longer / out-of-sample window.** The Calmar miss is decided by one episode (DeepSeek).
    Re-running once 2026+ data is cached adds the first genuinely out-of-sample observations and is
    the cleanest way to confirm or retire the adoption.
+
+---
+
+## 7. Option A — DC-zone congestion RELATIVE to the rest of PJM (2026-08-31) — FAILED
+
+**Motivation.** The absolute rung-1 signal's "step back" days cluster in three episodes — Mar–Apr
+2020, Mar 2023, Mar 2024 — all broad risk-off / shoulder-season windows, none data-center-driven.
+The absolute signal can't tell "the DC bottleneck relaxed" from "total electricity demand fell." A
+**relative** signal — z-score of `mean|congestion $|(DOM,AEP,COMED,PPL) − mean|congestion $|(rest of
+PJM, 16 zones)` — nets out any system-wide demand swing and isolates congestion *concentrating* in
+the data-center zones. `grid_regime.relative_regime_composite` / `relative_signal_report`
+(`_rest_of_pjm_congestion`, `REGIME_DC_ZONES`), 5 tests.
+
+**Pre-registered bar:** beat layer-1-only on Sharpe AND Calmar on both windows, on a threshold
+plateau, AND shave the prior-window drawdown vs the absolute signal (the COVID artifact it targets).
+
+**Result — FAIL, and it settles the earlier open question.**
+
+| rung-1 variant | primary Sharpe / Calmar / MaxDD | prior Sharpe / Calmar / MaxDD |
+|---|---|---|
+| layer-1 only (baseline) | 1.58 / 2.32 / −18.4% | 0.20 / 0.15 / −41.5% |
+| **absolute** (shipped) | 1.64 / 2.16 / −23.3% | **0.61 / 0.54 / −32.4%** |
+| **relative** (option A) | 1.68 / 2.16 / −24.2% | **0.21 / 0.15 / −41.5%** |
+
+- G1 still fails (Sharpe up, Calmar 2.16 < 2.32). Plateau 0/2. `fixes_prior_dd = False`
+  (−41.5% vs the absolute's −32.4% — it made the prior drawdown *worse*).
+- **The prior-window edge was the common-mode component.** Removing it drops prior Sharpe 0.61 → 0.21
+  (≈ layer-1-only / vol-target-only). So the absolute signal's 2020–22 "win" **was** the COVID
+  demand-collapse coincidence, exactly as suspected. The data-center-specific signal has ~no timing
+  edge in this sample: there was no DC-congestion regime in 2020–22 to detect, and in 2023–25 it
+  still trades drawdown for upside.
+
+**Takeaway.** The relative signal is the *honest* construction and it shows the timing edge is not
+there once the macro/seasonal artifact is stripped. It does not replace the shipped absolute rung 1
+(which is retained as a disclosed judgment call, §1a), but it caps how much weight that adoption can
+bear. `relative_regime_composite` is kept for the option-B pair test and for a future
+seasonally-adjusted variant.
