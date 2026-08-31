@@ -83,6 +83,44 @@ def _price_fn():
     return lambda names, s, e: pd.DataFrame({k: v for k, v in out.items() if k in names}).loc[s:e]
 
 
+def test_hedge_ratio_maps_signal_to_three_month_held_levels():
+    idx = pd.bdate_range("2021-01-01", "2021-05-31")
+    comp = pd.Series(0.0, index=idx)
+    comp.loc["2021-02"] = 2.0          # concentrating -> full hedge next month
+    comp.loc["2021-04"] = -2.0         # easing -> no hedge next month
+    k = gr._hedge_ratio(comp, thresh=0.5, k_lo=0.0, k_mid=0.5, k_hi=1.0, month_lookback=20)
+    assert set(k.dropna().unique()) <= {0.0, 0.5, 1.0}
+    assert (k.loc["2021-03"] == 1.0).all()
+    assert (k.loc["2021-05"] == 0.0).all()
+
+
+def test_pair_signal_report_structure():
+    n = 3200
+    dc = 2.0 + 1.5 * np.sin(np.arange(n) / 130)
+    rest = 2.0 + 1.5 * np.sin(np.arange(n) / 130 + 0.4)
+
+    def lmp_fn(*a, **k):
+        return _hourly({"DOM": dc, "AEP": dc, "COMED": dc, "PPL": dc,
+                        "PECO": rest, "BGE": rest, "JCPL": rest, "APS": rest,
+                        "ATSI": rest, "DPL": rest}, "2018-01-01", "2025-12-31", step_h=24)
+
+    def util_fn(s, e):
+        idx = pd.bdate_range("2019-06-03", "2026-02-27")
+        rng = np.random.default_rng(9)
+        cols = {t: 100 * (1 + pd.Series(rng.normal(2e-4, 7e-3, len(idx)), index=idx)).cumprod()
+                for t in ["XLU", "D", "AEP", "EXC", "PPL", "PEG", "FE"]}
+        return pd.DataFrame(cols).loc[s:e]
+
+    rep = gr.pair_signal_report(price_fn=_price_fn(), util_fn=util_fn, lmp_fn=lmp_fn,
+                                zscore_window=200, zscore_minp=120)
+    assert {"buy_and_hold", "layer1_only", "shipped_overlay"} <= set(rep["baselines"])
+    for key in ("static_pair", "tilted_pair_xlu", "tilted_pair_basket"):
+        assert {"primary", "prior", "full"} <= set(rep[key]["block"])
+    assert "cond_spread" in rep and {"high", "low"} <= set(rep["cond_spread"])
+    assert rep["verdict"] in {"PASS", "FAIL"}
+    assert isinstance(gr.pair_signal_table(rep), str)
+
+
 def test_relative_signal_report_has_baselines_absolute_and_relative():
     n = 3000
     dc = 2.0 + 1.5 * np.sin(np.arange(n) / 120)

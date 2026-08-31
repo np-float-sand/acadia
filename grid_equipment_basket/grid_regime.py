@@ -296,6 +296,131 @@ def relative_signal_report(price_fn=None, lmp_fn=None,
     return out
 
 
+# ── option B: long basket / short rest-of-PJM utilities, hedge tilted by the signal
+
+def _hedge_ratio(rel_comp: pd.Series, *, thresh: float, k_lo: float, k_mid: float,
+                 k_hi: float, month_lookback: int) -> pd.Series:
+    """Month-held hedge ratio from the relative congestion signal: full short
+    (``k_hi``) when DC congestion is concentrating, none (``k_lo``) when it's
+    easing, ``k_mid`` in between. Same trailing-mean + 1-month-lag convention as
+    `regime_multiplier`."""
+    s = rel_comp.astype(float).sort_index().rolling(month_lookback, min_periods=1).mean()
+    raw = pd.Series(k_mid, index=s.index)
+    raw[s >= thresh] = k_hi
+    raw[s <= -thresh] = k_lo
+    raw[s.isna()] = np.nan
+    return _month_hold(raw, rel_comp.index, fill=k_mid).rename("hedge_ratio")
+
+
+_PJM_UTILITIES = ["D", "AEP", "EXC", "PPL", "PEG", "FE"]
+
+
+def _default_util_fn(start, end):
+    from grid_equipment_basket.data.prices import fetch_prices
+    return fetch_prices(["XLU", *_PJM_UTILITIES], start, end)
+
+
+def pair_signal_report(price_fn=None, util_fn=None, lmp_fn=None,
+                       signal_start: str = config.REGIME_SIGNAL_START,
+                       primary=config.REGIME_PRIMARY_WINDOW,
+                       prior=config.REGIME_PRIOR_WINDOW,
+                       thresh: float = config.REGIME_THRESH,
+                       zscore_window: int = config.REGIME_ZSCORE_WINDOW,
+                       zscore_minp: int = config.REGIME_ZSCORE_MINP,
+                       winsor: float = config.REGIME_ZSCORE_WINSOR,
+                       month_lookback: int = config.REGIME_MONTH_LOOKBACK) -> dict:
+    """Option B: long the equipment basket, short a rest-of-PJM utilities proxy,
+    with the short weight tilted by the DC-minus-rest congestion signal (full
+    short when DC congestion concentrates, none when it eases). Reports a static
+    pair, the signal-tilted pair (vs XLU and vs a 6-name utility basket), and a
+    conditional spread diagnostic."""
+    price_fn = price_fn or overlay._default_price_fn
+    util_fn = util_fn or _default_util_fn
+    rf = config.RISK_FREE_RATE
+    full = (prior[0], primary[1])
+
+    ret, lvl = overlay._basket_series(full[0], full[1], price_fn)
+    up = util_fn(full[0], full[1])
+    xlu = up["XLU"].pct_change().reindex(ret.index)
+    ub_cols = [c for c in _PJM_UTILITIES if c in up.columns]
+    ubasket = up[ub_cols].pct_change().mean(axis=1).reindex(ret.index)
+
+    rel = relative_regime_composite(signal_start, full[1], dc_zones=list(config.REGIME_DC_ZONES),
+                                    zscore_window=zscore_window, zscore_minp=zscore_minp,
+                                    winsor=winsor, lmp_fn=lmp_fn)
+    k = _hedge_ratio(rel, thresh=thresh, k_lo=0.0, k_mid=0.5, k_hi=1.0,
+                     month_lookback=month_lookback).reindex(ret.index).fillna(0.5)
+
+    def blk3(s):
+        out = {}
+        for wk, (a, b) in (("primary", primary), ("prior", prior), ("full", full)):
+            seg = s.loc[a:b].dropna()
+            out[wk] = {"metrics": compute_metrics(seg, rf, _ANN),
+                       "calendar": calendar_year_returns(seg)}
+        return out
+
+    static = (ret - 1.0 * xlu.fillna(0.0))
+    tilt_xlu = (ret - k * xlu.fillna(0.0))
+    tilt_ub = (ret - k * ubasket.fillna(0.0))
+    shipped = overlay.apply_overlay_l2(ret, live_multiplier(signal_start=signal_start, end=full[1]), rf)
+
+    # conditional spread: is (basket - XLU) bigger in "signal high" months than "signal low"?
+    spread = (ret - xlu).dropna()
+    hi = spread[k.reindex(spread.index) >= 1.0]
+    lo = spread[k.reindex(spread.index) <= 0.0]
+
+    out = {
+        "windows": {"primary": tuple(primary), "prior": tuple(prior), "full": tuple(full)},
+        "baselines": {"buy_and_hold": blk3(ret), "layer1_only": blk3(overlay.apply_overlay(ret, lvl, rf)),
+                      "shipped_overlay": blk3(shipped)},
+        "static_pair": {"block": blk3(static)},
+        "tilted_pair_xlu": {"block": blk3(tilt_xlu)},
+        "tilted_pair_basket": {"block": blk3(tilt_ub)},
+        "cond_spread": {"high": round(float(hi.mean() * 1e4), 2), "low": round(float(lo.mean() * 1e4), 2),
+                        "n_high": int(len(hi)), "n_low": int(len(lo))},
+        "hedge_mechanics": {"avg_k": round(float(k.mean()), 2),
+                            "pct_full_short": round(float((k >= 1.0).mean()), 3),
+                            "pct_no_short": round(float((k <= 0.0).mean()), 3)},
+    }
+    # pre-registered gate for B
+    tx, sp = out["tilted_pair_xlu"]["block"], out["static_pair"]["block"]
+    beats_static = (tx["primary"]["metrics"]["sharpe"] > sp["primary"]["metrics"]["sharpe"]
+                    and tx["prior"]["metrics"]["sharpe"] > sp["prior"]["metrics"]["sharpe"])
+    spread_informative = out["cond_spread"]["high"] > out["cond_spread"]["low"] and out["cond_spread"]["high"] > 0
+    beats_l1 = tx["full"]["metrics"]["sharpe"] > out["baselines"]["layer1_only"]["full"]["metrics"]["sharpe"]
+    out["gate"] = {"beats_static_pair": bool(beats_static),
+                   "spread_informative": bool(spread_informative),
+                   "beats_layer1_full": bool(beats_l1)}
+    out["verdict"] = "PASS" if all(out["gate"].values()) else "FAIL"
+    return out
+
+
+def pair_signal_table(rep: dict) -> str:
+    def row(lab, blk):
+        c = [blk[w]["metrics"] for w in ("primary", "prior", "full")]
+        return (f"  {lab:<24}" + "  ".join(
+            f"{_pct(m['cagr']):>7}{_f(m['sharpe']):>6}{_pct(m['max_dd']):>7}" for m in c))
+    L = ["OPTION B -- long basket / short rest-of-PJM utilities, hedge tilted by the signal",
+         f"  {'':<24}" + "  ".join(f"{w+' CAGR/Shrp/DD':>21}" for w in ("primary", "prior", "full"))]
+    for k, lab in [("buy_and_hold", "buy & hold basket"), ("layer1_only", "layer-1 only"),
+                   ("shipped_overlay", "shipped overlay (abs)")]:
+        L.append(row(lab, rep["baselines"][k]["block"] if "block" in rep["baselines"][k] else rep["baselines"][k]))
+    L.append("")
+    for k, lab in [("static_pair", "static pair (-1.0 XLU)"), ("tilted_pair_xlu", "tilted pair (XLU)"),
+                   ("tilted_pair_basket", "tilted pair (util basket)")]:
+        L.append(row(lab, rep[k]["block"]))
+    cs = rep["cond_spread"]; hm = rep["hedge_mechanics"]
+    L += ["",
+          f"  conditional (basket - XLU) daily spread:  signal-high {cs['high']:+.1f}bp (n={cs['n_high']})  "
+          f"signal-low {cs['low']:+.1f}bp (n={cs['n_low']})",
+          f"  hedge: avg k {hm['avg_k']}, full-short {hm['pct_full_short']*100:.0f}% of days, "
+          f"no-short {hm['pct_no_short']*100:.0f}%",
+          f"  gate: beats-static {rep['gate']['beats_static_pair']}  "
+          f"spread-informative {rep['gate']['spread_informative']}  "
+          f"beats-L1-full {rep['gate']['beats_layer1_full']}  ->  {rep['verdict']}"]
+    return "\n".join(L)
+
+
 def relative_signal_table(rep: dict) -> str:
     def row(lab, blk):
         p, q = blk["primary"]["metrics"], blk["prior"]["metrics"]

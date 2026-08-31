@@ -227,3 +227,44 @@ there once the macro/seasonal artifact is stripped. It does not replace the ship
 (which is retained as a disclosed judgment call, §1a), but it caps how much weight that adoption can
 bear. `relative_regime_composite` is kept for the option-B pair test and for a future
 seasonally-adjusted variant.
+
+---
+
+## 8. Option B — long basket / short rest-of-PJM utilities, hedge tilted by the signal (2026-08-31) — FAILED
+
+**Construction.** Long the 9-name equipment basket; short a rest-of-PJM utilities proxy (XLU, and a
+6-name D/AEP/EXC/PPL/PEG/FE basket); hedge ratio `k` set by the DC-minus-rest congestion signal —
+`k=1.0` (full short) when DC congestion is concentrating, `k=0` when it's easing, `k=0.5` between.
+`grid_regime.pair_signal_report` / `pair_signal_table` (`_hedge_ratio`, `_PJM_UTILITIES`), 2 tests.
+
+**Pre-registered gate:** the signal-tilted XLU pair must (1) beat the static `−1.0·XLU` pair on
+Sharpe on both windows, (2) be *spread-informative* — the daily `basket − XLU` spread must be
+larger in "signal-high" months than "signal-low" months and positive when high, and (3) beat
+layer-1-only on full-span Sharpe.
+
+**Result — FAIL on the check that matters.**
+
+| | primary Sharpe | prior Sharpe | full Sharpe / MaxDD |
+|---|---|---|---|
+| shipped overlay (absolute) | 1.64 | 0.61 | 1.11 / −32.4% |
+| static pair (−1.0·XLU) | 1.15 | 0.51 | 0.84 / −38.4% |
+| tilted pair (XLU) | 1.33 | 0.79 | 1.07 / −38.7% |
+| tilted pair (util basket) | 1.26 | 0.86 | 1.07 / −42.6% |
+
+- **beats-static: True.** **beats-L1-full: True.** **spread-informative: FALSE — and it's backwards.**
+  `basket − XLU` averages **+7.3 bp/day when the signal says DC congestion is concentrating** vs
+  **+18.2 bp/day when it says easing.** The signal does not predict when equipment beats utilities;
+  if anything it's mildly anti-predictive on that spread.
+- The tilted pair's edge over the static pair comes from carrying a *lower average short* (avg
+  `k` 0.53, so less carry drag from a utility sector that rose) plus timing noise — not from the
+  congestion signal carrying cross-sectional information. The gate's spread-informative leg exists
+  precisely to catch that, and it did.
+- The tilted pair also doesn't beat what we already ship (full Sharpe 1.07 vs 1.11; primary 1.33 vs
+  1.64) — shorting utilities costs carry, the same finding as the original hedge search.
+
+**Combined takeaway for §7–§8.** Once the COVID/seasonal artifact is removed, there is **no
+demonstrable data-center-congestion edge in this sample — neither timing (A) nor cross-sectional
+(B)**. That is now 6 ladder rungs + 2 relative-signal variants, all short of their pre-registered
+bars. The shipped absolute rung 1 stays adopted on the disclosed §1a judgment call, with these two
+negatives as the ceiling on that call. Realistic next moves are unchanged: option (c) combine (not
+substitute), a seasonally-adjusted relative signal, or wait for out-of-sample 2026+ data.
