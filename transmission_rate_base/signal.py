@@ -105,7 +105,7 @@ def neutralize(signal_df: pd.DataFrame, panel: pd.DataFrame,
     """Add ``neutral_signal``: per year, winsorise + z-score raw_signal, then
     regress out log(rate base) and non-regulated revenue share and re-z-score
     the residual. Years with < 5 usable names skip the regression."""
-    size = (panel.assign(log_rate_base=np.log(panel["net_total"]))
+    size = (panel.assign(log_rate_base=np.log(panel["net_total"].where(panel["net_total"] > 0)))
             .set_index(["ticker", "year"])["log_rate_base"])
     sm = (segment_mix.set_index(["ticker", "fy"])["nonreg_rev_share"]
           if len(segment_mix) else pd.Series(dtype=float))
