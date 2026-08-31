@@ -75,3 +75,16 @@ def test_signal_on_date_uses_latest_visible_surprise_within_staleness():
                              log_mktcap=lmc, horizon_days=63, staleness_max_days=200)
     assert "C" not in out.index           # 2022-01 surprise is > 200 days stale
     assert set(out.index) == {"A", "B"}
+
+
+def test_non_positive_rpo_value_is_dropped_without_warning():
+    import warnings
+
+    # a spurious 0 at index 2, then a long clean run so a valid surprise re-emerges
+    mvs = [100, 110, 0.0, 133.1, 146.41, 161.05, 177.16, 194.87,
+           214.36, 235.79, 259.37, 285.31]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)   # any divide-by-zero-in-log fails the test
+        out = sig.name_surprise_series(_rpo_one(mvs), min_quarters=6)
+    assert out["g"].iloc[2] != out["g"].iloc[2]          # NaN g at the bad row (no -inf)
+    assert out["surprise"].notna().any()                 # recovers well after the poisoned window

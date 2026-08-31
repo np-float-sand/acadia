@@ -16,6 +16,8 @@ def name_surprise_series(rpo_one: pd.DataFrame, *, min_quarters: int = config.HI
                          span_min: int = config.SPAN_MIN_DAYS,
                          span_max: int = config.SPAN_MAX_DAYS) -> pd.DataFrame:
     g_df = rpo_one.sort_values("quarter_end").reset_index(drop=True)
+    # a non-positive disclosed RPO is bad data (or a sign error) -> drop before the log
+    g_df.loc[g_df["metric_value"] <= 0, "metric_value"] = np.nan
     g_df["g"] = np.log(g_df["metric_value"] / g_df["metric_value"].shift(1))
     g_df["expected_g"] = g_df["g"].shift(1).rolling(4).mean()
     g_df["surprise"] = g_df["g"] - g_df["expected_g"]
