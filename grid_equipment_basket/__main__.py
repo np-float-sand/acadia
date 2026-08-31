@@ -53,6 +53,9 @@ def main() -> None:
                     help="value-chain constructions only: drop VRT, GEV from the makers bucket")
     ap.add_argument("--overlay", action="store_true",
                     help="also print the layer-1 risk overlay (trend gate + vol target) report")
+    ap.add_argument("--overlay-l2", dest="overlay_l2", action="store_true",
+                    help="also run the layer-2 grid-congestion regime ladder (both windows) "
+                         "and write regime_metrics.csv / regime_timeline.csv")
     ap.add_argument("--output", default="./output_grid_equipment")
     ap.add_argument("--no-plot", action="store_true")
     args = ap.parse_args()
@@ -84,6 +87,13 @@ def main() -> None:
         print("\n" + overlay.overlay_table(orep))
         orep_pr = overlay.overlay_report(start, end, prior_regime=True)
         print("\n" + overlay.overlay_table(orep_pr))
+
+    if args.overlay_l2:
+        from grid_equipment_basket import grid_regime
+        rrep = grid_regime.regime_report()
+        print("\n" + grid_regime.regime_table(rrep))
+        _write_regime_outputs(rrep, out)
+
     rows = [{"name": "BASKET", **res["basket"]}]
     for b, blk in res["benchmarks"].items():
         rows.append({"name": b, **blk["metrics"]})
@@ -92,6 +102,27 @@ def main() -> None:
     if not args.no_plot:
         backtest.plot(res, str(out / "performance.png"))
         print(f"\nwrote {out}/metrics.csv, basket_returns.csv, performance.png")
+
+
+def _write_regime_outputs(rep: dict, out: Path) -> None:
+    rows: list[dict] = []
+    for key, blk in rep["baselines"].items():
+        for wk, wblk in blk.items():
+            rows.append({"name": key, "window": wk, "verdict": "baseline", **wblk["metrics"]})
+    timeline: dict = {}
+    for r in rep["rungs"]:
+        if r.get("status") == "deferred":
+            rows.append({"name": r["name"], "window": "-", "verdict": "deferred"})
+            continue
+        for wk, wblk in r["block"].items():
+            rows.append({"name": r["name"], "window": wk, "verdict": r["verdict"],
+                         **wblk["metrics"], **{f"gate_{k}": v for k, v in r["gate"].items()
+                                               if k in ("G1", "G2", "G3", "marginal")}})
+        if "multiplier" in r:
+            timeline[r["name"]] = r["multiplier"]
+    pd.DataFrame(rows).to_csv(out / "regime_metrics.csv", index=False)
+    pd.DataFrame(timeline).to_csv(out / "regime_timeline.csv")
+    print(f"\nwrote {out}/regime_metrics.csv, regime_timeline.csv")
 
 
 def _write_value_chain_outputs(rep: dict, out: Path) -> None:

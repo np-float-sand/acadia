@@ -408,7 +408,8 @@ def regime_report(price_fn=None, composite_fn=None, ercot_fn=None,
         rungs_out.append({"name": rung["name"], "params": {k: rung[k] for k in rung
                                                            if k not in ("neighbours",)},
                           "block": block, "gate": gate, "neighbours_pass": nb_pass,
-                          "verdict": verdict, "mechanics": _mechanics(mult, ret)})
+                          "verdict": verdict, "mechanics": _mechanics(mult, ret),
+                          "multiplier": mult.reindex(ret.index).astype(float).fillna(1.0)})
         if verdict == "PASS":
             stopped_at = rung["name"]
             break
