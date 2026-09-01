@@ -362,3 +362,90 @@ existing `overlay._basket_series` / `data.prices.fetch_prices` helpers.
    data-collection project (§5.1) — accept no validation until ~2028 — or move the search to a
    less-arbitraged theme. Ten honest attempts here is a strong prior that the edge, if it exists,
    is not reachable with the data available.
+
+---
+
+## 8. Work plan for the next conversation — try what remains
+
+Ordered by expected value. Each is an independent probe; run the cheap feasibility check first and
+kill on it before building. Use the `superpowers:brainstorming` skill per item; pre-register the bar
+and both windows (2023–26 and a pre-AI 2019–22) **before** the live run, same discipline as the
+layer-2 build.
+
+### 8.1 RT/DA (real-time − day-ahead) LMP spread — cross-sectional split
+
+- **Start with:** a live `gridstatus` probe — does it return real-time LMP for PJM + ERCOT at
+  hourly-or-finer granularity across a sample of months spanning 2018–2026? (This determines whether
+  CLAUDE.md's "~90 % ready" is real.) If no clean RT history → **stop, log "not feasible", done.**
+- **If feasible:** add `fetch_lmp_rt()` + `ISO_RT_LOCATION_TYPE` to `grid_resilience/data/grid_data.py`;
+  build a daily per-node `mean(RT − DA)` and its z-score. Use it *cross-sectionally*: rank the 9 (or
+  9 + foreign) names by their nodes' RT/DA spread exposure — merchant-gen-levered (GEV, IPP-adjacent)
+  long the spike, T&D / pure-equipment names short it — and test whether that ranking has forward IC.
+- **Pre-registered bar:** mean monthly rank-IC ≥ 0.03 with |t| ≥ 2 over the common window, on both
+  sub-periods. **Prior: low** — day-ahead congestion had ~0 equity correlation (§3.7) and RT/DA is a
+  related quantity; but it is a genuinely untested cross-sectional axis (all prior splits were
+  "which company is better-run").
+- **Effort:** ~1 day if `gridstatus` cooperates; the probe alone is ~1 hour.
+
+### 8.2 Earnings-estimate-revision / analyst-breadth momentum
+
+- **Start with:** a data-source decision — I/B/E/S / Refinitiv (paid), Visible Alpha (paid),
+  `yfinance` `.recommendations` / `.earnings_estimate` (thin, ~current only), or a Zacks/consensus
+  scrape. Without ≥3 yr of point-in-time consensus EPS/revenue revisions this can't be tested → note
+  and stop.
+- **If data:** standard signal — 3-month change in FY1/FY2 consensus, or % of analysts revising up
+  (breadth), lagged to the revision date. Tilt the equal-weight basket by the rank, or run it as a
+  long/short within the 9 (+ foreign).
+- **Pre-registered bar:** the tilt beats equal-weight on Sharpe on both sub-windows; rank-IC t ≥ 2.
+- **Prior: moderate** — momentum-of-fundamentals is a real, documented factor that historically adds
+  on trending themes; the risk is it's already in price for names this heavily covered.
+- **Effort:** ~1–2 days, dominated by the estimates-data plumbing.
+
+### 8.3 Backlog *coverage* / book-to-bill / pricing-power language (distinct from backlog growth)
+
+- **Start with:** confirm the fields exist. `grid_equipment_basket/backlog_data.py` already fetches
+  SEC XBRL RPO (`RevenueRemainingPerformanceObligation`). Coverage = RPO ÷ TTM revenue;
+  book-to-bill needs bookings (often only in MD&A prose, not XBRL — check per name).
+- **Build:** (a) a *coverage-rising* + *sustained book-to-bill > 1* tilt; (b) a text signal —
+  count/score lead-time and price-escalation language ("lead times extended", "pricing actions",
+  "backlog margin") in the 10-K/10-Q MD&A, per quarter, per name.
+- **Pre-registered bar:** same as 8.2. **Prior: moderate-low** — backlog *growth* rank already
+  failed (over-weighted FLNC); *coverage/pricing-power* is a different construct but the sample is
+  the same 9 names over ~4 yr, so breadth is thin. Frame it honestly as low-breadth.
+- **Effort:** ~2 days incl. the text-mining pass.
+
+### 8.4 Quality / balance-sheet weighting
+
+- **Build:** replace equal-weight with weights ∝ (low leverage × margin stability × FCF conversion),
+  from the fundamentals already in `margin_data.py` + a leverage pull. Compare to equal-weight and
+  to the congestion/price overlays on both windows.
+- **Pre-registered bar:** beats equal-weight on Sharpe on both sub-windows *and* is not just a
+  low-vol repackage (regress the excess return on a low-vol factor; require residual t ≥ 1.5).
+- **Prior: low** — it's a within-9-name weighting tweak; likely a small, regime-dependent effect.
+- **Effort:** ~half a day.
+
+### 8.5 Options-structured hedge (only if an options-data feed appears)
+
+- **Blocked on data.** Needs historical option chains (ORATS, LiveVol, or CBOE DataShop) for the 9
+  names or a liquid proxy (XLI, GRID). Without it, do not attempt — the earlier put-spread work was
+  approximated with Black-Scholes and that is not good enough to judge a structured overlay.
+- **If data:** put spreads financed by a call overwrite on the strongest-momentum name; a wide
+  collar. Judge on episode drawdown vs annualised premium drag, both windows.
+
+### 8.6 Interconnection-queue velocity — the data-collection project (parallel, long-horizon)
+
+- **Not a next-conversation build.** Start the collection now so it's testable later: script a
+  monthly capture of the PJM LAS "Large Load Adjustment Requests" deck and the ERCOT large-load
+  queue / TAC reports into dated parquet vintages (`grid_resilience/data/`), and do a one-off
+  archive dig for past vintages (PJM posts old LAS materials; ERCOT posts old TAC reports).
+- **Testable when:** ≥ 8–12 independent quarterly vintages exist (≈ 2028) → then test whether
+  Δ planned large-load MW by zone, mapped to name exposure, leads the basket or the §1 spread.
+- **This is the only avenue with genuine non-consensus alpha potential.** Everything else in §8 has
+  a low-to-moderate prior.
+
+### If §8.1–§8.5 all come back weak
+
+That would be ~14 honest attempts. The defensible conclusion is: **ship the §1 long/short as an
+openly-labelled style/relative-value trade** (or the risk-managed long-only basket), keep the
+queue-velocity collection running for a 2028 re-test, and move new research effort to a
+less-arbitraged theme.
