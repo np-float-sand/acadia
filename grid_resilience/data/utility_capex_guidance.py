@@ -40,3 +40,21 @@ def load_capex_guidance(seed: Path = SEED_CSV) -> pd.DataFrame:
     df["revision_quality"] = np.select(
         [stated, ~stated & derived_ok], ["stated", "derived"], default="n/a")
     return df
+
+
+def feasibility_summary(df: pd.DataFrame,
+                        window: tuple[str, str] = ("2023-01-01", "2026-08-31")) -> dict:
+    """Per-utility usable-plan / in-window-revision counts (spec s3.3). A
+    utility is "usable" if it has >=1 row with a non-null `capex_plan_usd_m`
+    AND >=1 row with a non-null `revision_vs_prior_usd_m` whose `report_date`
+    falls inside `window`."""
+    ws, we = pd.Timestamp(window[0]), pd.Timestamp(window[1])
+    per_utility: dict[str, dict] = {}
+    for u, g in df.groupby("utility"):
+        has_plan = bool(g["capex_plan_usd_m"].notna().any())
+        in_window = g[(g["report_date"] >= ws) & (g["report_date"] <= we)]
+        n_revisions = int(in_window["revision_vs_prior_usd_m"].notna().sum())
+        per_utility[u] = {"has_plan": has_plan, "n_revisions": n_revisions,
+                          "usable": bool(has_plan and n_revisions >= 1)}
+    n_usable = sum(1 for v in per_utility.values() if v["usable"])
+    return {"per_utility": per_utility, "n_usable": n_usable, "n_total": len(per_utility)}
