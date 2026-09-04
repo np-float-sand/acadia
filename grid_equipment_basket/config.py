@@ -160,3 +160,36 @@ REGIME_LADDER: list[dict] = [
      "reason": "needs a fetch_lmp_rt() + a live gridstatus RT-LMP availability probe "
                "over 2018-2025 (spec s7); not wired this pass."},
 ]
+
+# ── Utility capex-guidance revision signal ("Deliverable D", 2026-09-04) ───
+# Spec: docs/superpowers/specs/2026-09-04-capex-guidance-signal-design.md
+DC_GUIDANCE_UNIVERSE: list[str] = ["D", "AEP", "NEE", "SO", "ETR", "XEL", "DUK",
+                                   "PCG", "EIX", "PPL", "FE", "AEE", "WEC", "CMS", "DTE"]
+DC_GUIDANCE_MIN_UTILITIES: int = 8      # feasibility kill (spec s3.3)
+DC_GUIDANCE_FALLBACK: list[str] = ["D", "AEP", "NEE"]
+
+DER_SHORT_SLEEVE: list[str] = ["ENPH", "SEDG", "CHPT", "RUN", "BLNK", "STEM"]
+
+DC_GUIDANCE_ZSCORE_WINDOW: int = REGIME_ZSCORE_WINDOW      # reuse 756/252/3.0, not re-tuned
+DC_GUIDANCE_ZSCORE_MINP: int = REGIME_ZSCORE_MINP
+DC_GUIDANCE_ZSCORE_WINSOR: float = REGIME_ZSCORE_WINSOR
+
+DC_GUIDANCE_PRIMARY_WINDOW: tuple[str, str] = ("2023-01-01", "2026-08-31")
+DC_GUIDANCE_PRIOR_WINDOW: tuple[str, str] = ("2021-01-01", "2022-12-31")
+DC_GUIDANCE_HOLDOUT_WINDOW: tuple[str, str] = ("2026-03-01", "2026-08-31")
+DC_GUIDANCE_TTM_QUARTERS: int = 4
+
+# s6.1 one-directional de-risk -- fixed, plateau-probed, not fitted
+DC_GUIDANCE_DERISK_FLOOR_Z: float = -0.5
+DC_GUIDANCE_DERISK_LO_MULT: float = 0.6
+DC_GUIDANCE_DERISK_GRID_FLOOR: tuple[float, ...] = (-0.25, -0.5, -0.75)
+DC_GUIDANCE_DERISK_GRID_LO: tuple[float, ...] = (0.5, 0.6, 0.7)
+
+# s6.2 two-sided scaler
+DC_GUIDANCE_SCALER_K: float = 0.35
+DC_GUIDANCE_SCALER_LO: float = 0.5
+DC_GUIDANCE_SCALER_HI: float = 1.5
+DC_GUIDANCE_SCALER_GRID_K: tuple[float, ...] = (0.25, 0.35, 0.45)
+DC_GUIDANCE_SCALER_GRID_HI: tuple[float, ...] = (1.25, 1.5)
+
+DC_GUIDANCE_RANK_IC_MIN_T: float = 2.0   # spec s5.1/5.2/5.4
