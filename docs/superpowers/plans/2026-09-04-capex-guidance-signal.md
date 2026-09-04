@@ -1233,7 +1233,7 @@ def _panel(rows):
 
 
 def test_feasibility_gate_uses_full_panel_when_enough_usable(monkeypatch):
-    monkeypatch.setattr(config, "DC_GUIDANCE_MIN_UTILITIES", 1)
+    monkeypatch.setattr(cgs.config, "DC_GUIDANCE_MIN_UTILITIES", 1)
     df = _panel([{"utility": "D", "report_date": "2023-06-01",
                   "capex_plan_usd_m": 1000.0, "revision_vs_prior_usd_m": 50.0}])
     panel, feas, used = cgs.feasibility_gate(df, ("2023-01-01", "2026-08-31"))
