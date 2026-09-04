@@ -249,3 +249,4 @@ The sub-groupings (Generators, Wires-Only, Integrated) mirror the distinctions u
 | LMP + load (most ISOs) | [gridstatus](https://github.com/kmax12/gridstatus) | None (ERCOT needs token — auto-fetched) |
 | EIA generation mix | EIA Open Data API | Free key required — add to `.env` |
 | PJM grid data | PJM Data Miner API | Non-member email approval required — add to `.env` |
+| VA transmission-project filings (Dominion CPCN dockets) | VA SCC DocketSearch Breeze/OData backend (`grid_resilience/data/va_transmission_data.py`) | None — undocumented endpoint, may change. Seed table: `grid_resilience/data/seed/va_transmission_projects.csv`. Probe verdict + limitations: `docs/va-transmission-filings-probe-results.md` (monitored dashboard input, **not** a signal) |
