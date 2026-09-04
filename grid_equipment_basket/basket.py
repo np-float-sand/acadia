@@ -135,3 +135,36 @@ def backlog_tilt_targets(
     tilted = base * factor
     tilted = tilted / tilted.sum()
     return apply_cap(tilted, cap)
+
+
+def coverage_tilt_targets(
+    available, asof, fund_df, backlog_df,
+    cap: float = 0.25, top: float = 1.25, bottom: float = 0.75,
+) -> pd.Series:
+    """Equal weight tilted by year-over-year backlog-coverage change rank
+    (handoff 2026-09-01 §8.3(a)) -- coverage alone, not blended with gross
+    margin the way ``value_chain.value_chain_tilt_targets`` does."""
+    from grid_equipment_basket.value_chain import coverage_change_signal
+
+    names = sorted(available)
+    if not names:
+        return pd.Series(dtype=float)
+    base = pd.Series(1.0 / len(names), index=names)
+
+    ranks = coverage_change_signal(backlog_df, fund_df, asof).reindex(names).rank(
+        method="dense", ascending=True)
+    present = ranks.dropna()
+    factor = pd.Series(1.0, index=names)
+    if len(present) >= 2:
+        order = present.sort_values()
+        k = len(order)
+        half = k // 2
+        bottom_names = order.index[:half]
+        top_names = order.index[k - half:]
+        factor.loc[bottom_names] = bottom
+        factor.loc[top_names] = top
+        # middle name(s) with odd k stay 1.0
+
+    tilted = base * factor
+    tilted = tilted / tilted.sum()
+    return apply_cap(tilted, cap)

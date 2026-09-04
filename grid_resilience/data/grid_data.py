@@ -101,22 +101,104 @@ def _cache_path(iso: str, dataset: str) -> Path:
 
 # ── Raw fetch helpers (no caching) ───────────────────────────────────────────
 
-def _pjm_get(url: str, params: dict, api_key: str, retries: int = 6) -> dict:
-    """GET a PJM DataMiner 2 endpoint with exponential-backoff retry on 429."""
+def _pjm_get(url: str, params: dict, api_key: str, retries: int = 6,
+             return_response: bool = False):
+    """GET a PJM DataMiner 2 endpoint with exponential-backoff retry on 429.
+
+    ``return_response=True`` returns the raw ``requests.Response`` instead of
+    ``.json()`` -- needed for newer-envelope feeds (e.g. ``ftr_bids_mnt`` with
+    ``download=true``) whose pagination total lives in the ``X-TotalRows``
+    header, not the JSON body.
+    """
     import requests
     headers = {"Ocp-Apim-Subscription-Key": api_key}
     delay = 15
     for attempt in range(retries):
-        resp = requests.get(url, params=params, headers=headers, timeout=30)
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=30)
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+            if attempt == retries - 1:
+                raise
+            print(f"  [grid] PJM {type(exc).__name__} — retrying in {delay}s "
+                 f"(attempt {attempt + 1}/{retries})")
+            time.sleep(delay)
+            delay *= 2
+            continue
         if resp.status_code == 429:
             print(f"  [grid] PJM 429 — retrying in {delay}s (attempt {attempt + 1}/{retries})")
             time.sleep(delay)
             delay *= 2
             continue
         resp.raise_for_status()
-        return resp.json()
+        return resp if return_response else resp.json()
     resp.raise_for_status()
-    return {}
+    return resp if return_response else {}
+
+
+def _fetch_pjm_ftr_bids_raw(api_key: str, market_name: str,
+                            trade_type: str = "Buy", hedge_type: str = "Obligation",
+                            class_type: str = "OnPeak") -> pd.DataFrame:
+    """
+    Fetch one PJM monthly-FTR-auction's bid stack from DataMiner 2
+    (ftr_bids_mnt), filtered server-side to the given trade/hedge/class type.
+
+    Unlike LMP, ``sink_pnode_name`` / ``source_pnode_name`` are NOT filterable
+    server-side (bids are bus-level across the whole PJM footprint) — a single
+    month even after the trade/hedge/class filter is ~150-600k rows. Callers
+    filter to specific sink pnodes themselves after this returns.
+
+    This feed uses DataMiner's newer paginated-list envelope (``download=true``
+    + the ``X-TotalRows`` response header), unlike ``da_hrl_lmps``'s older
+    flat-JSON-body-with-totalRows envelope used by `_fetch_pjm_lmp_direct`.
+    """
+    url = "https://api.pjm.com/api/v1/ftr_bids_mnt"
+    row_count = 50000
+    start_row = 1
+    all_items: list = []
+
+    while True:
+        params = {
+            "startRow": start_row, "rowCount": row_count, "download": "true",
+            "market_name": market_name, "trade_type": trade_type,
+            "hedge_type": hedge_type, "class_type": class_type,
+        }
+        resp = _pjm_get(url, params, api_key, return_response=True)
+        items = resp.json()
+        all_items.extend(items)
+        total = int(resp.headers.get("X-TotalRows", 0))
+        if start_row + row_count - 1 >= total or not items:
+            break
+        start_row += row_count
+        time.sleep(1)
+
+    if not all_items:
+        return pd.DataFrame()
+    return pd.DataFrame(all_items)
+
+
+def fetch_ftr_bids_by_month(market_name: str, use_cache: bool = True) -> pd.DataFrame:
+    """
+    Cached PJM monthly-FTR bid stack (Buy+Obligation+OnPeak) for one auction
+    month label, e.g. ``"JAN 2019 Auction"``.
+
+    This feed has no date column to slice by — the auction month is only
+    identifiable via `market_name` — so it doesn't fit the monthly-chunk
+    cache_utils machinery (built for a `time` column range-query). Each
+    auction month is cached as its own parquet file instead. An empty result
+    is never written to cache: a month can come back empty because it's not
+    posted yet (four-month delay) rather than because it truly has no data,
+    and a permanent empty-cache would hide that once the auction posts.
+    """
+    safe_name = market_name.replace(" ", "_")
+    path = CACHE_DIR / f"pjm_ftr_bids_mnt_{safe_name}.parquet"
+    if use_cache and path.exists():
+        return pd.read_parquet(path)
+
+    api_key = os.environ.get("PJM_API_KEY", "")
+    df = _fetch_pjm_ftr_bids_raw(api_key, market_name)
+    if use_cache and not df.empty:
+        df.to_parquet(path)
+    return df
 
 
 def _fetch_pjm_lmp_direct(api_key: str, start: str, end: str, loc_type: str = "HUB") -> pd.DataFrame:

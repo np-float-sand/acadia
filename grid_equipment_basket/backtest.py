@@ -295,6 +295,39 @@ def value_chain_report(start: str, end: str, price_fn=None, drop_winners: bool =
     return report
 
 
+def coverage_report(start: str, end: str, price_fn=None, fund_df=None, backlog_df=None) -> dict:
+    """Coverage-alone tilt (handoff 2026-09-01 §8.3(a)) -- equal-weight vs
+    ``basket.coverage_tilt_targets``, same Gate 1 criterion as
+    ``value_chain_report`` (tilt beats equal-weight on Sharpe AND CAGR)."""
+    from grid_equipment_basket import basket as bk
+
+    price_fn = price_fn or _default_price_fn
+    fund_df, backlog_df = _load_vc_inputs(fund_df, backlog_df)
+    rf, af = config.RISK_FREE_RATE, config.ANN_FACTOR
+
+    prices = price_fn(config.UNIVERSE, start, end)
+    uni_cols = [t for t in config.UNIVERSE if t in prices.columns]
+
+    ew = simulate_basket(prices[uni_cols], start, end,
+                         config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT)
+
+    def _tilt_fn(available, asof):
+        return bk.coverage_tilt_targets(available, asof, fund_df, backlog_df,
+                                        cap=config.MAX_SINGLE_NAME_WEIGHT)
+    tilt = simulate_basket(prices[uni_cols], start, end,
+                           config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT, _tilt_fn)
+
+    equal_weight = compute_metrics(ew.returns, rf, af)
+    coverage_tilt = compute_metrics(tilt.returns, rf, af)
+
+    gate = {"tilt_sharpe": coverage_tilt["sharpe"], "ew_sharpe": equal_weight["sharpe"],
+           "tilt_cagr": coverage_tilt["cagr"], "ew_cagr": equal_weight["cagr"]}
+    gate["passed"] = bool(gate["tilt_sharpe"] > gate["ew_sharpe"] and gate["tilt_cagr"] > gate["ew_cagr"])
+
+    return {"start": start, "end": end,
+           "equal_weight": equal_weight, "coverage_tilt": coverage_tilt, "gate": gate}
+
+
 def value_chain_table(report: dict) -> str:
     L = [f"Value-chain reframe  {report['start']} -> {report['end']}"
          + ("  [drop-winners]" if report["drop_winners"] else ""),

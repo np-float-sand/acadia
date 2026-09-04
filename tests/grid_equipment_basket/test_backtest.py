@@ -220,3 +220,75 @@ def test_value_chain_report_conditional_short_never_engages_gives_zero_carry():
     assert rep["gate2"]["cond_carry"] == 0.0
     assert not np.isnan(rep["gate2"]["cond_carry"])
     assert isinstance(rep["gate2"]["passed"], bool)
+
+
+# ── coverage_report (handoff 2026-09-01 §8.3(a): coverage alone) ────────────
+
+def _coverage_fund_backlog(idx):
+    """9 names, 12 clean quarters (2021-Q4 through 2024-Q2) -- the extra four
+    early quarters give ``coverage_change_signal``'s year-ago lookback a full
+    4-quarter TTM-revenue window at the earliest rebalance in the test range,
+    not just at the latest one. Rising-coverage names (even index) get a
+    growing backlog against flat revenue; falling-coverage names (odd index)
+    get a shrinking backlog -- and their price drift is wired to match, so a
+    working tilt should beat equal-weight in this fixture."""
+    from grid_equipment_basket import config
+    from io import StringIO
+    from grid_equipment_basket.backlog_data import load_backlog_csv
+
+    names = sorted(config.UNIVERSE)
+    qe = ["2021-12-31", "2022-03-31", "2022-06-30", "2022-09-30", "2022-12-31",
+         "2023-03-31", "2023-06-30", "2023-09-30", "2023-12-31",
+         "2024-03-31", "2024-06-30"]
+    av = ["2022-02-01", "2022-05-01", "2022-08-01", "2022-11-01", "2023-02-01",
+         "2023-05-01", "2023-08-01", "2023-11-01", "2024-02-01",
+         "2024-05-01", "2024-08-01"]
+    fund_rows, bl_lines = [], []
+    rising_names = set()
+    for k, t in enumerate(names):
+        rising = (k % 2 == 0)
+        if rising:
+            rising_names.add(t)
+        for i, (q, a) in enumerate(zip(qe, av)):
+            fund_rows.append((pd.Timestamp(q), pd.Timestamp(a), 1000.0, 200.0, t))
+            backlog = 1000 + (100 * i if rising else -80 * i)
+            bl_lines.append(f"{t},{q},{a},{backlog},USD_million,xbrl_rpo,total,http://x,\n")
+    fund = pd.DataFrame(fund_rows, columns=["quarter_end", "availability_date", "revenue", "gross_profit", "ticker"])
+    header = ("ticker,quarter_end,availability_date,metric_value,metric_unit,"
+             "disclosure_type,segment_scope,source_url,notes\n")
+    bl = load_backlog_csv(StringIO(header + "".join(bl_lines)))
+    return fund, bl, rising_names
+
+
+def _coverage_price_fn(rising_names):
+    idx = pd.bdate_range("2023-01-02", periods=400)
+    rng = np.random.default_rng(11)
+
+    def _prices(tickers, start, end):
+        data = {}
+        for t in sorted(tickers):
+            drift = 0.0008 if t in rising_names else 0.0002
+            data[t] = 100 * np.exp(np.cumsum(rng.normal(drift, 0.01, len(idx))))
+        return pd.DataFrame(data, index=idx).loc[start:end]
+
+    return _prices, idx
+
+
+def test_coverage_report_shape_and_gate():
+    fund, bl, rising_names = _coverage_fund_backlog(None)
+    price_fn, idx = _coverage_price_fn(rising_names)
+    rep = bt.coverage_report("2023-06-01", str(idx[-1].date()),
+                             price_fn=price_fn, fund_df=fund, backlog_df=bl)
+    assert set(rep) >= {"equal_weight", "coverage_tilt", "gate"}
+    assert np.isfinite(rep["equal_weight"]["sharpe"])
+    assert np.isfinite(rep["coverage_tilt"]["sharpe"])
+    assert isinstance(rep["gate"]["passed"], bool)
+
+
+def test_coverage_report_tilt_beats_equal_weight_when_signal_is_real():
+    fund, bl, rising_names = _coverage_fund_backlog(None)
+    price_fn, idx = _coverage_price_fn(rising_names)
+    rep = bt.coverage_report("2023-06-01", str(idx[-1].date()),
+                             price_fn=price_fn, fund_df=fund, backlog_df=bl)
+    assert rep["gate"]["tilt_sharpe"] > rep["gate"]["ew_sharpe"]
+    assert rep["gate"]["passed"] is True

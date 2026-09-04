@@ -259,7 +259,7 @@ Outputs (to `--output`, default `./output_grid_equipment`):
 - `--overlay-l2`: `regime_metrics.csv` (baselines + per-rung metrics/gate/verdict, both windows),
   `regime_timeline.csv` (per-rung daily exposure multiplier)
 
-## Layer-2 grid-congestion regime signal (2026-08-31 — RECOMMENDED OVERLAY)
+## Layer-2 grid-congestion regime signal (2026-08-31 — OFF by default, 2026-09-01)
 
 `grid_regime.py` + the `overlay.py` seam (`regime_exposure`, `apply_overlay_l2`,
 `exposure_series_l2`; layer-1 functions untouched). Replaces layer-1's *price* trend gate with a
@@ -268,8 +268,12 @@ trailing-3y z-scored, reduced to a monthly basket-exposure multiplier — so
 `exposure = regime_multiplier × vol_target_scalar`. Data is the cached `grid_resilience` PJM zone
 LMP + zonal load (2018-01→2025-12); **zero network I/O**.
 
-**Live use** (`config.REGIME_ENABLED = True`, shipped config = `grid_regime.shipped_config()` =
-ladder rung 1):
+**`config.REGIME_ENABLED = False`.** Adopted as the recommended overlay by PM decision on
+2026-08-31, then **reverted 2026-09-01**: the Jan–Aug 2026 out-of-sample update showed it does not
+beat a plain price-gate + vol-target OOS (Sharpe 1.03 vs 1.16), and correlation diagnostics found
+the overlay's apparent edge was the vol-target de-lever, not congestion-specific information — see
+`docs/handoff_2026-09-01-grid-buildout-long-short.md` §3.4/§3.7/§7.2. The code and shipped config
+(`grid_regime.shipped_config()` = ladder rung 1) are kept for the negative result; to re-enable:
 
 ```python
 from grid_equipment_basket import grid_regime, overlay
@@ -298,6 +302,42 @@ deduped per quarter with the earliest filing kept), cached to
 genuinely factless name so it is not re-fetched every run). This fetch was re-run live on
 2026-08-29 after the revenue-tag-union fix; the realized per-name signal coverage is recorded
 in the results doc (backlog-coverage now live for 8 of 9 names).
+
+## FTR bid-implied forward-congestion signal (2026-09-02 — FAILED)
+
+`ftr_signal.py`: an alternative to the layer-2 congestion regime, using PJM FTR
+(Financial Transmission Rights) *bid* data as a genuinely forward-looking proxy for
+congestion expectations (an FTR is itself a multi-year-forward instrument, unlike a
+trailing LMP z-score). PJM's actual FTR *clearing* prices require a PJM membership
+login; the bid data (`ftr_bids_mnt`) is public but is not filterable by sink location
+server-side, so each auction month (150k-600k rows) is downloaded in full and filtered
+client-side to the four DC-heavy zones' bare zone-aggregate sinks (`AEP`, `COMED`,
+`DOM`/`DOMINION HUB`, `PPL`). MW-weighted mean bid price per zone, equal-weighted,
+trailing-z-scored, applied with the feed's own stated 4-month publication lag, feeds
+`grid_regime.regime_multiplier`/`overlay.apply_overlay_l2` unchanged (same seam as
+layer-2).
+
+**Result: FAILED the same pre-registered gate as layer-2** (`ftr_signal_report()`) —
+the multiplier engaged substantially (average exposure 0.91, real time at both 0.6 and
+1.25) but tracked layer-1-only almost exactly on both windows; G1 and G3 fail, G2 passes
+only marginally. Full write-up: `docs/ftr-bid-signal-results.md`. A live backfill of the
+96 months needed (2018-2025) took 106 minutes — PJM's rate limiter throttles hard under
+sustained sequential pagination, much heavier than a single-month probe suggests.
+
+## Backlog-coverage-alone signal (2026-09-02 — FAILED)
+
+`basket.coverage_tilt_targets()` + `backtest.coverage_report()`: tests the coverage
+half of the value-chain reframe's blended margin+coverage composite in isolation --
+tilt by year-over-year change in RPO/backlog coverage (÷ TTM revenue) alone, top/bottom
+half at 1.25x/0.75x. Data: `load_backlog_csv()` (fresh for all 9 names) ÷
+`margin_data.ttm_revenue()` (8 of 9 -- HUBB has no usable XBRL revenue tag, a known
+pre-existing limitation).
+
+**Result: FAILED Gate 1** (tilt must beat equal-weight on Sharpe AND CAGR, both
+windows) -- primary window CAGR edges up but Sharpe doesn't and drawdown worsens;
+prior window the tilt is *identical* to equal-weight (no name has enough backlog
+history that far back for the year-ago comparison to engage). Full write-up:
+`docs/backlog-coverage-signal-results.md`.
 
 ## Phase 2 — cross-sectional factor (NOT built here)
 

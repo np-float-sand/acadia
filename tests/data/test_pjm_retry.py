@@ -53,3 +53,49 @@ def test_pjm_get_raises_after_all_retries_exhausted():
         with patch("time.sleep"):
             with pytest.raises(requests.HTTPError):
                 _pjm_get("https://api.pjm.com/test", {}, "key", retries=2)
+
+
+def test_pjm_get_return_response_true_returns_response_object_not_json():
+    """Some newer-envelope feeds (e.g. ftr_bids_mnt with download=true) need
+    response headers (X-TotalRows) that .json() alone discards."""
+    ok = _mock_response(200, {"items": [{"x": 1}], "totalRows": 1})
+    with patch("requests.get", return_value=ok):
+        result = _pjm_get("https://api.pjm.com/test", {}, "key", return_response=True)
+    assert result is ok
+    ok.raise_for_status.assert_called_once()
+
+
+def test_pjm_get_return_response_still_retries_on_429():
+    rate_limited = _mock_response(429)
+    ok = _mock_response(200, {"items": [], "totalRows": 0})
+    with patch("requests.get", side_effect=[rate_limited, ok]):
+        with patch("time.sleep"):
+            result = _pjm_get("https://api.pjm.com/test", {}, "key", return_response=True)
+    assert result is ok
+
+
+def test_pjm_get_retries_on_read_timeout_then_succeeds():
+    """A large 50k-row page can hit a transient read timeout mid-download
+    (seen live during the FTR-bids backfill) -- this must retry like a 429,
+    not crash the whole multi-month fetch."""
+    ok = _mock_response(200, {"items": [], "totalRows": 0})
+    with patch("requests.get", side_effect=[requests.exceptions.ReadTimeout("timed out"), ok]):
+        with patch("time.sleep") as mock_sleep:
+            result = _pjm_get("https://api.pjm.com/test", {}, "key")
+    assert result == {"items": [], "totalRows": 0}
+    assert mock_sleep.call_count >= 1
+
+
+def test_pjm_get_retries_on_connection_error_then_succeeds():
+    ok = _mock_response(200, {"items": [], "totalRows": 0})
+    with patch("requests.get", side_effect=[requests.exceptions.ConnectionError("reset"), ok]):
+        with patch("time.sleep"):
+            result = _pjm_get("https://api.pjm.com/test", {}, "key")
+    assert result == {"items": [], "totalRows": 0}
+
+
+def test_pjm_get_raises_after_all_retries_exhausted_on_timeout():
+    with patch("requests.get", side_effect=requests.exceptions.ReadTimeout("timed out")):
+        with patch("time.sleep"):
+            with pytest.raises(requests.exceptions.ReadTimeout):
+                _pjm_get("https://api.pjm.com/test", {}, "key", retries=2)

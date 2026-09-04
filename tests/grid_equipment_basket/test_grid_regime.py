@@ -182,10 +182,10 @@ def test_regime_composite_fires_on_a_congestion_step_vs_recent_norm():
     assert comp.loc["2021-09-02":"2021-10-15"].max() > config.REGIME_THRESH
 
 
-# ── shipped live config (rung 1, adopted 2026-08-31) ────────────────────────
+# ── shipped live config (rung 1, adopted 2026-08-31, reverted 2026-09-01) ───
 
-def test_regime_enabled_flag_is_true():
-    assert config.REGIME_ENABLED is True
+def test_regime_enabled_flag_is_false():
+    assert config.REGIME_ENABLED is False
 
 
 def test_shipped_config_is_ladder_rung_1_without_neighbours():
