@@ -69,3 +69,60 @@ def panel_asof(df: pd.DataFrame, asof) -> pd.DataFrame:
         return known.iloc[0:0]
     idx = known.groupby("utility")["report_date"].idxmax()
     return known.loc[idx].sort_values("utility").reset_index(drop=True)
+
+
+def impute_dc_attributed(df: pd.DataFrame, *, max_iter: int = 5,
+                         tol: float = 0.005, imputed_weight: float = 0.5) -> pd.DataFrame:
+    """Point-in-time, EM-style fill of the data-center-attributed dollar figure
+    for rows where the utility only qualitatively mentioned data centers (or
+    not at all). Spec s4.2.
+
+    For a row with `dc_basis` in {"qualitative", "none"}, the fill is
+    `revision_vs_prior_usd_m * ratio(t)`, where `ratio(t)` is the mean of
+    `dc_attributed_usd_m / revision_vs_prior_usd_m` over every "stated"/
+    "derived" row with `report_date <= t` -- only already-disclosed data as of
+    that date, never a later quarter's. After the first pass, `ratio(t)` is
+    recomputed including the freshly-imputed rows (down-weighted
+    `imputed_weight` vs. a genuinely observed row) and the fill redone, for up
+    to `max_iter` rounds or until the total imputed $ changes by less than
+    `tol` (relative) between rounds. A row with no stated/derived observation
+    anywhere in the panel before its own date keeps `dc_attributed_usd_m_filled`
+    NaN -- there is nothing yet to calibrate the ratio from.
+    """
+    out = df.sort_values("report_date").reset_index(drop=True).copy()
+    observed = out["dc_basis"].isin(["stated", "derived"]) & out["dc_attributed_usd_m"].notna()
+    has_rev = out["revision_vs_prior_usd_m"].notna() & (out["revision_vs_prior_usd_m"] != 0)
+    needs_fill = out["dc_basis"].isin(["qualitative", "none"]) & has_rev
+
+    out["dc_attributed_usd_m_filled"] = np.where(observed, out["dc_attributed_usd_m"], np.nan)
+    out["dc_imputed"] = False
+
+    pool_mask = observed & has_rev
+    ratio_val = (out["dc_attributed_usd_m"] / out["revision_vs_prior_usd_m"]).where(pool_mask)
+    ratio_wt = pd.Series(np.where(pool_mask, 1.0, np.nan), index=out.index)
+
+    prev_total = None
+    for _ in range(max_iter):
+        weighted_sum = (ratio_val.fillna(0.0) * ratio_wt.fillna(0.0)).cumsum()
+        weight_sum = ratio_wt.fillna(0.0).cumsum()
+        ratio_asof = weighted_sum / weight_sum.replace(0.0, np.nan)
+
+        fill_val = out["revision_vs_prior_usd_m"] * ratio_asof
+        new_filled = out["dc_attributed_usd_m_filled"].where(observed, fill_val.where(needs_fill))
+        out["dc_attributed_usd_m_filled"] = new_filled
+        out["dc_imputed"] = needs_fill & new_filled.notna()
+
+        total_now = float(np.nansum(new_filled[out["dc_imputed"]]))
+
+        ratio_val = (out["dc_attributed_usd_m_filled"] / out["revision_vs_prior_usd_m"]).where(
+            observed | out["dc_imputed"])
+        ratio_wt = pd.Series(
+            np.where(observed, 1.0, np.where(out["dc_imputed"], imputed_weight, np.nan)),
+            index=out.index)
+
+        if prev_total is not None and abs(prev_total) > 1e-9 and \
+                abs(total_now - prev_total) / abs(prev_total) < tol:
+            break
+        prev_total = total_now
+
+    return out
