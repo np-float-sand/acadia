@@ -58,3 +58,14 @@ def feasibility_summary(df: pd.DataFrame,
                           "usable": bool(has_plan and n_revisions >= 1)}
     n_usable = sum(1 for v in per_utility.values() if v["usable"])
     return {"per_utility": per_utility, "n_usable": n_usable, "n_total": len(per_utility)}
+
+
+def panel_asof(df: pd.DataFrame, asof) -> pd.DataFrame:
+    """Most-recent row per utility with `report_date <= asof` (point-in-time
+    slice). A utility with no row on or before `asof` is simply absent."""
+    asof_ts = pd.Timestamp(asof)
+    known = df[df["report_date"] <= asof_ts]
+    if known.empty:
+        return known.iloc[0:0]
+    idx = known.groupby("utility")["report_date"].idxmax()
+    return known.loc[idx].sort_values("utility").reset_index(drop=True)

@@ -73,3 +73,24 @@ def test_feasibility_summary_counts_usable_utilities():
     assert feas["per_utility"]["CCC"]["usable"] is False
     assert feas["n_usable"] == 1
     assert feas["n_total"] == 3
+
+
+def test_panel_asof_returns_latest_row_per_utility_not_after_asof():
+    df = pd.DataFrame({
+        "utility":     ["AAA", "AAA", "BBB"],
+        "report_date": pd.to_datetime(["2022-01-01", "2023-01-01", "2023-06-01"]),
+        "capex_plan_usd_m": [1000, 1200, 500],
+    })
+    out = udg.panel_asof(df, "2023-03-01")
+    # AAA's 2023-01-01 row is the latest not after asof; BBB has none yet
+    assert set(out["utility"]) == {"AAA"}
+    assert out.iloc[0]["report_date"] == pd.Timestamp("2023-01-01")
+
+
+def test_panel_asof_empty_when_nothing_known_yet():
+    df = pd.DataFrame({
+        "utility": ["AAA"], "report_date": pd.to_datetime(["2023-01-01"]),
+        "capex_plan_usd_m": [1000],
+    })
+    out = udg.panel_asof(df, "2020-01-01")
+    assert out.empty
