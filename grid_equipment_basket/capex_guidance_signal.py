@@ -36,3 +36,28 @@ def guidance_composite(events: pd.Series, start: str, end: str, *,
         return pd.Series(dtype=float, name="guidance_composite")
     daily = broadcast_daily(events, start, end)
     return _trailing_zscore(daily, zscore_window, zscore_minp, winsor).rename("guidance_composite")
+
+
+def guidance_derisk_multiplier(composite: pd.Series, *,
+                               floor_z: float = config.DC_GUIDANCE_DERISK_FLOOR_Z,
+                               lo_mult: float = config.DC_GUIDANCE_DERISK_LO_MULT) -> pd.Series:
+    """`{lo_mult, 1.0}` -- `lo_mult` on any day the composite z-score is below
+    `floor_z` (revision-flow decelerating/reversing), back to 1.0 once it
+    clears. NaN days (not-yet-warm) default to 1.0. Never exceeds 1.0. Same
+    one-directional shape as `capex_signal.capex_derisk_multiplier` (spec s6.1)."""
+    lo = composite < floor_z
+    return pd.Series(np.where(lo.fillna(False), lo_mult, 1.0),
+                     index=composite.index).rename("guidance_derisk_mult")
+
+
+def guidance_scaler(composite: pd.Series, *,
+                    k: float = config.DC_GUIDANCE_SCALER_K,
+                    lo: float = config.DC_GUIDANCE_SCALER_LO,
+                    hi: float = config.DC_GUIDANCE_SCALER_HI) -> pd.Series:
+    """`clip(1 + k*z, lo, hi)` -- two-sided: leans in when the composite is
+    positive (revision-flow accelerating), leans out when negative. NaN days
+    default to 1.0. Same shape as `grid_regime`'s continuous-mode multiplier
+    (spec s6.2)."""
+    z = composite.fillna(0.0)
+    raw = (1.0 + k * z).clip(lower=lo, upper=hi)
+    return raw.where(composite.notna(), 1.0).rename("guidance_scaler")
