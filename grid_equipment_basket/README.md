@@ -357,3 +357,26 @@ tiny sample (4–9 as-of points per name; HUBB / NVT / VRT have too few to inclu
 are mixed and lean the wrong way — 4 of 6 names show a negative association — so it gives **no
 encouragement** to open a Phase-2 spec now. Descriptive only: no IC metric, no z-scoring, no
 significance claimed. Full table and read: `../docs/grid-equipment-basket-step1-results.md`.
+
+## Capex-Guidance Revision Signal (Deliverable D) — 2026-09-04
+
+Handoff: `docs/handoff_2026-09-03-transmission-project-filings.md` §6. Design spec:
+`docs/superpowers/specs/2026-09-04-capex-guidance-signal-design.md`. Results:
+`docs/capex-guidance-signal-results.md`.
+
+An aggregate timing signal (not a cross-sectional factor — it never re-weights the 9 basket
+names) built from a hand/web-assembled panel of 15 large US electric utilities' forward
+multi-year capex-guidance revisions (`grid_resilience/data/seed/utility_capex_guidance.csv`,
+loaded by `grid_resilience/data/utility_capex_guidance.py`). Tests the revision-flow ($ and
+size-weighted %, both the whole-panel total and the data-center-attributed portion, the latter
+with a point-in-time EM-style fill for utilities that only qualitatively mention data centers)
+as (1) a monthly rank-IC timing signal against forward basket and long/short-spread returns,
+controlling for Δ10y yield, SMH, and (separately) the big-four hyperscaler capex series, and
+(2) a one-directional de-risk multiplier / two-sided scaler for the basket's exposure, gated
+against layer-1 (price trend gate + vol target) with the same `grid_regime.gate_check`/
+`final_verdict` machinery the FTR-bid and grid-congestion signals use.
+
+Run with `python -m grid_equipment_basket --capex-guidance` (writes
+`capex_guidance_timing.csv`, `capex_guidance_gates.json` to the output dir).
+
+**RESULT: <<filled in by the live run — see docs/capex-guidance-signal-results.md>>**
