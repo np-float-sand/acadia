@@ -204,3 +204,92 @@ def test_timing_report_adds_hyperscaler_control_only_when_column_present():
                               primary=("2023-01-01", "2023-06-30"),
                               holdout=("2023-05-01", "2023-06-30"), horizons=(1,))
     assert "bigfour" in rep_w["c"][1]["control_with_hyperscaler"]["t"]
+
+
+def test_derisk_scaler_report_builds_full_parameter_grids():
+    idx = pd.bdate_range("2021-01-01", "2026-08-31")
+    rng = np.random.default_rng(4)
+    ret = pd.Series(rng.normal(0.0004, 0.02, size=len(idx)), index=idx)
+    lvl = (1.0 + ret).cumprod()
+    composite = pd.Series(rng.normal(size=len(idx)), index=idx)
+
+    rep = cgs.derisk_scaler_report(ret, lvl, composite,
+                                   primary=("2023-01-01", "2026-08-31"),
+                                   prior=("2021-01-01", "2022-12-31"))
+    assert len(rep["derisk"]["grid"]) == 9    # 3 floor_z x 3 lo_mult
+    assert len(rep["scaler"]["grid"]) == 6    # 3 k x 2 hi
+    assert rep["derisk"]["verdict"] in ("PASS", "FAIL", "marginal", "knife-edge")
+    assert rep["scaler"]["verdict"] in ("PASS", "FAIL", "marginal", "knife-edge")
+    assert "buy_and_hold" in rep["baselines"] and "layer1_only" in rep["baselines"]
+
+
+def _flat_price_fn(tickers, start, end):
+    idx = pd.bdate_range(start, end)
+    rng = np.random.default_rng(5)
+    data = {}
+    for t in tickers:
+        rets = rng.normal(0.0003, 0.01, size=len(idx))
+        data[t] = 100.0 * (1.0 + pd.Series(rets, index=idx)).cumprod()
+    return pd.DataFrame(data)
+
+
+def _synthetic_panel():
+    rows = []
+    for i, u in enumerate(["D", "AEP", "NEE", "SO", "ETR", "XEL", "DUK", "PCG"]):
+        for q in range(6):
+            rows.append({
+                "utility": u,
+                "report_date": pd.Timestamp("2022-01-01") + pd.DateOffset(months=6 * q),
+                "capex_plan_usd_m": 10000.0 + 500.0 * q + 100.0 * i,
+                "revision_vs_prior_usd_m": np.nan if q == 0 else 500.0 + 20.0 * i,
+                "dc_attributed_usd_m": 200.0 if (q >= 3 and i < 3) else np.nan,
+                "dc_basis": "stated" if (q >= 3 and i < 3) else "none",
+            })
+    df = pd.DataFrame(rows)
+    df["report_date"] = pd.to_datetime(df["report_date"])
+    # `guidance_signal_report`'s default panel is `load_capex_guidance()` output,
+    # which always carries `prior_capex_plan_usd_m` (the immediately-prior plan
+    # level per utility). `_SERIES_SPECS`' three `*_pct` series read it as the
+    # size-weighted denominator, so a faithful stand-in panel must supply it the
+    # same way the loader does.
+    df = df.sort_values(["utility", "report_date"]).reset_index(drop=True)
+    df["prior_capex_plan_usd_m"] = df.groupby("utility")["capex_plan_usd_m"].shift(1)
+    return df
+
+
+def test_lead_lag_table_reports_pearson_corr_at_each_offset():
+    idx = pd.date_range("2023-01-31", periods=24, freq="ME")
+    rng = np.random.default_rng(6)
+    signal_monthly = pd.Series(rng.normal(size=24), index=idx)
+    # "forward return" 2 months after date t is built to equal the signal's
+    # own value from t -- i.e. the signal genuinely leads by 2 months. Given
+    # this module's `shift(k)` convention (negative k = signal leads, matching
+    # the VA-probe/Table-B9 doc convention "k=-1 (filings lead)"), the perfect
+    # correlation must show up at k=-2, not k=+2.
+    fwd_proxy = signal_monthly.shift(2)
+    table = cgs.lead_lag_table(signal_monthly, fwd_proxy, ks=range(-3, 4))
+    assert set(table.index) == set(range(-3, 4))
+    assert table.loc[-2] == pytest.approx(1.0, abs=1e-6)
+
+
+def test_guidance_signal_report_runs_end_to_end():
+    fake_bigfour = pd.DataFrame({"decel2": [0.0, 0.0]},
+                                index=pd.PeriodIndex(["2022Q1", "2022Q2"], freq="Q"))
+    rep = cgs.guidance_signal_report(
+        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=lambda: fake_bigfour,
+        primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
+        holdout=("2023-10-01", "2023-12-31"))
+    assert rep["universe_used"] == "full"
+    assert "timing_basket" in rep and "all_usd" in rep["timing_basket"]
+    assert "derisk_scaler_gate" in rep
+    assert rep["derisk_scaler_gate"]["derisk"]["verdict"] in ("PASS", "FAIL", "marginal", "knife-edge")
+    assert "continuity_lead_lag" in rep and "all_usd" in rep["continuity_lead_lag"]
+
+
+def test_guidance_signal_report_not_testable_short_circuits():
+    df = _panel([{"utility": "ZZZ", "report_date": "1999-01-01",
+                 "capex_plan_usd_m": 10.0, "revision_vs_prior_usd_m": np.nan}])
+    rep = cgs.guidance_signal_report(price_fn=_flat_price_fn, panel_df=df,
+                                     bigfour_fn=lambda: pd.DataFrame({"decel2": []}))
+    assert rep["verdict"] == "not_yet_testable"
+    assert "timing_basket" not in rep

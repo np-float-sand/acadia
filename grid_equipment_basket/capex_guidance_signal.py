@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from grid_equipment_basket import config
+from grid_equipment_basket.capex_signal import fetch_bigfour_capex
 from grid_equipment_basket.ftr_signal import broadcast_daily
 from grid_equipment_basket.grid_regime import _trailing_zscore
 
@@ -181,3 +182,187 @@ def timing_report(composites: dict[str, pd.Series], basket_ret: pd.Series,
                 "passed": bool(passed),
             }
     return out
+
+
+def derisk_scaler_report(ret: pd.Series, lvl: pd.Series, composite: pd.Series, *,
+                         primary: tuple[str, str] = config.DC_GUIDANCE_PRIMARY_WINDOW,
+                         prior: tuple[str, str] = config.DC_GUIDANCE_PRIOR_WINDOW) -> dict:
+    """Spec s6: both the one-directional de-risk (s6.1) and the two-sided
+    scaler (s6.2), each on its parameter plateau, scored against the same
+    gate `grid_regime.gate_check`/`final_verdict` already uses -- "beats
+    layer-1 (price trend gate + vol target) on Sharpe AND Calmar, both
+    windows, non-marginal, survives the parameter-neighbour plateau probe"."""
+    from grid_equipment_basket import overlay
+    from grid_equipment_basket.backtest import calendar_year_returns, compute_metrics
+    from grid_equipment_basket.grid_regime import final_verdict, gate_check
+
+    rf, af = config.RISK_FREE_RATE, config.ANN_FACTOR
+    windows = {"primary": primary, "prior": prior}
+
+    def _block(series: pd.Series) -> dict:
+        return {wk: {"metrics": compute_metrics(series.loc[a:b].dropna(), rf, af),
+                    "calendar": calendar_year_returns(series.loc[a:b].dropna())}
+               for wk, (a, b) in windows.items()}
+
+    bh = _block(ret)
+    l1 = _block(overlay.apply_overlay(ret, lvl, rf))
+
+    def _score(mult: pd.Series) -> dict:
+        return _block(overlay.apply_overlay_l2(ret, mult, rf))
+
+    derisk_grid = [{"floor_z": fz, "lo_mult": lm,
+                    "block": _score(guidance_derisk_multiplier(composite, floor_z=fz, lo_mult=lm))}
+                   for fz in config.DC_GUIDANCE_DERISK_GRID_FLOOR
+                   for lm in config.DC_GUIDANCE_DERISK_GRID_LO]
+    scaler_grid = [{"k": k, "hi": hi,
+                    "block": _score(guidance_scaler(composite, k=k, hi=hi,
+                                                    lo=config.DC_GUIDANCE_SCALER_LO))}
+                   for k in config.DC_GUIDANCE_SCALER_GRID_K
+                   for hi in config.DC_GUIDANCE_SCALER_GRID_HI]
+
+    def _central(grid: list[dict], key: dict) -> dict:
+        for row in grid:
+            if all(row[k] == v for k, v in key.items()):
+                return row
+        return grid[0]
+
+    derisk_central = _central(derisk_grid, {"floor_z": config.DC_GUIDANCE_DERISK_FLOOR_Z,
+                                            "lo_mult": config.DC_GUIDANCE_DERISK_LO_MULT})
+    scaler_central = _central(scaler_grid, {"k": config.DC_GUIDANCE_SCALER_K,
+                                            "hi": config.DC_GUIDANCE_SCALER_HI})
+
+    def _neighbour_passes(central: dict, grid: list[dict]) -> list[bool]:
+        out = []
+        for row in grid:
+            if row is central:
+                continue
+            g = gate_check(row["block"]["primary"], row["block"]["prior"],
+                           l1["primary"], l1["prior"], bh["primary"], bh["prior"])
+            out.append(bool(g["G1"] and g["G2"]))
+        return out or [True]
+
+    def _gate_for(central: dict, grid: list[dict]) -> dict:
+        gate = gate_check(central["block"]["primary"], central["block"]["prior"],
+                          l1["primary"], l1["prior"], bh["primary"], bh["prior"])
+        verdict = final_verdict(gate, _neighbour_passes(central, grid))
+        return {"gate": gate, "verdict": verdict}
+
+    return {
+        "baselines": {"buy_and_hold": bh, "layer1_only": l1},
+        "derisk": {"grid": derisk_grid, "central": derisk_central,
+                  **_gate_for(derisk_central, derisk_grid)},
+        "scaler": {"grid": scaler_grid, "central": scaler_central,
+                  **_gate_for(scaler_central, scaler_grid)},
+    }
+
+
+def lead_lag_table(signal_monthly: pd.Series, fwd_return_monthly: pd.Series,
+                   ks: range = range(-6, 7)) -> pd.Series:
+    """Plain Pearson correlation between `signal_monthly` and
+    `fwd_return_monthly` shifted by each offset `k` in `ks` (negative k =
+    signal leads; positive k = basket leads) -- spec s5.3's continuity table,
+    same shape as the VA-transmission-probe's and Table-B9's lead-lag tables,
+    printed alongside the formal rank-IC/HAC test so a reader can see at a
+    glance whether this result looks different from those two negatives."""
+    out = {}
+    for k in ks:
+        pair = pd.concat([signal_monthly.rename("s"),
+                          fwd_return_monthly.shift(k).rename("r")], axis=1).dropna()
+        out[k] = float(pair["s"].corr(pair["r"])) if len(pair) >= 3 else float("nan")
+    return pd.Series(out).rename("lead_lag_corr")
+
+
+def _default_price_fn(tickers, start, end):
+    from grid_equipment_basket.data.prices import fetch_prices
+    return fetch_prices(tickers, start, end)
+
+
+_SERIES_SPECS: tuple[tuple[str, str, str | None], ...] = (
+    ("all_usd",       "revision_vs_prior_usd_m",   None),
+    ("all_pct",       "revision_vs_prior_usd_m",   "prior_capex_plan_usd_m"),
+    ("dc_stated_usd", "dc_attributed_usd_m",        None),
+    ("dc_stated_pct", "dc_attributed_usd_m",        "prior_capex_plan_usd_m"),
+    ("dc_filled_usd", "dc_attributed_usd_m_filled",  None),
+    ("dc_filled_pct", "dc_attributed_usd_m_filled",  "prior_capex_plan_usd_m"),
+)
+
+
+def guidance_signal_report(price_fn=None, panel_df=None, bigfour_fn=None,
+                           primary: tuple[str, str] = config.DC_GUIDANCE_PRIMARY_WINDOW,
+                           prior: tuple[str, str] = config.DC_GUIDANCE_PRIOR_WINDOW,
+                           holdout: tuple[str, str] = config.DC_GUIDANCE_HOLDOUT_WINDOW) -> dict:
+    """Orchestrates the full spec: feasibility kill (s3.3) -> six series
+    (s4.1/s4.2) -> daily composites (s4.3) -> timing bar (s5, basket AND
+    long/short-spread) -> de-risk/scaler gate (s6, on the headline `all_usd`
+    series). `price_fn(tickers, start, end) -> DataFrame`, `panel_df`, and
+    `bigfour_fn() -> DataFrame` are injectable for tests; defaults are the
+    live yfinance fetcher, `utility_capex_guidance.load_capex_guidance()`, and
+    `capex_signal.fetch_bigfour_capex`."""
+    from grid_equipment_basket.basket import simulate_basket
+    from grid_resilience.data import utility_capex_guidance as udg
+
+    price_fn = price_fn or _default_price_fn
+    bigfour_fn = bigfour_fn or fetch_bigfour_capex
+    panel_df = panel_df if panel_df is not None else udg.load_capex_guidance()
+
+    used_panel, feas, universe_used = feasibility_gate(panel_df, primary)
+    if universe_used == "not_testable":
+        return {"universe_used": universe_used, "feasibility": feas, "verdict": "not_yet_testable"}
+
+    panel_filled = udg.impute_dc_attributed(used_panel)
+
+    series = {}
+    for name, value_col, denom_col in _SERIES_SPECS:
+        src = panel_filled if value_col.endswith("_filled") else used_panel
+        series[name] = udg.aggregate_revision_series(
+            src, value_col=value_col, denom_col=denom_col,
+            ttm_quarters=config.DC_GUIDANCE_TTM_QUARTERS)
+
+    span_start, span_end = prior[0], primary[1]
+    composites = {name: guidance_composite(ev, span_start, span_end) for name, ev in series.items()}
+
+    tickers = sorted(set(config.UNIVERSE + config.DER_SHORT_SLEEVE + ["SMH", "^TNX"]))
+    prices = price_fn(tickers, span_start, span_end)
+    basket_cols = [t for t in config.UNIVERSE if t in prices.columns]
+    der_cols = [t for t in config.DER_SHORT_SLEEVE if t in prices.columns]
+
+    basket = simulate_basket(prices[basket_cols], span_start, span_end,
+                             config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT, None)
+    ret, lvl = basket.returns, (1.0 + basket.returns).cumprod()
+
+    der_ret = (prices[der_cols].pct_change().dropna(how="all").mean(axis=1)
+              if der_cols else pd.Series(dtype=float))
+    spread_ret = (ret - der_ret.reindex(ret.index)).dropna()
+
+    tnx = prices["^TNX"].dropna() if "^TNX" in prices.columns else pd.Series(dtype=float)
+    d10y_monthly = tnx.resample("ME").last().diff() if not tnx.empty else pd.Series(dtype=float)
+    smh_monthly = ((1.0 + prices["SMH"].pct_change().dropna()).resample("ME").prod() - 1.0
+                  if "SMH" in prices.columns else pd.Series(dtype=float))
+    bigfour = bigfour_fn()
+    if not bigfour.empty:
+        bigfour_s = bigfour["decel2"].copy()
+        bigfour_s.index = [p.to_timestamp(how="end") for p in bigfour_s.index]
+        bigfour_monthly = bigfour_s.resample("ME").ffill()
+    else:
+        bigfour_monthly = pd.Series(dtype=float)
+
+    controls = pd.DataFrame({"d10y": d10y_monthly, "smh": smh_monthly, "bigfour": bigfour_monthly})
+
+    timing_basket = timing_report(composites, ret, controls, primary=primary, holdout=holdout)
+    timing_spread = (timing_report(composites, spread_ret, controls, primary=primary, holdout=holdout)
+                     if not spread_ret.empty else {})
+
+    basket_nav = _monthly_nav(ret)
+    fwd_1m = _forward_return(basket_nav, 1)
+    continuity = {name: lead_lag_table(comp.resample("ME").last(), fwd_1m)
+                 for name, comp in composites.items()}
+
+    derisk_scaler = derisk_scaler_report(ret, lvl, composites["all_usd"], primary=primary, prior=prior)
+
+    return {
+        "universe_used": universe_used, "feasibility": feas,
+        "windows": {"primary": primary, "prior": prior, "holdout": holdout},
+        "timing_basket": timing_basket, "timing_spread": timing_spread,
+        "continuity_lead_lag": continuity,
+        "derisk_scaler_gate": derisk_scaler,
+    }
