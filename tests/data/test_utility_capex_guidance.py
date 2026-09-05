@@ -248,6 +248,30 @@ def test_aggregate_revision_series_pct_is_size_weighted_not_mean_of_percents():
     assert s.loc[pd.Timestamp("2023-01-15")] == pytest.approx(110.0 / 1020.0)
 
 
+def test_aggregate_revision_series_pct_drops_rows_with_a_null_denominator():
+    # AAA has a revision but NO prior plan level (a first-vintage row that
+    # nonetheless carried a stated revision -- 6 such rows exist in the live
+    # seed panel). It must be dropped from BOTH sums. Counting it in the
+    # numerator against a 0 denominator contribution inflated the ratio by a
+    # time-varying factor and manufactured a spurious downtrend.
+    df = pd.DataFrame({
+        "utility":     ["AAA", "BBB", "CCC"],
+        "report_date": pd.to_datetime(["2023-01-01", "2023-01-10", "2023-01-20"]),
+        "revision_vs_prior_usd_m": [900.0, 100.0, 10.0],
+        "prior_capex_plan_usd_m":  [np.nan, 1000.0, 20.0],
+    })
+    s = udg.aggregate_revision_series(df, value_col="revision_vs_prior_usd_m",
+                                      denom_col="prior_capex_plan_usd_m", ttm_quarters=4)
+    # only BBB + CCC contribute: (100+10)/(1000+20), NOT (900+100+10)/(1000+20)
+    assert s.loc[pd.Timestamp("2023-01-20")] == pytest.approx(110.0 / 1020.0)
+    # AAA's date is not even an event date for the pct series
+    assert pd.Timestamp("2023-01-01") not in s.index
+    # ... while the $ series is unaffected -- it has no denominator to be null
+    s_usd = udg.aggregate_revision_series(df, value_col="revision_vs_prior_usd_m",
+                                          ttm_quarters=4)
+    assert s_usd.loc[pd.Timestamp("2023-01-20")] == pytest.approx(1010.0)
+
+
 def test_aggregate_revision_series_drops_rows_with_missing_value():
     df = pd.DataFrame({
         "utility": ["AAA", "BBB"], "report_date": pd.to_datetime(["2023-01-01", "2023-01-02"]),

@@ -34,7 +34,10 @@ def guidance_composite(events: pd.Series, start: str, end: str, *,
     no-future-leak contract as `ftr_signal.ftr_composite` /
     `grid_regime.regime_composite`)."""
     if events.empty:
-        return pd.Series(dtype=float, name="guidance_composite")
+        # DatetimeIndex, not the default RangeIndex: this empty series flows
+        # straight into `timing_report`'s `.resample("ME")` and into
+        # `.loc[start:end]` string slices, both of which raise on a RangeIndex.
+        return pd.Series(dtype=float, index=pd.DatetimeIndex([]), name="guidance_composite")
     daily = broadcast_daily(events, start, end)
     return _trailing_zscore(daily, zscore_window, zscore_minp, winsor).rename("guidance_composite")
 
@@ -191,7 +194,17 @@ def derisk_scaler_report(ret: pd.Series, lvl: pd.Series, composite: pd.Series, *
     scaler (s6.2), each on its parameter plateau, scored against the same
     gate `grid_regime.gate_check`/`final_verdict` already uses -- "beats
     layer-1 (price trend gate + vol target) on Sharpe AND Calmar, both
-    windows, non-marginal, survives the parameter-neighbour plateau probe"."""
+    windows, non-marginal, survives the parameter-neighbour plateau probe".
+
+    Every grid row also carries `active_days_primary` / `active_days_prior`:
+    the number of days in that window where the multiplier differs from 1.0.
+    A row with 0 active days in a window was NOT EXERCISED there -- its block
+    is mechanically identical to the `vol_target_only` baseline (which is why
+    that baseline is returned alongside `buy_and_hold` and `layer1_only`), and
+    its gate result says nothing about the signal. The one-directional de-risk
+    leg in particular is silent whenever the composite never drops below any
+    `floor_z` in the grid, so these counts must be read before any gate
+    number in this block is interpreted as evidence."""
     from grid_equipment_basket import overlay
     from grid_equipment_basket.backtest import calendar_year_returns, compute_metrics
     from grid_equipment_basket.grid_regime import final_verdict, gate_check
@@ -205,18 +218,29 @@ def derisk_scaler_report(ret: pd.Series, lvl: pd.Series, composite: pd.Series, *
                for wk, (a, b) in windows.items()}
 
     bh = _block(ret)
+    # trend-gate off (ma_days=10**9 -> the MA is never warm -> gate == 1.0),
+    # vol-target on: the same `vt_only` construction grid_regime/ftr_signal use.
+    # A multiplier that is a constant 1.0 over a window reproduces this exactly,
+    # so it is the reference that says "this leg did nothing here".
+    vt_only = _block(overlay.apply_overlay(ret, lvl, rf, ma_days=10 ** 9))
     l1 = _block(overlay.apply_overlay(ret, lvl, rf))
 
     def _score(mult: pd.Series) -> dict:
         return _block(overlay.apply_overlay_l2(ret, mult, rf))
 
-    derisk_grid = [{"floor_z": fz, "lo_mult": lm,
-                    "block": _score(guidance_derisk_multiplier(composite, floor_z=fz, lo_mult=lm))}
+    def _active(mult: pd.Series) -> dict:
+        return {f"active_days_{wk}": int((mult.loc[a:b] != 1.0).sum())
+                for wk, (a, b) in windows.items()}
+
+    def _row(params: dict, mult: pd.Series) -> dict:
+        return {**params, "block": _score(mult), **_active(mult)}
+
+    derisk_grid = [_row({"floor_z": fz, "lo_mult": lm},
+                        guidance_derisk_multiplier(composite, floor_z=fz, lo_mult=lm))
                    for fz in config.DC_GUIDANCE_DERISK_GRID_FLOOR
                    for lm in config.DC_GUIDANCE_DERISK_GRID_LO]
-    scaler_grid = [{"k": k, "hi": hi,
-                    "block": _score(guidance_scaler(composite, k=k, hi=hi,
-                                                    lo=config.DC_GUIDANCE_SCALER_LO))}
+    scaler_grid = [_row({"k": k, "hi": hi},
+                        guidance_scaler(composite, k=k, hi=hi, lo=config.DC_GUIDANCE_SCALER_LO))
                    for k in config.DC_GUIDANCE_SCALER_GRID_K
                    for hi in config.DC_GUIDANCE_SCALER_GRID_HI]
 
@@ -248,7 +272,7 @@ def derisk_scaler_report(ret: pd.Series, lvl: pd.Series, composite: pd.Series, *
         return {"gate": gate, "verdict": verdict}
 
     return {
-        "baselines": {"buy_and_hold": bh, "layer1_only": l1},
+        "baselines": {"buy_and_hold": bh, "vol_target_only": vt_only, "layer1_only": l1},
         "derisk": {"grid": derisk_grid, "central": derisk_central,
                   **_gate_for(derisk_central, derisk_grid)},
         "scaler": {"grid": scaler_grid, "central": scaler_central,
@@ -277,6 +301,15 @@ def _default_price_fn(tickers, start, end):
     return fetch_prices(tickers, start, end)
 
 
+def _empty_daily() -> pd.Series:
+    """An empty float Series carrying an empty *DatetimeIndex*. Used for every
+    "this control isn't available" fallback: a default RangeIndex would make
+    the assembled `controls` frame fall back to an object index, and the
+    downstream `.loc["2023-01-01":"2026-08-31"]` slice would then raise
+    `TypeError: '<' not supported between instances of 'Timestamp' and 'str'`."""
+    return pd.Series(dtype=float, index=pd.DatetimeIndex([]))
+
+
 _SERIES_SPECS: tuple[tuple[str, str, str | None], ...] = (
     ("all_usd",       "revision_vs_prior_usd_m",   None),
     ("all_pct",       "revision_vs_prior_usd_m",   "prior_capex_plan_usd_m"),
@@ -297,7 +330,12 @@ def guidance_signal_report(price_fn=None, panel_df=None, bigfour_fn=None,
     series). `price_fn(tickers, start, end) -> DataFrame`, `panel_df`, and
     `bigfour_fn() -> DataFrame` are injectable for tests; defaults are the
     live yfinance fetcher, `utility_capex_guidance.load_capex_guidance()`, and
-    `capex_signal.fetch_bigfour_capex`."""
+    `capex_signal.fetch_bigfour_capex`. A non-empty `bigfour_fn()` result must
+    carry both `decel2` and `known_date` (the point-in-time stamp the control
+    is aligned on -- see below); an empty frame is handled as "control not
+    available" rather than an error, so a cold `bigfour_capex.parquet` cache or
+    a failed SEC/XBRL fetch degrades the with-hyperscaler regression to n=0
+    instead of killing the whole report."""
     from grid_equipment_basket.basket import simulate_basket
     from grid_resilience.data import utility_capex_guidance as udg
 
@@ -331,20 +369,30 @@ def guidance_signal_report(price_fn=None, panel_df=None, bigfour_fn=None,
     ret, lvl = basket.returns, (1.0 + basket.returns).cumprod()
 
     der_ret = (prices[der_cols].pct_change().dropna(how="all").mean(axis=1)
-              if der_cols else pd.Series(dtype=float))
+              if der_cols else _empty_daily())
     spread_ret = (ret - der_ret.reindex(ret.index)).dropna()
 
-    tnx = prices["^TNX"].dropna() if "^TNX" in prices.columns else pd.Series(dtype=float)
-    d10y_monthly = tnx.resample("ME").last().diff() if not tnx.empty else pd.Series(dtype=float)
+    # Every "control not available" fallback below goes through `_empty_daily`
+    # (see its docstring): without a DatetimeIndex the whole report dies on any
+    # machine with a cold big-four cache or a partially failed price fetch.
+    tnx = prices["^TNX"].dropna() if "^TNX" in prices.columns else _empty_daily()
+    d10y_monthly = tnx.resample("ME").last().diff() if not tnx.empty else _empty_daily()
     smh_monthly = ((1.0 + prices["SMH"].pct_change().dropna()).resample("ME").prod() - 1.0
-                  if "SMH" in prices.columns else pd.Series(dtype=float))
+                  if "SMH" in prices.columns else _empty_daily())
     bigfour = bigfour_fn()
     if not bigfour.empty:
-        bigfour_s = bigfour["decel2"].copy()
-        bigfour_s.index = [p.to_timestamp(how="end") for p in bigfour_s.index]
+        # Point-in-time: `fetch_bigfour_capex` stamps each quarter with
+        # `known_date` (period end + 50d, when the prints are actually public).
+        # Indexing on the quarter END instead would regress forward returns on a
+        # control that was not yet observable -- the same 50-day look-ahead
+        # `capex_signal.capex_derisk_multiplier` already avoids by using
+        # `known_date`.
+        bigfour_s = pd.Series(bigfour["decel2"].to_numpy(),
+                              index=pd.DatetimeIndex(pd.to_datetime(bigfour["known_date"]))
+                              ).sort_index()
         bigfour_monthly = bigfour_s.resample("ME").ffill()
     else:
-        bigfour_monthly = pd.Series(dtype=float)
+        bigfour_monthly = _empty_daily()
 
     controls = pd.DataFrame({"d10y": d10y_monthly, "smh": smh_monthly, "bigfour": bigfour_monthly})
 
@@ -366,9 +414,6 @@ def guidance_signal_report(price_fn=None, panel_df=None, bigfour_fn=None,
         "continuity_lead_lag": continuity,
         "derisk_scaler_gate": derisk_scaler,
     }
-
-def _p(x) -> str:
-    return "n/a" if x != x else f"{x * 100:.1f}%"
 
 
 def _f(x) -> str:
@@ -405,7 +450,14 @@ def guidance_table(rep: dict) -> str:
     L.append("")
     for leg in ("derisk", "scaler"):
         g = rep["derisk_scaler_gate"][leg]
+        # `active_days(primary)` is printed on the same line as the verdict on
+        # purpose: 0 means the multiplier was a flat 1.0 all window, so the
+        # gate result is the vol-target-only baseline's, NOT evidence about
+        # this signal. Read it before the G1/G2/G3 flags.
+        act = g["central"].get("active_days_primary")
         L.append(f"  {leg.upper()} GATE: verdict={g['verdict']}  "
                  f"G1={g['gate']['G1']} G2={g['gate']['G2']} G3={g['gate']['G3']} "
-                 f"marginal={g['gate']['marginal']}")
+                 f"marginal={g['gate']['marginal']}  "
+                 f"active_days(primary)={'n/a' if act is None else act}"
+                 + ("  <- NOT EXERCISED (multiplier flat 1.0)" if act == 0 else ""))
     return "\n".join(L)

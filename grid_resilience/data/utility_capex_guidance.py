@@ -146,11 +146,19 @@ def aggregate_revision_series(df: pd.DataFrame, *, value_col: str = "revision_vs
     `denom_col="prior_capex_plan_usd_m"` -> the size-weighted percent series
     (spec s4.1's `agg_revision_ttm_pct`): at each event date, the ratio of the
     trailing-window SUM of `value_col` to the trailing-window SUM of
-    `denom_col` -- not a mean of each row's own percentage."""
-    s = df.dropna(subset=[value_col]).sort_values("report_date")
+    `denom_col` -- not a mean of each row's own percentage.
+
+    When `denom_col` is given, a row with a null `denom_col` is dropped from
+    BOTH sums, not just the denominator. (It previously contributed its value
+    to the numerator and 0 to the denominator, which inflated the ratio by a
+    time-varying factor -- the panel's first-vintage stated-revision rows have
+    a revision but no prior plan level, so the distortion decayed as later
+    vintages aged in and manufactured a spurious downtrend.)"""
+    subset = [value_col] + ([denom_col] if denom_col else [])
+    s = df.dropna(subset=subset).sort_values("report_date")
     dates = pd.DatetimeIndex(s["report_date"])
     values = s[value_col].to_numpy()
-    denom_values = s[denom_col].fillna(0.0).to_numpy() if denom_col else None
+    denom_values = s[denom_col].to_numpy() if denom_col else None
     window = pd.Timedelta(days=round(91.3 * ttm_quarters))
 
     event_dates = pd.DatetimeIndex(sorted(dates.unique()))

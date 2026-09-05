@@ -1,12 +1,13 @@
 # Utility Capex-Guidance Revision Signal ("Deliverable D") — results (2026-09-05)
 
-**Status: FAILED — both legs.** The aggregate utility capex-guidance revision signal
+**Status: FAILED — not adopted.** The aggregate utility capex-guidance revision signal
 does not clear its pre-registered timing bar (spec §5) on any of the six series ×
-three horizons, and does not clear the de-risk / scaler gate (spec §6) in either
-variant. Logged as **attempt #15** against the grid-equipment-basket theme's search
-for a signal-based edge (spec §1's count; the running ledger is fuzzy — a couple of
-memory notes number a parallel probe "~16" — but the conclusion is the same: no
-prior attempt has been adopted).
+three horizons, and the one exposure-overlay leg that the data actually exercises (the
+two-sided scaler, spec §6.2) does not clear the de-risk/scaler gate. The one-directional
+de-risk leg (§6.1) turned out to be **untestable in this window** — see §5.1. Logged as
+**attempt #15** against the grid-equipment-basket theme's search for a signal-based edge
+(spec §1's count; the running ledger is fuzzy — a couple of memory notes number a parallel
+probe "~16" — but the conclusion is the same: no prior attempt has been adopted).
 
 Spec: `docs/superpowers/specs/2026-09-04-capex-guidance-signal-design.md`.
 Plan: `docs/superpowers/plans/2026-09-04-capex-guidance-signal.md`.
@@ -27,23 +28,39 @@ Handoff this follows: `docs/handoff_2026-09-03-transmission-project-filings.md` 
   does not, at monthly resolution over 2023-01 → 2026-08.**
 - **Timing bar (spec §5): FAIL on every cell.** The two whole-panel revision-flow
   series (`all_usd`, `all_pct`) are the only ones with enough history to test. Their
-  rank-IC vs forward basket return is **negative at every horizon** (−0.12 to −0.40) —
-  the *opposite* sign to the thesis — and no rank-IC t clears |t| ≥ 2 (best −1.40).
-  Three of twelve without-hyperscaler control-t cells cross |t| ≥ 2 (all with the wrong
-  sign, none matched by a significant rank-IC), which is exactly the multiple-comparisons
-  pattern spec §11 says to treat as noise, not signal.
+  primary-window rank-IC vs forward basket return is **negative at every horizon**
+  (−0.07 to −0.27) — the *opposite* sign to the thesis — and no rank-IC t clears
+  |t| ≥ 2 (best −1.54). **3 of the 12 testable without-hyperscaler control-t cells**
+  (2 series × 3 horizons × 2 books = 12; the other 24 cells are the n/a `dc_*` series)
+  cross |t| ≥ 2, all with the wrong sign and none matched by a significant rank-IC —
+  exactly the multiple-comparisons pattern spec §11 says to treat as noise, not signal.
+- **The one holdout cell that clears |t| ≥ 2 is a 5-point sample that flips sign.**
+  `all_pct` h=1m has a holdout rank-IC of +0.60 (t = +2.47) on **n = 5** months —
+  *positive*, against a primary-window IC of −0.24 for the same cell. It is non-gating
+  (spec §5.4 gates on the primary-window rank-IC + control-t), and the sign flip between
+  a window and its own trailing carve-out is itself the signature of noise. Reported, not
+  promoted.
 - **DC-attributed sub-signal (spec §4.2): could not be tested at all.** Every stated
   data-center dollar figure in the panel is a 2026 vintage (DTE 2026-02-17, WEC
   2026-03-02, FE 2026-02-19, ETR 2026-04-29), so the composite's trailing z-score
   (252-day warm-up) never becomes non-NaN inside the test window. `dc_stated_*` and
   `dc_filled_*` return n/a for every horizon. This is a data-history limitation, not a
   code failure — reported as n/a, never fabricated.
-- **De-risk / scaler bar (spec §6): FAIL.** Both the one-directional de-risk multiplier
-  and the two-sided scaler miss **G1** (beat layer-1 on Sharpe *and* Calmar in the
-  primary window): de-risk is +0.03 Sharpe but −0.21 Calmar vs layer-1; the scaler is
-  −0.06 Sharpe / −0.55 Calmar. The whole 9-combo (de-risk) and 6-combo (scaler)
-  parameter plateaus fail G1 identically — a consistent plateau of *failing*, not a
-  knife-edge.
+- **De-risk leg (spec §6.1): NOT EXERCISED — no verdict on merit.** The `all_usd`
+  composite's z-score **never drops below +0.212** anywhere in the span (the TTM
+  revision-flow series trends up over 2024 → 2026 with no sustained pullback), so there is no
+  capex-deceleration episode in this panel. `guidance_derisk_multiplier` is therefore a
+  **constant 1.0 on every day of both windows across all 9 grid combos**
+  (`active_days_primary = active_days_prior = 0` for every row), and its reported
+  metrics are numerically identical to the **vol-target-only** baseline. The gate
+  machinery prints FAIL; the honest reading is **not applicable** (§5.1).
+- **Scaler leg (spec §6.2): tested and FAILED.** The two-sided scaler *is* genuinely
+  exercised — `clip(1 + k·z, lo, hi)` moves off 1.0 for any non-zero z, and it is active
+  on 685 of the primary window's days. It misses **G1** (−0.056 Sharpe / −0.550 Calmar
+  vs layer-1) across its whole 6-combo plateau. Caveat on what exactly failed: because
+  the composite z never goes negative, the realised multiplier range is **[1.000, 1.500]**
+  — it **only ever leaned in, never out**. What failed is "lever up when aggregate
+  guidance revisions accelerate", not the two-sided rule in full.
 - **Feasibility (spec §3.3): PASS, 14/15 utilities usable** — well above the
   `DC_GUIDANCE_MIN_UTILITIES = 8` floor, so the full-panel signal ran (no fallback to
   the 3-name DC-heaviest set). NEE is the sole exclusion, for substantive reasons (§3).
@@ -101,6 +118,16 @@ Per-utility vintage counts and in-window (2023-01 → 2026-08) revisions:
 | DTE | 2 | 2 | yes |
 | **total** | **44** | — | **14 / 15** |
 
+**Six rows carry a stated revision but no prior plan level.** AEE 2024-02-23, DTE
+2025-02-13, DUK 2024-02-08, ETR 2025-02-18, SO 2024-02-15 and WEC 2024-10-31 are each a
+utility's first vintage in the panel, so `prior_capex_plan_usd_m` is NaN even though the
+company stated a revision figure. `aggregate_revision_series` drops these rows from
+**both** sides of the size-weighted percent ratio. (Until the 2026-09-05 fix it kept them
+in the numerator with a zero denominator contribution, which inflated `all_pct` by a
+time-varying factor — ≈2.4× in 2024-11 decaying to 1.0× by 2026-02 — and manufactured a
+spurious downtrend across the primary window. The `all_pct` cells in §4 are the corrected
+ones; `all_usd` has no denominator and was never affected.)
+
 **Data-center-attributed dollar coverage is thin and late.** Only 4 rows carry a
 `stated`/`derived` DC-$ figure (ETR $15.0B, DTE $2.0B, FE $1.03B derived, WEC $1.0B) and
 **all four are 2026 vintages**. The point-in-time EM-style imputation (spec §4.2) fills 7
@@ -144,31 +171,46 @@ gating "without-hyperscaler" spec) and, as non-gating context, the same regressi
 **+ big-four `decel2`**. **Combined verdict (spec §5.4): a cell passes only if BOTH the
 primary-window rank-IC t AND the without-hyperscaler control-t clear |t| ≥ 2.**
 
+The big-four hyperscaler control is aligned to its **`known_date`** (fiscal-quarter end
++ 50 days, when the prints are actually public), not to the quarter end — the same
+point-in-time stamp `capex_signal.capex_derisk_multiplier` uses. Indexing on the quarter
+end would have regressed forward returns on a control that was not yet observable at the
+observation date.
+
 ### 4.1 vs the basket
+
+The **holdout** column is the same rank-IC re-computed on
+`DC_GUIDANCE_HOLDOUT_WINDOW = 2026-03-01 → 2026-08-31`, the trailing 6 months carved out
+as the out-of-sample check spec §7 pre-registered in place of a usable prior window. At
+h = 3m and h = 6m the holdout has too few forward-return observations to fit (n = 3 / 0).
 
 | series | h | rank-IC (t) [n] | holdout IC (t) [n] | ctrl-t w/o hyperscaler | ctrl-t w/ hyperscaler | PASS? |
 |---|---|---|---|---|---|---|
-| `all_usd` | 1m | −0.157 (−0.75) [22] | +0.10 (+0.25) [5] | −0.71 | +0.51 | fail |
-| `all_usd` | 3m | −0.266 (−1.39) [20] | n/a [3] | **−2.08** | +0.48 | fail |
-| `all_usd` | 6m | −0.191 (−1.10) [17] | n/a [0] | −1.62 | −1.08 | fail |
-| `all_pct` | 1m | −0.396 (−1.40) [13] | −0.60 (−3.06) [5] | **−2.00** | −2.76 | fail |
-| `all_pct` | 3m | −0.155 (−1.05) [11] | n/a [3] | −0.22 | +0.69 | fail |
-| `all_pct` | 6m | −0.119 (−0.68) [8] | n/a [0] | **−3.15** | −23.57 | fail |
+| `all_usd` | 1m | −0.157 (−0.75) [22] | +0.10 (+0.25) [5] | −0.71 | +0.12 | fail |
+| `all_usd` | 3m | −0.266 (−1.39) [20] | n/a [3] | **−2.08** | −0.56 | fail |
+| `all_usd` | 6m | −0.191 (−1.10) [17] | n/a [0] | −1.62 | −1.53 | fail |
+| `all_pct` | 1m | −0.236 (−0.77) [13] | +0.60 (+2.47) [5] | −1.77 | −4.08 | fail |
+| `all_pct` | 3m | −0.236 (−1.54) [11] | n/a [3] | −0.11 | −0.19 | fail |
+| `all_pct` | 6m | −0.071 (−0.39) [8] | n/a [0] | **−3.06** | −2.69 | fail |
 | `dc_stated_usd` | 1/3/6m | n/a [0] | n/a [0] | n/a | n/a | fail |
 | `dc_stated_pct` | 1/3/6m | n/a [0] | n/a [0] | n/a | n/a | fail |
 | `dc_filled_usd` | 1/3/6m | n/a [0] | n/a [0] | n/a | n/a | fail |
 | `dc_filled_pct` | 1/3/6m | n/a [0] | n/a [0] | n/a | n/a | fail |
 
-- **Every rank-IC point estimate is negative.** More aggregate capex-guidance-raising is
-  associated with *lower* forward basket returns — the opposite sign to the "guidance
-  leads spend leads equipment orders" thesis. None is significant (best `all_pct` h=1m,
-  t = −1.40).
-- **The three control-t cells that cross |t| ≥ 2** (`all_usd` h=3m −2.08, `all_pct` h=1m
-  −2.00, `all_pct` h=6m −3.15) are all the wrong sign, none is matched by a significant
-  rank-IC, and the `all_pct` h=6m with-hyperscaler t of −23.57 on n=8 is a degenerate
-  small-sample fit (4 regressors + constant on 8 points). Per spec §5.4 none of these is
-  a pass; per spec §11 they are multiple-comparisons noise (3 of 12 testable cells,
-  scattered sign/horizon, no rank-IC support).
+- **Every primary-window rank-IC point estimate is negative.** More aggregate
+  capex-guidance-raising is associated with *lower* forward basket returns — the opposite
+  sign to the "guidance leads spend leads equipment orders" thesis. None is significant
+  (best `all_pct` h=3m, t = −1.54).
+- **The two control-t cells here that cross |t| ≥ 2** (`all_usd` h=3m −2.08, `all_pct`
+  h=6m −3.06) are both the wrong sign, neither is matched by a significant rank-IC, and
+  the h=6m cells sit on n=8 with 3–4 regressors plus a constant. Per spec §5.4 neither is
+  a pass; per spec §11 they are multiple-comparisons noise (3 of 12 testable cells across
+  §4.1 + §4.2, scattered sign/horizon, no rank-IC support).
+- **The `all_pct` h=1m holdout cell (+0.60, t = +2.47, n = 5) is the only |t| ≥ 2 rank-IC
+  anywhere in the report**, and it is *positive* while the same cell's primary-window IC
+  is −0.24. Five monthly observations, sign opposite the in-window estimate: this is what
+  noise looks like, not an out-of-sample confirmation. It is also non-gating by
+  construction (spec §5.4 gates on the primary-window rank-IC).
 - **The DC-attributed rows are structurally untestable in this window** (§2): all stated
   and all imputed DC-$ values are 2026-dated, so the composite's 252-day z-score warm-up
   never completes before the span ends and every monthly value is NaN → `_rank_ic`
@@ -182,13 +224,13 @@ primary-window rank-IC t AND the without-hyperscaler control-t clear |t| ≥ 2.*
 | `all_usd` | 1m | +0.098 (+0.50) [22] | +0.35 | fail |
 | `all_usd` | 3m | +0.293 (+1.16) [20] | +1.21 | fail |
 | `all_usd` | 6m | −0.152 (−0.74) [17] | +0.45 | fail |
-| `all_pct` | 1m | −0.071 (−0.27) [13] | +0.31 | fail |
-| `all_pct` | 3m | +0.164 (+1.23) [11] | +0.11 | fail |
-| `all_pct` | 6m | −0.190 (−1.61) [8] | −3.67 | fail |
+| `all_pct` | 1m | 0.000 (−0.00) [13] | −0.74 | fail |
+| `all_pct` | 3m | +0.118 (+0.57) [11] | −0.94 | fail |
+| `all_pct` | 6m | −0.024 (−0.17) [8] | **−3.34** | fail |
 | `dc_*` (4 series) | 1/3/6m | n/a [0] | n/a | fail |
 
 Signs flip between horizons; nothing approaches the bar. The lone |t| ≥ 2 control cell
-(`all_pct` h=6m, −3.67 on n=8) is the same small-sample degeneracy as in 4.1.
+(`all_pct` h=6m, −3.34 on n=8) is the same small-sample degeneracy as in 4.1.
 
 ### 4.3 Continuity — lead-lag correlation (spec §5.3)
 
@@ -198,7 +240,7 @@ shifted k = −6…+6 (negative k = signal leads):
 | k | −6 | −5 | −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | +4 | +5 | +6 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `all_usd` | +0.30 | +0.35 | −0.05 | −0.23 | +0.06 | +0.05 | −0.20 | −0.09 | +0.06 | −0.22 | +0.07 | +0.05 | +0.31 |
-| `all_pct` | −0.57 | −0.03 | −0.09 | +0.06 | +0.34 | −0.12 | −0.37 | +0.10 | −0.15 | −0.30 | −0.08 | −0.07 | +0.29 |
+| `all_pct` | −0.50 | +0.16 | −0.29 | −0.11 | +0.36 | +0.11 | −0.34 | +0.27 | +0.15 | −0.26 | −0.21 | −0.17 | +0.31 |
 
 No coherent lead structure — the series oscillates around zero, with the largest
 magnitudes at the extreme lags (k = ±6), the classic "no real relationship" shape.
@@ -213,69 +255,115 @@ even that artifact is absent.
 Both variants feed `overlay.apply_overlay_l2(basket_ret, multiplier, rf)` and are scored
 with the same `grid_regime.gate_check` / `final_verdict` machinery the layer-2 congestion
 ladder and the FTR-bid signal use. The composite is the headline `all_usd` series.
+
+**Read the exercised-day count first.** `derisk_scaler_report` records, per grid combo,
+`active_days_primary` / `active_days_prior` — the number of days in that window where the
+multiplier differs from 1.0, counted on the composite's own daily-calendar index (the
+primary window is 1 339 calendar days, the prior window 730). A combo with 0 active days
+in a window was **not exercised** there: its returns are mechanically the
+**vol-target-only** baseline, and its gate flags say nothing about this signal. That is
+why the baseline table below carries a vol-target-only row, and why `guidance_table`
+prints `active_days(primary)=…` on the same line as each gate verdict.
+
 Baselines (primary = 2023-01 → 2026-08, n = 918 trading days; prior = 2021-01 → 2022-12,
 n = 502):
 
 | book | window | CAGR | Vol | Sharpe | MaxDD | Calmar |
 |---|---|---|---|---|---|---|
 | buy & hold | primary | 54.2% | 36.5% | 1.264 | −41.3% | 1.31 |
+| vol-target only (trend gate off) | primary | 44.0% | 22.8% | 1.540 | −22.3% | 1.97 |
 | layer-1 (trend gate + vol target) | primary | 40.1% | 21.2% | **1.507** | −18.4% | **2.18** |
 | buy & hold | prior | 19.9% | 30.3% | 0.620 | −32.8% | 0.61 |
+| vol-target only | prior | 15.7% | 21.9% | 0.591 | −26.7% | 0.59 |
 | layer-1 | prior | 6.0% | 17.1% | **0.192** | −24.8% | **0.24** |
 
-### 5.1 One-directional de-risk (`guidance_derisk_multiplier`, spec §6.1)
+### 5.1 One-directional de-risk (`guidance_derisk_multiplier`, spec §6.1) — NOT EXERCISED
 
 Central config `floor_z = −0.5, lo_mult = 0.6`; plateau `floor_z ∈ {−0.25, −0.5, −0.75}`
 × `lo_mult ∈ {0.5, 0.6, 0.7}` (9 combos).
 
+**This leg never fired, in either window, at any grid setting.** The `all_usd` composite
+is non-NaN from **2024-10-16** (the 252-day z-score warm-up after the panel's first
+qualifying revision) and from that day forward its value **never falls below +0.212** —
+the TTM revision-flow series trends up over 2024 → 2026 with no sustained pullback, so **the panel contains
+no capex-deceleration episode at all**. Every `floor_z` in the grid is negative, so
+`guidance_derisk_multiplier` returns a **constant 1.0 for every day of both windows in all
+9 combos**: `active_days_primary = 0` and `active_days_prior = 0` on all 9 grid rows.
+
+The block below is therefore **not a result about this signal.** It is
+`apply_overlay_l2` with a flat 1.0 multiplier, which is exactly the **vol-target-only**
+baseline — compare row-for-row with §5's baseline table; the numbers are identical.
+
 | window | CAGR | Sharpe | MaxDD | Calmar | Sharpe gap vs L1 | Calmar gap vs L1 |
 |---|---|---|---|---|---|---|
-| primary | 44.0% | 1.540 | −22.3% | 1.97 | **+0.033** | **−0.21** |
+| primary | 44.0% | 1.540 | −22.3% | 1.97 | +0.033 | −0.21 |
 | prior | 15.7% | 0.591 | −26.7% | 0.59 | +0.399 | +0.345 |
 
 | gate | value |
 |---|---|
-| **G1** (beats L1 on Sharpe AND Calmar, primary) | **False** — Sharpe +0.03 but Calmar −0.21 |
-| **G2** (beats L1 on Sharpe AND Calmar, prior) | True — Sharpe +0.40, Calmar +0.34 |
-| **G3** (annual return drag vs BH ≤ L1's, both windows) | True |
+| **G1** (beats L1 on Sharpe AND Calmar, primary) | False — but the +0.033 Sharpe / −0.21 Calmar gap is **vol-target-only vs trend-gate+vol-target**, i.e. "trend gate off vs on". It contains no information about capex guidance. |
+| **G2** (prior) | True — same caveat, same flat multiplier |
+| **G3** (annual return drag vs BH ≤ L1's, both windows) | True — same caveat |
 | marginal | False |
-| **neighbour plateau** | all 8 non-central combos give the identical G1=False / G2=True / G3=True |
-| **verdict** | **FAIL** (G1 false) |
+| **neighbour plateau** | all 8 non-central combos are the *identical* constant-1.0 series, so their matching G1=False / G2=True / G3=True is a tautology, not a plateau probe |
+| **verdict** | machinery prints **FAIL**; the honest reading is **not applicable — leg not exercised** |
 
-### 5.2 Two-sided scaler (`guidance_scaler`, spec §6.2)
+**De-risk gate: n/a, not on merit.** A one-directional de-risk rule cannot be graded on a
+window that contains nothing to de-risk into. Re-testable only once the panel covers a
+period of decelerating or reversing aggregate guidance — which, on this evidence, has not
+happened since the series became measurable.
+
+### 5.2 Two-sided scaler (`guidance_scaler`, spec §6.2) — tested, FAILED
 
 Central config `k = 0.35, lo = 0.5, hi = 1.5`; plateau `k ∈ {0.25, 0.35, 0.45}` ×
 `hi ∈ {1.25, 1.5}` (6 combos).
 
+**This leg is genuinely exercised.** `clip(1 + k·z, lo, hi)` moves off 1.0 for any
+non-zero z, so the same all-positive composite drives it on **685 of the primary window's
+1 339 days** (`active_days_primary = 685` — every day the composite is non-NaN; all 6
+combos identical, since `k`/`hi` change the size of the tilt, not when it is on).
+`active_days_prior = 0`: the prior window is entirely pre-warm-up, so its block is the
+same inert vol-target-only book as §5.1's.
+
+**One-sided in practice:** because the composite z never goes negative, the realised
+multiplier range over both windows is **[1.000, 1.500]** — the scaler **only ever leaned
+in, never out**. So what is shown to fail is specifically *"lever up when aggregate
+guidance revisions accelerate"*; the de-lever half of the two-sided rule was never
+reached, for the same reason §5.1's leg was not.
+
 | window | CAGR | Sharpe | MaxDD | Calmar | Sharpe gap vs L1 | Calmar gap vs L1 |
 |---|---|---|---|---|---|---|
-| primary | 53.2% | 1.451 | −32.6% | 1.63 | **−0.056** | **−0.55** |
+| primary | 53.2% | 1.451 | −32.6% | 1.63 | **−0.056** | **−0.550** |
 | prior | 15.7% | 0.591 | −26.7% | 0.59 | +0.399 | +0.345 |
 
 | gate | value |
 |---|---|
-| **G1** (primary) | **False** — Sharpe −0.06, Calmar −0.55 |
-| **G2** (prior) | True — Sharpe +0.40, Calmar +0.34 |
+| **G1** (primary) | **False** — Sharpe −0.056, Calmar −0.550 |
+| **G2** (prior) | True — but the prior-window block is the not-exercised flat-1.0 book (§5.3) |
 | **G3** | True |
 | marginal | False |
-| **neighbour plateau** | all 5 non-central combos give the identical G1=False / G2=True / G3=True |
+| **neighbour plateau** | all 5 non-central combos also fail G1 (primary Sharpe 1.451–1.499, Calmar 1.63–1.77, every one below layer-1's Sharpe 1.507 AND its Calmar 2.18) — a genuine plateau of *failing*, since these 6 combos really are 6 different multiplier series |
 | **verdict** | **FAIL** (G1 false) |
 
-### 5.3 Why G2 "passes" and why it does not rescue the result
+Levering the basket up on an accelerating guidance flow adds return (CAGR 53.2% vs
+layer-1's 40.1%) but adds drawdown faster (−32.6% vs −18.4%) — it is a beta-up trade
+dressed as a signal, which is precisely what the Calmar half of G1 exists to catch.
 
-The composite is **entirely NaN before 2024-02** (the first panel revision with enough
-prior history to enter the series is DUK 2024-02-08), so throughout the prior window
-(2021–2022) both the de-risk multiplier and the scaler are an inert constant 1.0 — which
-is why their prior-window blocks are byte-identical. The "+0.40 Sharpe / +0.34 Calmar"
-G2 pass is therefore **not the signal working**: it is `apply_overlay_l2` with a flat
-1.0 multiplier (≈ buy-and-hold, Sharpe 0.59 vs BH 0.62) happening to beat the layer-1
-trend-gate/vol-target book (Sharpe 0.19) in the choppy 2021–2022 tape. Spec §7
-pre-registered the prior window as structurally uninformative for this signal and said a
-result there is not equivalent evidence — that cuts both ways: the G2 "pass" carries no
-weight. The gate that matters is **G1, the primary window where the signal is actually
-live, and G1 fails** for both variants. (Even inside the primary window the multiplier is
-only non-trivial from roughly late-2024 onward once the z-score warms, so the de-risk /
-scaler test is effectively a ~20-month test.)
+### 5.3 Why G2 "passes" and why it does not rescue either leg
+
+The composite is **entirely NaN before 2024-10-16** — the panel's first qualifying
+revision is DUK 2024-02-08 and the trailing z-score needs a 252-day window before it
+returns a number. Throughout the prior window (2021–2022) both the de-risk multiplier and
+the scaler are therefore an inert constant 1.0, which is why their prior-window blocks are
+byte-identical to each other *and* to the vol-target-only baseline. The "+0.40 Sharpe /
++0.34 Calmar" G2 pass is **not the signal working**: it is `apply_overlay_l2` with a flat
+1.0 multiplier happening to beat the layer-1 trend-gate/vol-target book (Sharpe 0.19) in
+the choppy 2021–2022 tape. Spec §7 pre-registered the prior window as structurally
+uninformative for this signal and said a result there is not equivalent evidence — that
+cuts both ways: the G2 "pass" carries no weight.
+
+The gate that matters is **G1, the primary window** — and there, only the scaler leg has
+anything to grade (§5.1 vs §5.2).
 
 ---
 
@@ -318,14 +406,29 @@ a rally.
 
 Additional caveats specific to this run:
 
+- **The de-risk leg was never exercised, so "FAIL" would overstate the evidence.** The
+  composite has no sub-`floor_z` day anywhere in the span; §5.1 reports the leg as *not
+  applicable*, and the metrics printed under it are the vol-target-only baseline's. The
+  scaler leg's failure is real but is a failure of the *lean-in* half only — the realised
+  multiplier range is [1.000, 1.500] and the de-lever half was never reached.
 - **The DC-attributed cut of the signal (`dc_stated_*`, `dc_filled_*` — 4 of the 6
   series) was not testable at all.** Every stated and every imputed DC-$ value is a 2026
   vintage, so the trailing z-score never warms inside the window. These four series are
   reported n/a, not failed-on-merit. If the theme is revisited in ~2027 with 2027–2028
   vintages added, this cut becomes testable for the first time.
-- **The de-risk / scaler gate is effectively a ~20-month test**, not the full 44-month
-  primary window, because the composite is NaN until 2024-02 and only materially
-  non-constant from roughly late 2024.
+- **The scaler test is effectively a ~22-month test**, not the full 44-month primary
+  window: the composite is NaN until 2024-10-16, so only 685 of the primary window's
+  1 339 days carry a live multiplier.
+- **Decision-timing asymmetry (favours the signal, and it still failed).**
+  `guidance_derisk_multiplier` / `guidance_scaler` apply the composite's **same-day**
+  value, whereas every other multiplier graded through `gate_check` in this package
+  (`overlay.trend_gate`, `grid_regime.regime_multiplier`) is passed through
+  `overlay._month_hold` first — decided at the prior month-end and held. So the guidance
+  overlay trades on a slightly fresher signal than the layer-1 baseline it is scored
+  against. This is spec-conformant ("the most-recently-known composite", §6.1) and the
+  bias runs *in the signal's favour*, so the FAIL conclusion is safe; it is left in place
+  rather than "fixed" so the published numbers match the spec as pre-registered. Anyone
+  re-testing this on a passing signal should month-hold the multiplier first.
 - Several M-confidence rows involve a 4yr→5yr horizon redefinition (EIX, ETR 2026-07-29),
   so the loader's derived revision for those vintages is partly a horizon-length artifact.
 
@@ -333,11 +436,13 @@ Additional caveats specific to this run:
 
 ## 8. Verdict and bookkeeping
 
-**FAILED — both the timing leg (spec §5) and the de-risk/scaler leg (spec §6).** No
-series/horizon cell passed the combined rank-IC + control-regression bar; both gate
-variants missed G1 across their entire parameter plateau. The signal's rank-IC sign is
-*negative*, consistent with the handoff's stated risk that a heavily-covered theme is
-already priced into the equipment names before the guidance number is public.
+**FAILED — not adopted.** No series/horizon cell passed the combined rank-IC +
+control-regression bar (spec §5); of the two exposure-overlay legs (spec §6), the scaler
+missed G1 across its entire 6-combo plateau and the de-risk leg could not be graded at all
+because the panel contains no deceleration episode to grade it on. The signal's
+primary-window rank-IC sign is *negative*, consistent with the handoff's stated risk that a
+heavily-covered theme is already priced into the equipment names before the guidance number
+is public.
 
 This is **attempt #15** against the grid-equipment-basket theme's search for a
 signal-based stock-selection or timing edge (spec §1's count; ~14 prior, none adopted).
@@ -366,3 +471,7 @@ signal (contrast `REGIME_ENABLED`, which the layer-2 rung-1 overlay does use).
   breakdown, and both gate verdicts with G1/G2/G3 (gitignored).
 - Seed panel: `grid_resilience/data/seed/utility_capex_guidance.csv` (44 rows, kept).
 - Task-3 research detail: `.superpowers/sdd/2026-09-04-capex-guidance-signal/task-3-report.md`.
+- Final-review fix pass (2026-09-05): de-risk not-exercised framing + `active_days_*`
+  instrumentation, `all_pct` NaN-denominator correction, empty-Series DatetimeIndex
+  guards, big-four control re-aligned to `known_date`. `all_usd` and both gate verdicts
+  are unchanged by all four.

@@ -8,6 +8,11 @@ from grid_equipment_basket import capex_guidance_signal as cgs
 def test_guidance_composite_empty_events_is_empty_series():
     result = cgs.guidance_composite(pd.Series(dtype=float), "2023-01-01", "2023-06-01")
     assert result.empty
+    # A default RangeIndex here would blow up downstream: `timing_report`
+    # resamples the composite to month-end and slices it with date STRINGS.
+    assert isinstance(result.index, pd.DatetimeIndex)
+    assert result.resample("ME").last().empty
+    assert result.loc["2023-01-01":"2023-06-01"].empty
 
 
 def test_guidance_composite_no_future_leak():
@@ -23,7 +28,7 @@ def test_guidance_composite_no_future_leak():
     pd.testing.assert_series_equal(full.loc[common], truncated.loc[common])
 
 
-def test_guidance_composite_holds_value_between_events():
+def test_guidance_composite_is_nan_through_a_zero_variance_stretch():
     events = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0],
                        index=pd.date_range("2022-01-01", periods=5, freq="90D"))
     result = cgs.guidance_composite(events, "2022-01-01", "2022-12-31",
@@ -188,6 +193,17 @@ def test_timing_report_combines_rank_ic_and_control_regression_pass_conditions(m
                              holdout=("2023-10-01", "2023-12-31"), horizons=(1,))
     assert rep2["strong"][1]["passed"] is False
 
+    # The converse veto (spec s5.4 is an AND, not an OR): a strong rank-IC with
+    # a weak without-hyperscaler control-t must also fail.
+    monkeypatch.setattr(cgs, "_rank_ic", lambda signal, fwd, lag: {"ic": 0.9, "t": 5.0, "n": 10})
+    monkeypatch.setattr(cgs, "_hac_ols",
+                        lambda y, X, lag: {"coef": {c: 0.0 for c in X.columns},
+                                           "t": {c: 0.5 for c in X.columns}, "n": 10})
+    rep3 = cgs.timing_report({"strong": composite}, basket_ret, controls,
+                             primary=("2023-01-01", "2023-12-31"),
+                             holdout=("2023-10-01", "2023-12-31"), horizons=(1,))
+    assert rep3["strong"][1]["passed"] is False
+
 
 def test_timing_report_adds_hyperscaler_control_only_when_column_present():
     idx = pd.date_range("2023-01-31", periods=6, freq="ME")
@@ -206,11 +222,17 @@ def test_timing_report_adds_hyperscaler_control_only_when_column_present():
     assert "bigfour" in rep_w["c"][1]["control_with_hyperscaler"]["t"]
 
 
-def test_derisk_scaler_report_builds_full_parameter_grids():
+def _derisk_inputs(seed: int = 4):
+    """The shared `ret`/`lvl` construction for `derisk_scaler_report` tests."""
     idx = pd.bdate_range("2021-01-01", "2026-08-31")
-    rng = np.random.default_rng(4)
+    rng = np.random.default_rng(seed)
     ret = pd.Series(rng.normal(0.0004, 0.02, size=len(idx)), index=idx)
     lvl = (1.0 + ret).cumprod()
+    return idx, rng, ret, lvl
+
+
+def test_derisk_scaler_report_builds_full_parameter_grids():
+    idx, rng, ret, lvl = _derisk_inputs()
     composite = pd.Series(rng.normal(size=len(idx)), index=idx)
 
     rep = cgs.derisk_scaler_report(ret, lvl, composite,
@@ -220,7 +242,38 @@ def test_derisk_scaler_report_builds_full_parameter_grids():
     assert len(rep["scaler"]["grid"]) == 6    # 3 k x 2 hi
     assert rep["derisk"]["verdict"] in ("PASS", "FAIL", "marginal", "knife-edge")
     assert rep["scaler"]["verdict"] in ("PASS", "FAIL", "marginal", "knife-edge")
-    assert "buy_and_hold" in rep["baselines"] and "layer1_only" in rep["baselines"]
+    for key in ("buy_and_hold", "vol_target_only", "layer1_only"):
+        assert key in rep["baselines"]
+
+
+def test_derisk_leg_is_reported_as_not_exercised_when_composite_never_dips():
+    """The live run's failure mode, pinned: the `all_usd` composite never drops
+    below any `floor_z` in the grid, so `guidance_derisk_multiplier` is a flat
+    1.0 everywhere and the de-risk leg tests NOTHING. The report must make that
+    visible (`active_days_* == 0`) and its block must be numerically identical
+    to the vol-target-only baseline -- otherwise the gate numbers read as a
+    verdict on the signal when they are really a verdict on `apply_overlay_l2`
+    with a constant multiplier."""
+    idx, rng, ret, lvl = _derisk_inputs()
+    # entirely >= 0, so it is above every floor_z in {-0.25, -0.5, -0.75}
+    composite = pd.Series(np.abs(rng.normal(size=len(idx))) + 0.2, index=idx)
+
+    rep = cgs.derisk_scaler_report(ret, lvl, composite,
+                                   primary=("2023-01-01", "2026-08-31"),
+                                   prior=("2021-01-01", "2022-12-31"))
+
+    for row in rep["derisk"]["grid"]:
+        assert row["active_days_primary"] == 0, row
+        assert row["active_days_prior"] == 0, row
+
+    derisk_primary = rep["derisk"]["central"]["block"]["primary"]["metrics"]
+    vt_primary = rep["baselines"]["vol_target_only"]["primary"]["metrics"]
+    for metric in ("sharpe", "cagr", "max_dd"):
+        assert derisk_primary[metric] == pytest.approx(vt_primary[metric], abs=1e-6)
+
+    # ... while the two-sided scaler IS exercised by the same composite (a
+    # positive z still moves `clip(1+k*z, lo, hi)` away from 1.0).
+    assert rep["scaler"]["central"]["active_days_primary"] > 0
 
 
 def _flat_price_fn(tickers, start, end):
@@ -231,6 +284,24 @@ def _flat_price_fn(tickers, start, end):
         rets = rng.normal(0.0003, 0.01, size=len(idx))
         data[t] = 100.0 * (1.0 + pd.Series(rets, index=idx)).cumprod()
     return pd.DataFrame(data)
+
+
+def _price_fn_without_controls(tickers, start, end):
+    """`_flat_price_fn` with the two control tickers missing -- the shape a
+    partially-failed yfinance fetch produces."""
+    prices = _flat_price_fn(tickers, start, end)
+    return prices.drop(columns=[c for c in ("^TNX", "SMH") if c in prices.columns])
+
+
+def _fake_bigfour():
+    """Mirrors `capex_signal.fetch_bigfour_capex`'s contract: `decel2` plus the
+    point-in-time `known_date` (period end + 50d) the control is aligned on."""
+    idx = pd.PeriodIndex(["2022Q1", "2022Q2"], freq="Q")
+    return pd.DataFrame(
+        {"decel2": [0.0, 0.0],
+         "known_date": [p.to_timestamp(how="end").normalize() + pd.Timedelta(days=50)
+                        for p in idx]},
+        index=idx)
 
 
 def _synthetic_panel():
@@ -272,11 +343,55 @@ def test_lead_lag_table_reports_pearson_corr_at_each_offset():
     assert table.loc[-2] == pytest.approx(1.0, abs=1e-6)
 
 
+def test_guidance_signal_report_aligns_bigfour_control_on_its_known_date():
+    """Point-in-time discipline (a plan Global Constraint): the hyperscaler
+    control must enter the regression at `known_date` (period end + 50d), not
+    at the quarter end -- regressing forward returns on a print that was not
+    yet public is a 50-day look-ahead."""
+    bf = _fake_bigfour()
+    captured = {}
+
+    def _capture(composites, basket_ret, controls, **kw):
+        captured["index"] = controls.index
+        return {}
+
+    import grid_equipment_basket.capex_guidance_signal as mod
+    real = mod.timing_report
+    mod.timing_report = _capture
+    try:
+        mod.guidance_signal_report(
+            price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=lambda: bf,
+            primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
+            holdout=("2023-10-01", "2023-12-31"))
+    finally:
+        mod.timing_report = real
+
+    # 2022Q2 ends 2022-06-30; known_date is 2022-08-19, so the control's last
+    # month-end is in August, not June.
+    last_bigfour_month = captured["index"][captured["index"] <= pd.Timestamp("2022-12-31")].max()
+    assert last_bigfour_month >= pd.Timestamp("2022-08-01")
+
+
+def test_guidance_signal_report_survives_missing_bigfour_and_control_prices():
+    """A cold `bigfour_capex.parquet` cache / failed SEC fetch (empty frame) and
+    a partial price fetch (no `^TNX` / `SMH`) must degrade the affected control
+    cells to n=0, not crash the whole report. Before the DatetimeIndex guards
+    this raised `TypeError: '<' not supported between instances of 'Timestamp'
+    and 'str'` from `timing_report`'s date-string slice."""
+    for price_fn in (_flat_price_fn, _price_fn_without_controls):
+        rep = cgs.guidance_signal_report(
+            price_fn=price_fn, panel_df=_synthetic_panel(),
+            bigfour_fn=lambda: pd.DataFrame(),
+            primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
+            holdout=("2023-10-01", "2023-12-31"))
+        assert "timing_basket" in rep and "all_usd" in rep["timing_basket"]
+        assert "derisk_scaler_gate" in rep
+        assert rep["timing_basket"]["all_usd"][1]["control_with_hyperscaler"]["n"] == 0
+
+
 def test_guidance_signal_report_runs_end_to_end():
-    fake_bigfour = pd.DataFrame({"decel2": [0.0, 0.0]},
-                                index=pd.PeriodIndex(["2022Q1", "2022Q2"], freq="Q"))
     rep = cgs.guidance_signal_report(
-        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=lambda: fake_bigfour,
+        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=_fake_bigfour,
         primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
         holdout=("2023-10-01", "2023-12-31"))
     assert rep["universe_used"] == "full"
@@ -304,13 +419,14 @@ def test_guidance_table_handles_not_yet_testable_report():
 
 
 def test_guidance_table_renders_full_report():
-    fake_bigfour = pd.DataFrame({"decel2": [0.0, 0.0]},
-                                index=pd.PeriodIndex(["2022Q1", "2022Q2"], freq="Q"))
     rep = cgs.guidance_signal_report(
-        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=lambda: fake_bigfour,
+        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=_fake_bigfour,
         primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
         holdout=("2023-10-01", "2023-12-31"))
     out = cgs.guidance_table(rep)
     assert "full" in out
     assert "all_usd" in out
     assert "DERISK" in out.upper() or "SCALER" in out.upper()
+    # the de-risk/scaler gate lines must carry the exercised-day count, so a
+    # constant-1.0 (not-exercised) leg can never be read as a merit verdict
+    assert out.count("active_days(primary)=") == 2
