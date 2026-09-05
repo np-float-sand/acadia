@@ -293,3 +293,24 @@ def test_guidance_signal_report_not_testable_short_circuits():
                                      bigfour_fn=lambda: pd.DataFrame({"decel2": []}))
     assert rep["verdict"] == "not_yet_testable"
     assert "timing_basket" not in rep
+
+
+def test_guidance_table_handles_not_yet_testable_report():
+    rep = {"universe_used": "not_testable",
+          "feasibility": {"n_usable": 0, "n_total": 3, "per_utility": {}},
+          "verdict": "not_yet_testable"}
+    out = cgs.guidance_table(rep)
+    assert "not_yet_testable" in out or "NOT YET TESTABLE" in out.upper()
+
+
+def test_guidance_table_renders_full_report():
+    fake_bigfour = pd.DataFrame({"decel2": [0.0, 0.0]},
+                                index=pd.PeriodIndex(["2022Q1", "2022Q2"], freq="Q"))
+    rep = cgs.guidance_signal_report(
+        price_fn=_flat_price_fn, panel_df=_synthetic_panel(), bigfour_fn=lambda: fake_bigfour,
+        primary=("2023-01-01", "2023-12-31"), prior=("2021-01-01", "2022-12-31"),
+        holdout=("2023-10-01", "2023-12-31"))
+    out = cgs.guidance_table(rep)
+    assert "full" in out
+    assert "all_usd" in out
+    assert "DERISK" in out.upper() or "SCALER" in out.upper()

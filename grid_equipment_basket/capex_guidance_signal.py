@@ -366,3 +366,46 @@ def guidance_signal_report(price_fn=None, panel_df=None, bigfour_fn=None,
         "continuity_lead_lag": continuity,
         "derisk_scaler_gate": derisk_scaler,
     }
+
+def _p(x) -> str:
+    return "n/a" if x != x else f"{x * 100:.1f}%"
+
+
+def _f(x) -> str:
+    return "n/a" if x != x else f"{x:.2f}"
+
+
+def guidance_table(rep: dict) -> str:
+    L = ["CAPEX-GUIDANCE REVISION SIGNAL (Deliverable D)", ""]
+    if rep.get("universe_used") == "not_testable":
+        L.append("  FEASIBILITY: NOT YET TESTABLE")
+        feas = rep["feasibility"]
+        L.append(f"  n_usable={feas['n_usable']} / n_total={feas['n_total']}")
+        return "\n".join(L)
+
+    L.append(f"  universe_used: {rep['universe_used']}  "
+             f"(n_usable={rep['feasibility']['n_usable']}/{rep['feasibility']['n_total']})")
+    w = rep["windows"]
+    L.append(f"  windows: primary {w['primary']}  prior {w['prior']}  holdout {w['holdout']}")
+    L.append("")
+    L.append("  TIMING BAR (vs basket) -- rank-IC t | control(w/o hyperscaler) t | PASS?")
+    for name, by_h in rep["timing_basket"].items():
+        for h, cell in by_h.items():
+            ic = cell["rank_ic_primary"]
+            ctrl = cell["control_without_hyperscaler"]
+            L.append(f"    {name:<16} h={h}m  ic={_f(ic['ic'])} t={_f(ic['t'])}  "
+                     f"ctrl_t={_f(ctrl['t'].get('signal', float('nan')))}  "
+                     f"{'PASS' if cell['passed'] else 'fail'}")
+    L.append("")
+    if "all_usd" in rep.get("continuity_lead_lag", {}):
+        ll = rep["continuity_lead_lag"]["all_usd"]
+        L.append("  CONTINUITY -- lead-lag corr, all_usd vs 1m-fwd basket return "
+                 "(negative k = signal leads):")
+        L.append("    " + "  ".join(f"k={k}:{_f(v)}" for k, v in ll.items()))
+    L.append("")
+    for leg in ("derisk", "scaler"):
+        g = rep["derisk_scaler_gate"][leg]
+        L.append(f"  {leg.upper()} GATE: verdict={g['verdict']}  "
+                 f"G1={g['gate']['G1']} G2={g['gate']['G2']} G3={g['gate']['G3']} "
+                 f"marginal={g['gate']['marginal']}")
+    return "\n".join(L)
