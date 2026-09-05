@@ -136,3 +136,35 @@ hindsight-revised. A point-in-time test needs the STEO monthly archive
 planning reserve margin (semi-annual, no gas contamination); ISO-NE Forward Capacity Auction
 clearing prices (3-yr forward, history to 2008); NYISO ICAP. CME publishes its power forward
 curve as free *delayed* quotes — no history but capturable going forward.
+
+## Round 4 (2026-09-05) — nonlinear / combined (GBM + RF)
+
+Put all session buildout-heat signals (25 features: NG/UNL 3-12mo changes, EMA, strip slope,
+STEO ELWHU_PJ/TX 3-12mo changes, PJM & ERCOT spark-spread proxies, 4 category-demand momentum
+z-scores + composite, SMH, d10y, basket own momentum) into a walk-forward TimeSeriesSplit(5)
+GBM and RandomForest predicting basket forward 1-month return.
+
+| window | GBM OOF rank-IC | RF OOF rank-IC | R2 | perm p(IC>=obs) |
+|---|---|---|---|---|
+| 2023-26 (n=43) | +0.18 | +0.29 | ~0 | 0.08 / 0.00 |
+| 2018-26 (n=98) | +0.02 | +0.00 | negative | 0.37 / 0.42 |
+
+The 2023-26 flicker beats the permutation null but **vanishes entirely on the extended 2018-26
+sample**, R2 ~= 0 throughout, and feeding the GBM walk-forward predictions back as an exposure
+signal **loses to static** (Sharpe 1.04 vs 1.10). Overfit to the 43-month window, not signal.
+
+**Inverted composite overlay** ("fade the buildout-heat"): rank-IC(heat, fwd-ret) = +0.08 in
+2023-26 (mildly positive -> fading does not help), -0.01 in 2018-26. Overlay Sharpe 1.32 vs
+static 1.31 vs vol-target-only 1.22; active 80-93% of months. Adds +0.01. Nothing.
+
+The "9-of-10 negative sub-threshold cells" pattern (crowding / already-priced) lives in the
+*other session*'s 15-utility capex-guidance panel, not in these gas/power/category features (where
+the composite is weakly positive 2023-26). The one remaining untested combination: union both
+feature sets into one walk-forward GBM, both windows. Needs `capex_guidance_signal.py` output
+exported to run in one place.
+
+**Cross-session stop-rule (per the Deliverable-D synthesis):** three independent demand-data
+classes -- forecast (PJM Table B-9), physical-flow (congestion, FTR), commitment (capex
+guidance) -- have now each failed to time this basket under pre-registered discipline. The
+monthly-resolution probes do not even reproduce the spurious +0.8 annual k=-1 artifact the VA /
+Table-B-9 work threw. Defensible prior: the timing edge is not reachable with available data.
