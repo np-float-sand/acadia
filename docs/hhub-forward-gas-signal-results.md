@@ -94,3 +94,45 @@ ETFs (PHO/FIW/CGW). No change to the verdict:
 
 Smoothing and alternative free sources do not rescue it; the genuinely-forward segment of the curve
 remains the paywalled part.
+
+## Round 3 (2026-09-05) — a free forward *power* series does exist: EIA STEO ELWHU_*
+
+**EIA Short-Term Energy Outlook** publishes monthly wholesale electricity price series per hub,
+each with a **~16-month forward forecast tail**, 2010→present, free via the API key in `.env`:
+
+| series | hub | span |
+|---|---|---|
+| `ELWHU_PJ` | PJM RTO Western hub | 2010-01 → 2027-12 |
+| `ELWHU_TX` | ERCOT North hub | 2010-12 → 2027-12 |
+| `ELWHU_CA` | CAISO SP15 | 2010-01 → 2027-12 |
+
+(+ `ELWHU_NE/NY/MW/NW/SW/SE`.) Endpoint:
+`https://api.eia.gov/v2/steo/data/?frequency=monthly&data[0]=value&facets[seriesId][]=ELWHU_PJ&api_key=...`
+
+It is an EIA-modeled, futures-informed **forecast**, not a market clearing price — but it is
+power-specific, genuinely forward (~16 mo), hub-level, covers every DC-heavy market, and has
+15 years of history. First free series in this thread that is forward + power + has history.
+
+**Backtest caveat:** a single API pull returns only the *latest* vintage, whose forecast tail is
+hindsight-revised. A point-in-time test needs the STEO monthly archive
+(`eia.gov/outlooks/steo/archives/`, ~90 files for 2019–2026), extracting each vintage’s
+12–16-month-ahead `ELWHU_*` forecast. ~half a day.
+
+### Scoped next step (not yet run)
+
+1. Scrape the STEO archive; build a point-in-time panel: for each vintage month v, the v+12 and
+   v+16 forecast for `ELWHU_PJ`, `ELWHU_TX`, `ELWHU_CA`, plus the implied slope (v+16 forecast ÷
+   spot).
+2. Signal = 3–6-month change in the v+12/v+16 forward forecast (level and slope), z-scored.
+3. Test vs the 9-name basket forward 1m/3m return, both sub-windows (2019–22, 2023–26):
+   pre-registered bar rank-IC |t| ≥ 2 on both windows, **survives a control for the 12-month
+   Henry Hub gas-strip change and SMH** (the residual power-specific / implied-heat-rate move is
+   the only part that could be new — the gas-curve component is already known to be flat, Rounds
+   1–2), and a scaler that beats price-gate+vol-target on Sharpe AND Calmar on both windows.
+4. Kill: IC |t| < 1.5 pooled, or works one window only, or fully explained by the gas-strip +
+   SMH control → log, done.
+
+**Other free forward-tightness indicators** (not power price, but forward scarcity): ERCOT CDR
+planning reserve margin (semi-annual, no gas contamination); ISO-NE Forward Capacity Auction
+clearing prices (3-yr forward, history to 2008); NYISO ICAP. CME publishes its power forward
+curve as free *delayed* quotes — no history but capturable going forward.
