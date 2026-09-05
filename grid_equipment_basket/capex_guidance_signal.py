@@ -110,3 +110,74 @@ def _forward_return(monthly_nav: pd.Series, h: int) -> pd.Series:
     (`nav[t+h] / nav[t] - 1`); NaN for the trailing `h` month-ends where the
     future NAV isn't known yet."""
     return (monthly_nav.shift(-h) / monthly_nav - 1.0).rename(f"fwd_{h}m")
+
+
+_HORIZONS: tuple[int, ...] = (1, 3, 6)
+
+
+def feasibility_gate(panel_df: pd.DataFrame,
+                     primary_window: tuple[str, str] = config.DC_GUIDANCE_PRIMARY_WINDOW
+                     ) -> tuple[pd.DataFrame | None, dict, str]:
+    """Spec s3.3: <8 usable utilities in `primary_window` -> fall back to
+    `config.DC_GUIDANCE_FALLBACK`; the fallback itself unusable (0 usable) ->
+    `(None, feas, "not_testable")` so the caller stops before backtesting on
+    data too thin to trust. Returns `(panel_to_use, feasibility_dict,
+    universe_used)` with `universe_used` one of `"full"/"fallback"/"not_testable"`."""
+    from grid_resilience.data import utility_capex_guidance as udg
+
+    feas = udg.feasibility_summary(panel_df, window=primary_window)
+    if feas["n_usable"] >= config.DC_GUIDANCE_MIN_UTILITIES:
+        return panel_df, feas, "full"
+
+    fallback = panel_df[panel_df["utility"].isin(config.DC_GUIDANCE_FALLBACK)]
+    feas_fb = udg.feasibility_summary(fallback, window=primary_window)
+    if feas_fb["n_usable"] == 0:
+        return None, feas_fb, "not_testable"
+    return fallback, feas_fb, "fallback"
+
+
+def timing_report(composites: dict[str, pd.Series], basket_ret: pd.Series,
+                  controls: pd.DataFrame, *,
+                  primary: tuple[str, str] = config.DC_GUIDANCE_PRIMARY_WINDOW,
+                  holdout: tuple[str, str] = config.DC_GUIDANCE_HOLDOUT_WINDOW,
+                  horizons: tuple[int, ...] = _HORIZONS) -> dict:
+    """Spec s5: for each named composite series and each forward horizon, the
+    rank-IC (primary + holdout windows, s5.1) and the with/without-hyperscaler
+    control regression (primary window, s5.2), plus the combined pass/fail
+    (s5.4: BOTH the primary-window rank-IC and the without-hyperscaler control
+    must clear `|t| >= config.DC_GUIDANCE_RANK_IC_MIN_T`).
+
+    `controls` is a monthly-indexed DataFrame with columns `d10y`, `smh`, and
+    optionally `bigfour`; the without-hyperscaler regression uses `d10y` +
+    `smh` only, the with-hyperscaler regression adds `bigfour` when present."""
+    basket_nav = _monthly_nav(basket_ret)
+    out: dict = {}
+    for name, comp in composites.items():
+        comp_monthly = comp.resample("ME").last()
+        out[name] = {}
+        for h in horizons:
+            fwd = _forward_return(basket_nav, h)
+            rank_ic_primary = _rank_ic(comp_monthly.loc[primary[0]:primary[1]],
+                                       fwd.loc[primary[0]:primary[1]], lag=h)
+            rank_ic_holdout = _rank_ic(comp_monthly.loc[holdout[0]:holdout[1]],
+                                       fwd.loc[holdout[0]:holdout[1]], lag=h)
+
+            X = pd.DataFrame({"signal": comp_monthly, "d10y": controls.get("d10y"),
+                              "smh": controls.get("smh")}).loc[primary[0]:primary[1]]
+            fwd_primary = fwd.loc[primary[0]:primary[1]]
+            ctrl_wo = _hac_ols(fwd_primary, X, lag=h)
+            if "bigfour" in controls.columns:
+                X_w = X.assign(bigfour=controls["bigfour"].loc[primary[0]:primary[1]])
+                ctrl_w = _hac_ols(fwd_primary, X_w, lag=h)
+            else:
+                ctrl_w = {"coef": {}, "t": {}, "n": 0}
+
+            sig_t = ctrl_wo["t"].get("signal", np.nan)
+            passed = (abs(rank_ic_primary["t"]) >= config.DC_GUIDANCE_RANK_IC_MIN_T
+                     and abs(sig_t) >= config.DC_GUIDANCE_RANK_IC_MIN_T)
+            out[name][h] = {
+                "rank_ic_primary": rank_ic_primary, "rank_ic_holdout": rank_ic_holdout,
+                "control_without_hyperscaler": ctrl_wo, "control_with_hyperscaler": ctrl_w,
+                "passed": bool(passed),
+            }
+    return out

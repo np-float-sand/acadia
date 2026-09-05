@@ -129,3 +129,78 @@ def test_monthly_nav_compounds_daily_returns_to_month_end():
     nav = cgs._monthly_nav(ret)
     assert nav.loc["2023-01-31"] == pytest.approx(1.10)
     assert nav.loc["2023-02-28"] == pytest.approx(1.10 * 1.05)
+
+
+def _panel(rows):
+    df = pd.DataFrame(rows)
+    df["report_date"] = pd.to_datetime(df["report_date"])
+    return df
+
+
+def test_feasibility_gate_uses_full_panel_when_enough_usable(monkeypatch):
+    monkeypatch.setattr(cgs.config, "DC_GUIDANCE_MIN_UTILITIES", 1)
+    df = _panel([{"utility": "D", "report_date": "2023-06-01",
+                  "capex_plan_usd_m": 1000.0, "revision_vs_prior_usd_m": 50.0}])
+    panel, feas, used = cgs.feasibility_gate(df, ("2023-01-01", "2026-08-31"))
+    assert used == "full"
+    assert feas["n_usable"] == 1
+
+
+def test_feasibility_gate_falls_back_when_not_enough_usable():
+    rows = [{"utility": "D", "report_date": "2023-06-01",
+            "capex_plan_usd_m": 1000.0, "revision_vs_prior_usd_m": 50.0},
+           {"utility": "AEP", "report_date": "2023-06-01",
+            "capex_plan_usd_m": 900.0, "revision_vs_prior_usd_m": 40.0},
+           {"utility": "ZZZ", "report_date": "1999-01-01",
+            "capex_plan_usd_m": 10.0, "revision_vs_prior_usd_m": np.nan}]
+    df = _panel(rows)
+    panel, feas, used = cgs.feasibility_gate(df, ("2023-01-01", "2026-08-31"))
+    assert used == "fallback"
+    assert set(panel["utility"]) == {"D", "AEP"}
+
+
+def test_feasibility_gate_not_testable_when_fallback_also_empty():
+    df = _panel([{"utility": "ZZZ", "report_date": "1999-01-01",
+                 "capex_plan_usd_m": 10.0, "revision_vs_prior_usd_m": np.nan}])
+    panel, feas, used = cgs.feasibility_gate(df, ("2023-01-01", "2026-08-31"))
+    assert used == "not_testable"
+    assert panel is None
+
+
+def test_timing_report_combines_rank_ic_and_control_regression_pass_conditions(monkeypatch):
+    idx = pd.date_range("2023-01-31", periods=12, freq="ME")
+    composite = pd.Series(np.arange(12, dtype=float), index=idx)
+    basket_ret = pd.Series(0.001, index=pd.date_range("2023-01-01", "2023-12-31", freq="D"))
+    controls = pd.DataFrame({"d10y": 0.0, "smh": 0.0}, index=idx)
+
+    monkeypatch.setattr(cgs, "_rank_ic", lambda signal, fwd, lag: {"ic": 0.9, "t": 5.0, "n": 10})
+    monkeypatch.setattr(cgs, "_hac_ols",
+                        lambda y, X, lag: {"coef": {c: 0.0 for c in X.columns},
+                                           "t": {c: 5.0 for c in X.columns}, "n": 10})
+    rep = cgs.timing_report({"strong": composite}, basket_ret, controls,
+                            primary=("2023-01-01", "2023-12-31"),
+                            holdout=("2023-10-01", "2023-12-31"), horizons=(1,))
+    assert rep["strong"][1]["passed"] is True
+
+    monkeypatch.setattr(cgs, "_rank_ic", lambda signal, fwd, lag: {"ic": 0.0, "t": 0.5, "n": 10})
+    rep2 = cgs.timing_report({"strong": composite}, basket_ret, controls,
+                             primary=("2023-01-01", "2023-12-31"),
+                             holdout=("2023-10-01", "2023-12-31"), horizons=(1,))
+    assert rep2["strong"][1]["passed"] is False
+
+
+def test_timing_report_adds_hyperscaler_control_only_when_column_present():
+    idx = pd.date_range("2023-01-31", periods=6, freq="ME")
+    composite = pd.Series(np.arange(6, dtype=float), index=idx)
+    basket_ret = pd.Series(0.001, index=pd.date_range("2023-01-01", "2023-06-30", freq="D"))
+    controls_without = pd.DataFrame({"d10y": 0.0, "smh": 0.0}, index=idx)
+    rep = cgs.timing_report({"c": composite}, basket_ret, controls_without,
+                            primary=("2023-01-01", "2023-06-30"),
+                            holdout=("2023-05-01", "2023-06-30"), horizons=(1,))
+    assert rep["c"][1]["control_with_hyperscaler"]["n"] == 0
+
+    controls_with = controls_without.assign(bigfour=1.0)
+    rep_w = cgs.timing_report({"c": composite}, basket_ret, controls_with,
+                              primary=("2023-01-01", "2023-06-30"),
+                              holdout=("2023-05-01", "2023-06-30"), horizons=(1,))
+    assert "bigfour" in rep_w["c"][1]["control_with_hyperscaler"]["t"]
