@@ -78,3 +78,19 @@ funded — and scope it then as a *basket-level confirmation gauge* (spark-sprea
 2–4-year point), not cross-sectional alpha. Standing conclusion unchanged
 (`docs/handoff_2026-09-01…` §7): ship the concentrated long/short as a discretionary,
 risk-managed thematic position.
+
+## Round 2 (2026-09-05) — smoothing + alternative sources
+
+Re-ran with **UNL** (US 12-Month Natural Gas Fund = a 12-contract strip, deseasonalised ~1-year-forward
+gas, free, 2010→), smoothing variants (3-mo MA, EMA-6 momentum, 36-mo rolling z), and water-equity
+ETFs (PHO/FIW/CGW). No change to the verdict:
+
+- UNL 12/6/3-mo change and the smoothed variants: forward-return IC |t| < 1.6 on both sub-windows;
+  smoothing makes the cross-regime sign *less* stable, not more. The 2019–22 "+0.39 vs basket−SMH"
+  reappears and again dies under the SMH + Δ10y control (coef t ≈ −1.4) and is absent in 2023–26.
+- Water ETFs are water-*equity* baskets — rank-corr +0.25 (1-mo) to +0.49 (3-mo) with the grid
+  basket (shared XYL/PNR), i.e. contaminated industrial/utility beta, no forward IC.
+- FCG / UNG add nothing over NG=F front-month.
+
+Smoothing and alternative free sources do not rescue it; the genuinely-forward segment of the curve
+remains the paywalled part.
