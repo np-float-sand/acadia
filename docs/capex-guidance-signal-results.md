@@ -248,6 +248,49 @@ This is *weaker* than the two prior negatives: the VA probe and PJM Table B-9 at
 produced a spurious +0.8 at k = −1 on annual (n = 7) data; at monthly resolution here
 even that artifact is absent.
 
+### 4.4 Sub-threshold t-stat inventory (|t| ≥ 1.5)
+
+The pass bar (spec §5.4) is |t| ≥ 2 on **both** the primary-window rank-IC and the
+gating without-hyperscaler control-t; §4.1/§4.2 show nothing clears it. This subsection
+reports the fuller picture immediately below that bar — every cell in the §4.1/§4.2
+tables with |t| ≥ 1.5 — on the reasoning that a weak effect could still matter combined
+with another signal or used nonlinearly. Ten cells qualify. "n" is the monthly-observation
+count reported for that series × horizon × window in §4.1/§4.2.
+
+| series | horizon | book | statistic | t | n | sign vs thesis |
+|---|---|---|---|---|---|---|
+| `all_usd` | 3m | basket | control-t, w/o hyperscaler (**gating**) | −2.08 | 20 | wrong (inverse) |
+| `all_usd` | 6m | basket | control-t, w/o hyperscaler (gating) | −1.62 | 17 | wrong (inverse) |
+| `all_usd` | 6m | basket | control-t, w/ hyperscaler (non-gating) | −1.53 | 17 | wrong (inverse) |
+| `all_pct` | 1m | basket | control-t, w/o hyperscaler (gating) | −1.77 | 13 | wrong (inverse) |
+| `all_pct` | 1m | basket | control-t, w/ hyperscaler (non-gating) | −4.08 | 13 | wrong (inverse) |
+| `all_pct` | 1m | basket | holdout rank-IC t | +2.47 | 5 | "right", but sign-flipped vs its own −0.24 primary IC |
+| `all_pct` | 3m | basket | primary rank-IC t | −1.54 | 11 | wrong (inverse) |
+| `all_pct` | 6m | basket | control-t, w/o hyperscaler (gating) | −3.06 | 8 | wrong (inverse) |
+| `all_pct` | 6m | basket | control-t, w/ hyperscaler (non-gating) | −2.69 | 8 | wrong (inverse) |
+| `all_pct` | 6m | spread | control-t, w/o hyperscaler (gating) | −3.34 | 8 | wrong (inverse) |
+
+Of the ten cells at |t| ≥ 1.5, nine are negative. That is not scatter around zero — it is
+a weak but directionally consistent *inverse* association: heavier aggregate
+capex-guidance-raising precedes *lower* forward basket (and long/short-spread) returns.
+That is the opposite sign to this probe's pre-registered thesis ("guidance leads spend
+leads equipment orders") and the correct sign for a crowding / already-priced-in read —
+the buildout is loudest in the guidance once it is already in the equities, so a fresh
+raise coincides with, or slightly lags, a local top rather than leading a rally. It does
+not change the verdict: per spec §5.4 a cell passes only when the primary-window rank-IC t
+**and** the primary without-hyperscaler control-t both clear |t| ≥ 2, and no cell does;
+the gating control-t cells that cross |t| ≥ 2 at all (`all_usd` h=3m −2.08 and `all_pct`
+h=6m −3.06 vs the basket, `all_pct` h=6m −3.34 vs the spread) are every one the wrong sign
+and none is matched by a significant rank-IC. Several reasons not to over-read the inverse
+sign: the strongest cells (|t| 2.7–4.1) are all `all_pct` on n = 8–13 with 3–4 regressors
+plus a constant — near-singular small samples; the §4.3 lead-lag table shows no coherent
+structure, with the largest magnitudes at the extreme lags k = ±6; and this is ~36
+statistical results in total, so a same-sign cluster at |t| 1.5–2 is within noise for a
+weak real effect. The one thing worth carrying forward: the sign consistency says that if
+this signal is ever revisited it should be tested *inverted* — a fade-the-guidance-raise
+overlay — and/or as one input in a combined or nonlinear model, not in the thesis
+direction as a standalone.
+
 ---
 
 ## 5. Test 2 — de-risk / scaler gate (spec §6)

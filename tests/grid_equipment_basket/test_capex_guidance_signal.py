@@ -347,12 +347,23 @@ def test_guidance_signal_report_aligns_bigfour_control_on_its_known_date():
     """Point-in-time discipline (a plan Global Constraint): the hyperscaler
     control must enter the regression at `known_date` (period end + 50d), not
     at the quarter end -- regressing forward returns on a print that was not
-    yet public is a 50-day look-ahead."""
+    yet public is a 50-day look-ahead.
+
+    This asserts on the big-four column's OWN non-NaN dates, not on
+    `controls.index`. The latter is the union index of {d10y, smh, bigfour} and
+    -- under `_flat_price_fn`, whose two control tickers span the whole
+    2021..2023 range -- covers `span_start..span_end` regardless of how the
+    big-four series is aligned, so an assertion on it discriminates nothing.
+    The discriminating fact is the big-four series' own stamps: with
+    `known_date` alignment the fixture's Q1 (ends 2022-03-31, known_date
+    2022-05-20) and Q2 (ends 2022-06-30, known_date 2022-08-19) land the
+    ffilled month-end column on 2022-05-31 .. 2022-08-31; quarter-end alignment
+    would instead land it on 2022-03-31 .. 2022-06-30."""
     bf = _fake_bigfour()
     captured = {}
 
     def _capture(composites, basket_ret, controls, **kw):
-        captured["index"] = controls.index
+        captured["controls"] = controls
         return {}
 
     import grid_equipment_basket.capex_guidance_signal as mod
@@ -366,10 +377,17 @@ def test_guidance_signal_report_aligns_bigfour_control_on_its_known_date():
     finally:
         mod.timing_report = real
 
-    # 2022Q2 ends 2022-06-30; known_date is 2022-08-19, so the control's last
-    # month-end is in August, not June.
-    last_bigfour_month = captured["index"][captured["index"] <= pd.Timestamp("2022-12-31")].max()
-    assert last_bigfour_month >= pd.Timestamp("2022-08-01")
+    bigfour_dates = captured["controls"]["bigfour"].dropna().index
+    # Q2 2022 ends 2022-06-30; its known_date is 2022-08-19 (period end + 50d),
+    # whose month-end is 2022-08-31. Quarter-end alignment would instead put the
+    # last big-four observation on 2022-06-30 -- the ~50-day gap between the two
+    # is exactly the look-ahead this guards against.
+    assert bigfour_dates.max() == pd.Timestamp("2022-08-31"), bigfour_dates.max()
+    assert bigfour_dates.max() != pd.Timestamp("2022-06-30")
+    # ... and the earliest observation is the Q1 known_date's month-end
+    # (2022-05-31, from known_date 2022-05-20), not the bare Q1 quarter-end
+    # (2022-03-31).
+    assert bigfour_dates.min() == pd.Timestamp("2022-05-31"), bigfour_dates.min()
 
 
 def test_guidance_signal_report_survives_missing_bigfour_and_control_prices():
