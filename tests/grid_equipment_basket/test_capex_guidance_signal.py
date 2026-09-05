@@ -108,3 +108,24 @@ def test_rank_ic_too_few_pairs_returns_nan():
     out = cgs._rank_ic(pd.Series([1.0, 2.0, 3.0], index=idx),
                        pd.Series([1.0, np.nan, np.nan], index=idx), lag=1)
     assert np.isnan(out["ic"])
+
+
+def test_forward_return_computes_next_h_month_realized_return():
+    idx = pd.period_range("2023-01", periods=4, freq="M").to_timestamp("M")
+    nav = pd.Series([1.0, 1.1, 1.21, 1.331], index=idx)
+    fwd1 = cgs._forward_return(nav, 1)
+    assert fwd1.iloc[0] == pytest.approx(0.10)
+    assert pd.isna(fwd1.iloc[-1])
+    fwd3 = cgs._forward_return(nav, 3)
+    assert fwd3.iloc[0] == pytest.approx(0.331)
+    assert fwd3.iloc[1:].isna().all()
+
+
+def test_monthly_nav_compounds_daily_returns_to_month_end():
+    idx = pd.date_range("2023-01-01", "2023-02-28", freq="D")
+    ret = pd.Series(0.0, index=idx)
+    ret.loc["2023-01-15"] = 0.10
+    ret.loc["2023-02-10"] = 0.05
+    nav = cgs._monthly_nav(ret)
+    assert nav.loc["2023-01-31"] == pytest.approx(1.10)
+    assert nav.loc["2023-02-28"] == pytest.approx(1.10 * 1.05)

@@ -97,3 +97,16 @@ def _rank_ic(signal: pd.Series, fwd_return: pd.Series, *, lag: int) -> dict:
     ranks = pair.rank()
     hac = _hac_ols(ranks["r"], ranks[["s"]].rename(columns={"s": "signal"}), lag=lag)
     return {"ic": float(ic), "t": hac["t"]["signal"], "n": len(pair)}
+
+
+def _monthly_nav(daily_ret: pd.Series) -> pd.Series:
+    """Month-end NAV level (base 1.0) from a daily simple-return series."""
+    nav = (1.0 + daily_ret.fillna(0.0)).cumprod()
+    return nav.resample("ME").last()
+
+
+def _forward_return(monthly_nav: pd.Series, h: int) -> pd.Series:
+    """At each month-end, the realized return over the NEXT `h` months
+    (`nav[t+h] / nav[t] - 1`); NaN for the trailing `h` month-ends where the
+    future NAV isn't known yet."""
+    return (monthly_nav.shift(-h) / monthly_nav - 1.0).rename(f"fwd_{h}m")
