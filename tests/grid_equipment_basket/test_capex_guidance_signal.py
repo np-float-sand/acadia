@@ -28,7 +28,16 @@ def test_guidance_composite_holds_value_between_events():
                        index=pd.date_range("2022-01-01", periods=5, freq="90D"))
     result = cgs.guidance_composite(events, "2022-01-01", "2022-12-31",
                                     zscore_window=1000, zscore_minp=1, winsor=3.0)
-    # a day between two events holds the earlier one's (already z-scored) value
+    # Before the second distinct event, the forward-filled value is flat at
+    # 1.0 throughout -- the rolling window's variance is genuinely zero (not
+    # merely "not yet warm"), so `_trailing_zscore`'s explicit zero-variance
+    # guard correctly returns NaN, not a spurious 0. This confirms the
+    # composite doesn't error out and doesn't leak a numeric artifact during
+    # a held/flat stretch -- both dates must be NaN, matching
+    # `_trailing_zscore`'s own documented "zero-variance window -> NaN, not
+    # inf" contract (not a pytest.approx equality check, since NaN != NaN
+    # under pytest.approx by default).
     d_after_first = events.index[0] + pd.Timedelta(days=5)
     d_of_first = events.index[0]
-    assert result.loc[d_after_first] == pytest.approx(result.loc[d_of_first])
+    assert pd.isna(result.loc[d_of_first])
+    assert pd.isna(result.loc[d_after_first])

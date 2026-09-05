@@ -35,8 +35,4 @@ def guidance_composite(events: pd.Series, start: str, end: str, *,
     if events.empty:
         return pd.Series(dtype=float, name="guidance_composite")
     daily = broadcast_daily(events, start, end)
-    z_scored = _trailing_zscore(daily, zscore_window, zscore_minp, winsor)
-    # For periods with zero variance (NaN z-score), use the original value
-    # instead of propagating the NaN
-    result = z_scored.fillna(daily)
-    return result.rename("guidance_composite")
+    return _trailing_zscore(daily, zscore_window, zscore_minp, winsor).rename("guidance_composite")
