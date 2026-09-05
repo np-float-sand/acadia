@@ -183,3 +183,28 @@ def test_impute_dc_attributed_converges_within_max_iter():
         out5["dc_attributed_usd_m_filled"].fillna(-1.0),
         out20["dc_attributed_usd_m_filled"].fillna(-1.0),
         check_exact=False, atol=1.0, rtol=0.02)
+
+
+def test_impute_dc_attributed_same_day_ties_are_deterministic():
+    aaa_stated = {"utility": "AAA", "report_date": "2023-06-01",
+                  "revision_vs_prior_usd_m": 1000.0, "dc_attributed_usd_m": 500.0,
+                  "dc_basis": "stated"}
+    bbb_qualitative = {"utility": "BBB", "report_date": "2023-06-01",
+                       "revision_vs_prior_usd_m": 800.0, "dc_attributed_usd_m": np.nan,
+                       "dc_basis": "qualitative"}
+
+    df_ab = pd.DataFrame([aaa_stated, bbb_qualitative])
+    df_ab["report_date"] = pd.to_datetime(df_ab["report_date"])
+    out_ab = udg.impute_dc_attributed(df_ab)
+
+    df_ba = pd.DataFrame([bbb_qualitative, aaa_stated])
+    df_ba["report_date"] = pd.to_datetime(df_ba["report_date"])
+    out_ba = udg.impute_dc_attributed(df_ba)
+
+    v_ab = out_ab.loc[out_ab["utility"] == "BBB", "dc_attributed_usd_m_filled"].iloc[0]
+    v_ba = out_ba.loc[out_ba["utility"] == "BBB", "dc_attributed_usd_m_filled"].iloc[0]
+    # same report_date for AAA (stated) and BBB (qualitative) -- the imputed
+    # value for BBB must not depend on which order the two rows appeared in
+    # the input DataFrame.
+    assert v_ab == pytest.approx(v_ba)
+    assert v_ab == pytest.approx(400.0)

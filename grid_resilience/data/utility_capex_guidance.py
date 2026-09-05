@@ -88,8 +88,15 @@ def impute_dc_attributed(df: pd.DataFrame, *, max_iter: int = 5,
     `tol` (relative) between rounds. A row with no stated/derived observation
     anywhere in the panel before its own date keeps `dc_attributed_usd_m_filled`
     NaN -- there is nothing yet to calibrate the ratio from.
+
+    Sorting is by `["report_date", "utility"]` with a stable sort so that
+    same-day rows from different utilities get a deterministic tie order
+    (alphabetical by utility) rather than one that depends on quicksort's
+    behaviour on the input's pre-sort row order -- `ratio_asof` is a cumsum
+    inclusive of each row's own sorted position, so an undefined same-day
+    tiebreak would make results depend on incidental input row order.
     """
-    out = df.sort_values("report_date").reset_index(drop=True).copy()
+    out = df.sort_values(["report_date", "utility"], kind="stable").reset_index(drop=True).copy()
     observed = out["dc_basis"].isin(["stated", "derived"]) & out["dc_attributed_usd_m"].notna()
     has_rev = out["revision_vs_prior_usd_m"].notna() & (out["revision_vs_prior_usd_m"] != 0)
     needs_fill = out["dc_basis"].isin(["qualitative", "none"]) & has_rev
