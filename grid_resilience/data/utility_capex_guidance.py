@@ -133,3 +133,40 @@ def impute_dc_attributed(df: pd.DataFrame, *, max_iter: int = 5,
         prev_total = total_now
 
     return out
+
+
+def aggregate_revision_series(df: pd.DataFrame, *, value_col: str = "revision_vs_prior_usd_m",
+                              denom_col: str | None = None, ttm_quarters: int = 4) -> pd.Series:
+    """Trailing-`ttm_quarters`-quarter (~91.3 days/quarter) rolling sum of
+    `value_col` across every panel row with a non-null value, evaluated at
+    each of the panel's own distinct `report_date` values (event-dated --
+    callers broadcast this to a daily index via `guidance_composite`).
+
+    `denom_col=None` -> the $ series (spec s4.1's `agg_revision_ttm_usd`).
+    `denom_col="prior_capex_plan_usd_m"` -> the size-weighted percent series
+    (spec s4.1's `agg_revision_ttm_pct`): at each event date, the ratio of the
+    trailing-window SUM of `value_col` to the trailing-window SUM of
+    `denom_col` -- not a mean of each row's own percentage."""
+    s = df.dropna(subset=[value_col]).sort_values("report_date")
+    dates = pd.DatetimeIndex(s["report_date"])
+    values = s[value_col].to_numpy()
+    denom_values = s[denom_col].fillna(0.0).to_numpy() if denom_col else None
+    window = pd.Timedelta(days=round(91.3 * ttm_quarters))
+
+    event_dates = pd.DatetimeIndex(sorted(dates.unique()))
+    num_out: list[float] = []
+    den_out: list[float] = []
+    for d in event_dates:
+        mask = (dates > d - window) & (dates <= d)
+        num_out.append(float(values[mask].sum()))
+        if denom_col:
+            den_out.append(float(denom_values[mask].sum()))
+
+    num = pd.Series(num_out, index=event_dates)
+    if not denom_col:
+        result = num
+    else:
+        den = pd.Series(den_out, index=event_dates)
+        result = num / den.replace(0.0, np.nan)
+    name = value_col + ("_ttm_pct" if denom_col else "_ttm")
+    return result.rename(name)

@@ -208,3 +208,51 @@ def test_impute_dc_attributed_same_day_ties_are_deterministic():
     # the input DataFrame.
     assert v_ab == pytest.approx(v_ba)
     assert v_ab == pytest.approx(400.0)
+
+
+def test_aggregate_revision_series_usd_is_trailing_sum_within_window():
+    df = pd.DataFrame({
+        "utility":     ["AAA", "BBB", "AAA"],
+        "report_date": pd.to_datetime(["2023-01-01", "2023-02-01", "2023-11-01"]),
+        "revision_vs_prior_usd_m": [100.0, 50.0, 200.0],
+    })
+    s = udg.aggregate_revision_series(df, value_col="revision_vs_prior_usd_m", ttm_quarters=4)
+    # at 2023-02-01, trailing 4Q (~365 days) window includes both prior events -> 150
+    assert s.loc[pd.Timestamp("2023-02-01")] == pytest.approx(150.0)
+    # at 2023-11-01, the Jan event (>365 days back is not yet true, ~304 days,
+    # still inside the window) plus itself -> all three sum to 350
+    assert s.loc[pd.Timestamp("2023-11-01")] == pytest.approx(350.0)
+
+
+def test_aggregate_revision_series_drops_out_after_ttm_window():
+    df = pd.DataFrame({
+        "utility":     ["AAA", "AAA"],
+        "report_date": pd.to_datetime(["2022-01-01", "2023-06-01"]),
+        "revision_vs_prior_usd_m": [100.0, 50.0],
+    })
+    s = udg.aggregate_revision_series(df, value_col="revision_vs_prior_usd_m", ttm_quarters=4)
+    # by 2023-06-01 the 2022-01-01 event is >365 days old -> only the new one counts
+    assert s.loc[pd.Timestamp("2023-06-01")] == pytest.approx(50.0)
+
+
+def test_aggregate_revision_series_pct_is_size_weighted_not_mean_of_percents():
+    df = pd.DataFrame({
+        "utility":     ["AAA", "BBB"],
+        "report_date": pd.to_datetime(["2023-01-01", "2023-01-15"]),
+        "revision_vs_prior_usd_m": [100.0, 10.0],
+        "prior_capex_plan_usd_m":  [1000.0, 20.0],   # AAA 10%, BBB 50%
+    })
+    s = udg.aggregate_revision_series(df, value_col="revision_vs_prior_usd_m",
+                                      denom_col="prior_capex_plan_usd_m", ttm_quarters=4)
+    # size-weighted: (100+10)/(1000+20) = 0.1078..., NOT mean(10%, 50%) = 30%
+    assert s.loc[pd.Timestamp("2023-01-15")] == pytest.approx(110.0 / 1020.0)
+
+
+def test_aggregate_revision_series_drops_rows_with_missing_value():
+    df = pd.DataFrame({
+        "utility": ["AAA", "BBB"], "report_date": pd.to_datetime(["2023-01-01", "2023-01-02"]),
+        "dc_attributed_usd_m": [np.nan, 40.0],
+    })
+    s = udg.aggregate_revision_series(df, value_col="dc_attributed_usd_m", ttm_quarters=4)
+    assert list(s.index) == [pd.Timestamp("2023-01-02")]
+    assert s.iloc[0] == pytest.approx(40.0)
