@@ -65,3 +65,46 @@ def test_guidance_scaler_clips_and_defaults_to_one_when_nan():
     assert scaled.iloc[1] == pytest.approx(1.5)   # 1+0.35*2=1.7 -> clipped to hi
     assert scaled.iloc[2] == pytest.approx(0.5)   # 1-0.7=0.3 -> clipped to lo
     assert scaled.iloc[3] == pytest.approx(1.0)   # NaN -> default
+
+
+def test_hac_ols_recovers_a_strong_known_relationship():
+    rng = np.random.default_rng(0)
+    n = 60
+    x = pd.Series(rng.normal(size=n), index=pd.date_range("2020-01-31", periods=n, freq="ME"))
+    y = 2.0 * x + rng.normal(scale=0.1, size=n)
+    out = cgs._hac_ols(y, pd.DataFrame({"x": x}), lag=1)
+    assert out["coef"]["x"] == pytest.approx(2.0, abs=0.2)
+    assert abs(out["t"]["x"]) >= 2.0
+
+
+def test_hac_ols_no_relationship_gives_small_t():
+    rng = np.random.default_rng(1)
+    n = 60
+    x = pd.Series(rng.normal(size=n), index=pd.date_range("2020-01-31", periods=n, freq="ME"))
+    y = pd.Series(rng.normal(size=n), index=x.index)
+    out = cgs._hac_ols(y, pd.DataFrame({"x": x}), lag=1)
+    assert abs(out["t"]["x"]) < 3.0   # not a hard bound, just "not obviously significant"
+
+
+def test_hac_ols_too_few_observations_returns_nan_not_a_crash():
+    x = pd.Series([1.0, 2.0], index=pd.date_range("2020-01-31", periods=2, freq="ME"))
+    y = pd.Series([1.0, 2.0], index=x.index)
+    out = cgs._hac_ols(y, pd.DataFrame({"x": x}), lag=1)
+    assert np.isnan(out["t"]["x"])
+
+
+def test_rank_ic_positive_when_signal_leads_forward_return():
+    idx = pd.date_range("2020-01-31", periods=40, freq="ME")
+    rng = np.random.default_rng(2)
+    signal = pd.Series(rng.normal(size=40), index=idx)
+    fwd = signal + rng.normal(scale=0.3, size=40)
+    out = cgs._rank_ic(signal, pd.Series(fwd.values, index=idx), lag=1)
+    assert out["ic"] > 0.5
+    assert out["t"] >= 2.0
+
+
+def test_rank_ic_too_few_pairs_returns_nan():
+    idx = pd.date_range("2020-01-31", periods=3, freq="ME")
+    out = cgs._rank_ic(pd.Series([1.0, 2.0, 3.0], index=idx),
+                       pd.Series([1.0, np.nan, np.nan], index=idx), lag=1)
+    assert np.isnan(out["ic"])

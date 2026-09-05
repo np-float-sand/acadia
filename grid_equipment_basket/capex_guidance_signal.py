@@ -61,3 +61,39 @@ def guidance_scaler(composite: pd.Series, *,
     z = composite.fillna(0.0)
     raw = (1.0 + k * z).clip(lower=lo, upper=hi)
     return raw.where(composite.notna(), 1.0).rename("guidance_scaler")
+
+
+def _hac_ols(y: pd.Series, X: pd.DataFrame, *, lag: int) -> dict:
+    """OLS of `y` on `X` (a constant is added automatically) with Newey-West
+    HAC standard errors at `lag`. Used both for the rank-IC t-stat (on ranked
+    series) and the multi-control regression (on raw series) -- spec s5.1/s5.2.
+    Returns `{"coef": {col: value}, "t": {col: value}, "n": n_obs}`; a NaN dict
+    when there aren't enough observations to fit, rather than raising."""
+    import statsmodels.api as sm
+
+    frame = pd.concat([y.rename("__y__"), X], axis=1).dropna()
+    cols = list(X.columns)
+    if len(frame) < len(cols) + 3:
+        return {"coef": {c: np.nan for c in cols}, "t": {c: np.nan for c in cols}, "n": len(frame)}
+    yy = frame["__y__"]
+    XX = sm.add_constant(frame[cols])
+    fit = sm.OLS(yy, XX).fit(cov_type="HAC", cov_kwds={"maxlags": max(int(lag), 1)})
+    return {"coef": {c: float(fit.params[c]) for c in cols},
+           "t": {c: float(fit.tvalues[c]) for c in cols}, "n": int(len(frame))}
+
+
+def _rank_ic(signal: pd.Series, fwd_return: pd.Series, *, lag: int) -> dict:
+    """Spearman rank-IC (point estimate via `scipy.stats.spearmanr`) plus a
+    serial-correlation-robust t-stat: `_hac_ols` of `rank(fwd_return)` on
+    `rank(signal)` with Newey-West lag=`lag` (the overlapping-forward-window
+    horizons h=3/6 have serially correlated residuals month to month, which a
+    plain Spearman significance test would understate). Spec s5.1."""
+    from scipy.stats import spearmanr
+
+    pair = pd.concat([signal.rename("s"), fwd_return.rename("r")], axis=1).dropna()
+    if len(pair) < 5:
+        return {"ic": np.nan, "t": np.nan, "n": len(pair)}
+    ic, _ = spearmanr(pair["s"], pair["r"])
+    ranks = pair.rank()
+    hac = _hac_ols(ranks["r"], ranks[["s"]].rename(columns={"s": "signal"}), lag=lag)
+    return {"ic": float(ic), "t": hac["t"]["signal"], "n": len(pair)}
