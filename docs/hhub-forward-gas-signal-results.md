@@ -168,3 +168,33 @@ classes -- forecast (PJM Table B-9), physical-flow (congestion, FTR), commitment
 guidance) -- have now each failed to time this basket under pre-registered discipline. The
 monthly-resolution probes do not even reproduce the spurious +0.8 annual k=-1 artifact the VA /
 Table-B-9 work threw. Defensible prior: the timing edge is not reachable with available data.
+
+## Round 5 (2026-09-05) — IS/OOS split WITHIN the AI regime (2023-26)
+
+Per "2018 was a different regime, split 2023-26 for in/out-of-sample":
+
+| protocol | model | test rank-IC | perm p | overlay Sh vs static |
+|---|---|---|---|---|
+| train 2023-24 -> test 2025-26 (n=19) | Ridge 25f | +0.29 | 0.11 | 1.53 / 1.15 |
+| | GBM 6f | +0.18 | 0.19 | 1.08 / 1.15 |
+| | RF 6f | +0.18 | 0.19 | 1.11 / 1.15 |
+| train 2025-26 -> test 2023-24 (n=24) | RF 6f | +0.40 | 0.18 | 1.94 / 1.80 |
+| | Ridge 6f | +0.40 | 0.03 | R2 = -0.65 (broken) |
+| expanding walk-fwd in 2023-26 (OOS n=25) | GBM 25f | +0.32 | -- | -- |
+| | GBM 6f | +0.06 | -- | -- |
+
+(LEAN 6 features = pjw_chg6, sparkPJ_chg6, unl_ema6, catscore, ng_chg12, d10y.)
+
+Everything leans **mildly positive** (dir-acc 0.58-0.71, ICs positive, overlays >= static -- not
+anti-predictive), but **nothing clears a permutation null** (best real p ~= 0.11); the FULL-model
+walk-forward +0.32 collapses to +0.06 with a sensible 6-feature model (25 features exploiting
+noise on ~20 training rows); the one p=0.03 cell has R2 = -0.65. At n=19-25 with target
+autocorrelation, a faint positive tilt is indistinguishable from momentum structure. Splitting
+the AI regime does not rescue it.
+
+**Not included:** the other session's IESC/EME gross-margin vs DC-hub QCEW-wage-index feature
+(+4.19 level / +2.66 spread, the only cell same-sign pre/post-2022). Different pipeline, different
+universe (contractor sleeve, not the 9). Its own OOS test should cover: 2023-26 IS/OOS half-split;
+Bonferroni for 1-of-24 (|t|>=2.9 -> level clears, spread does not); and whether it predicts
+contractor-sleeve *returns*, not just co-moves with margins. The one remaining combined test is
+unioning that feature set with these STEO/gas/category features in one walk-forward model.
