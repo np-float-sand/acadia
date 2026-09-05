@@ -56,6 +56,10 @@ def main() -> None:
     ap.add_argument("--overlay-l2", dest="overlay_l2", action="store_true",
                     help="also run the layer-2 grid-congestion regime ladder (both windows) "
                          "and write regime_metrics.csv / regime_timeline.csv")
+    ap.add_argument("--capex-guidance", dest="capex_guidance", action="store_true",
+                    help="also run the utility capex-guidance revision signal report "
+                         "(Deliverable D) and write capex_guidance_timing.csv / "
+                         "capex_guidance_gates.json")
     ap.add_argument("--output", default="./output_grid_equipment")
     ap.add_argument("--no-plot", action="store_true")
     args = ap.parse_args()
@@ -94,6 +98,12 @@ def main() -> None:
         print("\n" + grid_regime.regime_table(rrep))
         _write_regime_outputs(rrep, out)
 
+    if args.capex_guidance:
+        from grid_equipment_basket import capex_guidance_signal
+        grep = capex_guidance_signal.guidance_signal_report()
+        print("\n" + capex_guidance_signal.guidance_table(grep))
+        _write_guidance_outputs(grep, out)
+
     rows = [{"name": "BASKET", **res["basket"]}]
     for b, blk in res["benchmarks"].items():
         rows.append({"name": b, **blk["metrics"]})
@@ -123,6 +133,34 @@ def _write_regime_outputs(rep: dict, out: Path) -> None:
     pd.DataFrame(rows).to_csv(out / "regime_metrics.csv", index=False)
     pd.DataFrame(timeline).to_csv(out / "regime_timeline.csv")
     print(f"\nwrote {out}/regime_metrics.csv, regime_timeline.csv")
+
+
+def _write_guidance_outputs(rep: dict, out: Path) -> None:
+    import json
+
+    if rep.get("universe_used") == "not_testable":
+        (out / "capex_guidance_gates.json").write_text(json.dumps(rep, default=str, indent=2))
+        print(f"\nwrote {out}/capex_guidance_gates.json (not yet testable)")
+        return
+
+    rows = []
+    for name, by_h in rep["timing_basket"].items():
+        for h, cell in by_h.items():
+            rows.append({
+                "series": name, "horizon_months": h,
+                "rank_ic": cell["rank_ic_primary"]["ic"], "rank_ic_t": cell["rank_ic_primary"]["t"],
+                "control_t": cell["control_without_hyperscaler"]["t"].get("signal"),
+                "passed": cell["passed"],
+            })
+    pd.DataFrame(rows).to_csv(out / "capex_guidance_timing.csv", index=False)
+    (out / "capex_guidance_gates.json").write_text(json.dumps({
+        "universe_used": rep["universe_used"], "feasibility": rep["feasibility"],
+        "derisk": {"verdict": rep["derisk_scaler_gate"]["derisk"]["verdict"],
+                  "gate": rep["derisk_scaler_gate"]["derisk"]["gate"]},
+        "scaler": {"verdict": rep["derisk_scaler_gate"]["scaler"]["verdict"],
+                  "gate": rep["derisk_scaler_gate"]["scaler"]["gate"]},
+    }, default=str, indent=2))
+    print(f"\nwrote {out}/capex_guidance_timing.csv, capex_guidance_gates.json")
 
 
 def _write_value_chain_outputs(rep: dict, out: Path) -> None:

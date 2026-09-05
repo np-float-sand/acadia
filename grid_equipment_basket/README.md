@@ -231,6 +231,7 @@ python -m grid_equipment_basket [--start ...] [--end ...] [--prior-regime]
     [--drop-winners]        # value-chain constructions only: drop VRT, GEV from makers
     [--overlay]             # also print the layer-1 risk overlay (trend gate + vol target) report
     [--overlay-l2]          # also run the layer-2 grid-congestion regime ladder (both windows)
+    [--capex-guidance]      # also run the utility capex-guidance revision signal report (Deliverable D)
     [--output DIR] [--no-plot]
 ```
 
@@ -258,6 +259,9 @@ Outputs (to `--output`, default `./output_grid_equipment`):
 - `value-chain-tilt` / `pair`: `value_chain_metrics.csv`, `value_chain_gates.json`
 - `--overlay-l2`: `regime_metrics.csv` (baselines + per-rung metrics/gate/verdict, both windows),
   `regime_timeline.csv` (per-rung daily exposure multiplier)
+- `--capex-guidance`: `capex_guidance_timing.csv` (per-series/horizon rank-IC, control-t, pass flag),
+  `capex_guidance_gates.json` (universe/feasibility + de-risk & scaler gate verdicts; when the
+  panel is not yet testable, just the not-testable dict)
 
 ## Layer-2 grid-congestion regime signal (2026-08-31 — OFF by default, 2026-09-01)
 
