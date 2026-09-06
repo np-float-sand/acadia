@@ -97,8 +97,8 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Backlog-coverage-alone tilt (RPO ÷ TTM revenue) | 2026-09-02 | FAILED Gate 1 — indistinguishable from equal-weight where it engages | `docs/backlog-coverage-signal-results.md` |
 | Grid-demand-sensitivity factor (Proposal D) | 2026-08-31 | FAILED — IC t = −0.47 | `docs/triage_2026-08-31-proposals-bda.md` |
 | VA/Dominion transmission-filing work-type tilt | 2026-09-03 | FAILED — mix ~all line/rebuild/substation; static "tilt to EPCs, zero the makers" | `docs/va-transmission-filings-probe-results.md` |
-| Cross-sectional price momentum, wide 44-name universe | 2026-09-05 | FAILED — 2023–24 burst only (+2.5 Sharpe), +0.24 since; sector bet on EPCs | `scratchpad/xsec/mom_stress.py` |
-| Cointegration pairs stat-arb (wide universe) | 2026-09-05 | FAILED — OOS Sharpe ~0.3–0.5, one −0.9 year | `scratchpad/xsec/pairs.py` |
+| Cross-sectional price momentum, wide 44-name universe | 2026-09-05 | FAILED — 2023–24 burst only (+2.5 Sharpe), +0.24 since; sector bet on EPCs | `research/xsec_factors_ls/mom_stress.py` |
+| Cointegration pairs stat-arb (wide universe) | 2026-09-05 | FAILED — OOS Sharpe ~0.3–0.5, one −0.9 year | `research/xsec_factors_ls/pairs.py` |
 | Un-crowd the universe (POWL/ATKR/AZZ/…) | 2026-08-31 | FAILED — underperforms marquee, deeper DD, 0.84 corr | `docs/triage_2026-08-31-differentiation-ideas.md` |
 
 ### Short-leg / hedge search — CLOSED
@@ -166,10 +166,11 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
   `grid_resilience/data/seed/va_transmission_projects.csv`; `grid_resilience/data/seed/pjm_large_load_b9_vintages.csv`;
   `grid_equipment_basket/data/category_demand.py` (FRED panel — dashboard series, not a signal);
   `grid_equipment_basket/ftr_signal.py` (negative result, kept).
-- **Exploratory / throwaway probes:** `scratchpad/` — flat files are the strategy-package
-  session's (`crowding_probe`, `backlash_hedge`, `hedge_probe`, `hedge_feasibility`,
-  `utility_rotation`, `make_exposure_plot`); subdirs are this session's
-  (`va_probe/`, `catrot/`, `hhub/`, `xsec/`). None are production; re-run to regenerate.
+- **Exploratory probes (tracked):** `research/` — `va_transmission_probe/`,
+  `category_demand_rotation/`, `forward_gas_power/`, `xsec_factors_ls/` (see `research/README.md`).
+  The parallel electrification-strategy session keeps its throwaway scripts in the gitignored
+  `scratchpad/` (`crowding_probe`, `backlash_hedge`, `hedge_probe`, `hedge_feasibility`,
+  `utility_rotation`, `make_exposure_plot`). None are production; re-run to regenerate.
 - **Proposals:** `docs/electrification-strategy-proposal-v2.md` / `.html` (canonical, `screen`),
   `docs/electrification-strategy-proposal.html` (earlier, ETF-holdings).
 - **Handoffs (context):** `handoff_2026-09-01-grid-buildout-long-short.md` (the full prior record),
