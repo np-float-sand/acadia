@@ -228,3 +228,25 @@ lower*, not a feature to copy. Nothing wired.
 basket. The book is trimmed below its 0.85 baseline ~73% of days (vol target); the
 valuation rule specifically is active (mult < 1) ~42%, bottoming at 0.6; deepest combined
 trim 0.14 in Apr-2020. Overlays barely move rolling Sharpe -- they buy the smaller drawdown.
+
+## Follow-up (2026-09-06): rotate INTO solar when rates fall -- mild PASS
+
+The *opposite sign* of the rejected DER short. A small LONG in the beaten-down DER sleeve
+(ENPH SEDG CHPT RUN BLNK STEM), sized up when the 6-mo real-yield change is negative
+(rates falling, 42% of days), on the shipped `screen +val+sleeve`:
+
+| structure | full Sharpe | CAGR | MaxDD | fair Sharpe | feared P&L vs ship |
+|---|---|---|---|---|---|
+| shipped `screen +val+sleeve` | 0.69 | 14.4% | -24.0% | 1.35 | -- |
+| + LONG 0.10x solar when rates falling | **0.77** | 16.8% | -26.8% | 1.40 | **+7%** |
+| + LONG 0.15x solar when rates falling | 0.79 | 17.9% | -29.2% | 1.39 | +11% |
+| + LONG 0.05x solar ALWAYS (barbell) | 0.74 | 16.3% | -25.1% | 1.27 | +12% |
+
+A convex "rate-relief" cushion for the exact feared scenario (rates fall -> washed-out
+solar squeezes up -> AI-power suppliers de-rate): raises full Sharpe 0.69->0.77 at 0.10x,
+lifts CAGR, and is *positive* in the feared months (+7%). Cost: MaxDD -24%->-27% (solar is
+a -90% asset), and it's a levered mean-reversion bet with squeeze risk both ways, one
+cycle. The conditional trigger avoids most of the "-0.5 Sharpe drag in 2023-26" the
+strategy note flagged for an always-on barbell (fair Sharpe holds 1.35->1.40 vs the always
+rows sagging to 1.17). **Candidate refinement, not yet wired** -- would need the trigger
+tightened (42% of days is loose) and disclosed as adding tail risk.
