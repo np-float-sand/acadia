@@ -148,3 +148,89 @@ Keep the VA table + SCC fetch helpers as a **monitored input to the discretionar
 (`docs/handoff_2026-09-01-grid-buildout-long-short.md` §7) — it confirms scale and the DC-driven
 share with more resolution than Table B-9, but yields no tradeable timing signal and no defensible
 cross-sectional name weighting from Virginia alone.
+
+---
+
+## 6. Part 2 — data-center COMMITMENT signals (new, not yet built)
+
+**Motivation.** Everything that has failed (PJM Table B-9 MW forecasts, capacity-auction prices,
+grid congestion, big-4 capex-decel, and the VA project-$ probe in §5) is *forecast* or
+*physical-flow* data — slow, revised, lagging, quarterly corr ≈ 0 with the basket. The untried
+class is **commitment data**: a signed ESA or a raised capex-guidance number is a firm forward
+obligation that leads spend and arrives as a discrete dated event. Try all three below; each is an
+independent probe with its own kill.
+
+**Shared pre-registration** (before any live run, per the layer-2 discipline):
+- Primary window **2023-01 → 2026-08**; prior window **2021-01 → 2022-12** (note: the DC-tariff
+  data barely predates 2024, so C's prior window is effectively empty — score C on primary +
+  a forward-holdout only, and say so).
+- **Timing bar:** monthly rank-IC of the signal vs next-1/3/6-month basket (and long/short spread)
+  return, |t| ≥ 2 on the common window; survives a control regression on Δ10y yield + SMH.
+- **De-risk/scaler bar:** the signal-scaled book beats the static book on **Sharpe AND Calmar on
+  both windows**, on a parameter plateau (not a knife-edge).
+- Kill on the cheap feasibility check first (can the data even be assembled point-in-time?).
+
+### Deliverable C — data-center tariff / ESA filings at state PUCs  *(recommended, reuses §2 stack)*
+
+- **Hypothesis:** the quarterly flow of *newly-contracted firm DC MW* (from executed Electric
+  Service Agreements and new large-load tariff cases) leads the basket, where the MW-forecast
+  revisions did not — because an ESA is take-or-pay, not a planner's guess.
+- **Sources / dated events:** AEP Ohio large-load tariff (PUCO 24-508-EL-ATA — disclosed ~30 GW of
+  DC requests), Georgia Power (GA PSC), Indiana (AES IN, Duke IN, I&M — IURC), Dominion VA
+  large-load tariff (VA SCC), plus FERC-filed transmission-level ESAs in eLibrary. Same
+  docket-scrape + `pdftotext` stack as Deliverable A.
+- **Series:** `filing_date, approval_date, iso, utility, contracted_mw, min_take_pct,
+  ramp_years, doc_type, source_url`; aggregate to quarterly newly-contracted MW by ISO and RTO.
+- **Test:** rank-IC of ΔMW-contracted vs forward basket / spread return; also an event-study CAR
+  around each large tariff-case *filing* and *approval* date.
+- **Feasibility kill:** if < ~6 quarters of assemblable contracted-MW exist across ≥ 3 states →
+  log "not yet testable", set up the quarterly capture, revisit ~2027.
+- **Effort:** ~2–3 days (docket scraping dominates). **Prior:** low-moderate — genuinely different
+  mechanism (commitment vs forecast), but very short history and one regime.
+
+### Deliverable D — aggregate utility capex-guidance revisions, DC-attributed
+
+- **Hypothesis:** Δ(sum of the top ~15 US electric utilities' forward 5-yr capex guidance), with
+  the data-center-attributed portion, leads the equipment basket 1–3 quarters — equipment stocks
+  demonstrably price customer capex *guidance* ahead of the spend.
+- **Universe:** D, AEP, NEE, SO, ETR, XEL, DUK, PCG, EIX, PPL, FE, AEE, WEC, CMS, DTE.
+- **Sources:** quarterly earnings-call transcripts + 10-K "capital program" tables + major
+  rate-case testimony. Capture guidance level, revision, and the DC/large-load attribution when
+  stated.
+- **Series:** `quarter, utility, capex_guide_5yr_usd, revision_vs_prior, dc_attributed_usd (if
+  disclosed), source`; aggregate to an RTO/US total and its QoQ change.
+- **Test:** rank-IC / lead-lag of Δaggregate-guidance vs the basket and the long/short spread;
+  control for the big-4 hyperscaler capex series (`capex_signal.py`) to show it adds beyond it.
+- **Feasibility kill:** if fewer than ~8 utilities give a usable 5-yr number with revisions →
+  fall back to just D + AEP + NEE (the DC-heaviest) and note reduced breadth.
+- **Effort:** ~2 days (transcript pull). **Prior:** moderate — forward-looking and filing-based;
+  the risk is it's already in the equipment stocks' price given how covered this theme is.
+
+### Deliverable E — county data-center permit / zoning / tax-abatement filings
+
+- **Hypothesis:** county-level DC permit/rezoning/abatement approvals (with disclosed MW / sq ft /
+  capex) *lead* the utility interconnection queue by 6–18 months — the physical pipeline before
+  the grid sees it — and therefore lead the basket earlier than any utility-side signal.
+- **Sources:** Loudoun & Prince William County VA (planning-commission dockets), Franklin/Licking
+  County OH (New Albany), North Texas (Dallas/Tarrant/Denton), Iowa (Council Bluffs), Phoenix-metro
+  AZ. Data Center Dynamics / county GIS portals as discovery, county filings as the record.
+- **Series:** `approval_date, county, project_name, operator (if named), planned_mw, planned_sqft,
+  capex_usd, incentive_value, source_url`; aggregate to quarterly approved MW by region.
+- **Test:** does quarterly approved-MW lead the utility queue Δ (cross-check vs PJM LAS / ERCOT)
+  *and* the basket? Rank-IC and lead-lag, primary + prior windows.
+- **Feasibility kill:** if the top ~5 counties can't be assembled into a consistent quarterly MW
+  series within ~1 day of trying → log, pick the 2 richest (Loudoun, Prince William) only.
+- **Effort:** ~3–4 days (heterogeneous county sources, no single feed). **Prior:** low on
+  effort-adjusted basis, but it is the *most leading* of anything considered — worth the dig if C
+  and D come back weak.
+
+### Order of attack
+
+1. **D first** (cheapest, best prior, transcript-only — no scraping).
+2. **C next** (reuses the Deliverable-A docket stack; feasibility-gate hard on history depth).
+3. **E last / in parallel as a data-collection project** (start the quarterly capture now
+   regardless, test when ≥ 8 quarters exist).
+
+If C, D, E all come back with quarterly rank-IC ≈ 0 like Table B-9 and the VA probe, that is
+~17 attempts — **stop looking for a data-center demand signal; ship the trade as a discretionary
+thematic position** (`docs/handoff_2026-09-01…` §7) and keep the E capture running for a 2028 re-test.
