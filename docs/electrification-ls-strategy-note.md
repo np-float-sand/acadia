@@ -182,3 +182,45 @@ manifestation of a durable cross-industry anomaly.
   correlated clean-energy short.
 - If the mandate is truly "a durable long/short," **aero-supply / airlines** has far more
   cross-cycle evidence than this theme and is worth a separate look.
+
+---
+
+## 7. Follow-ups tested 2026-09-05 (combining industries; reverse-corr hunt; firm-thermal thesis)
+
+### Combining supplier-longs / downstream-shorts across industries -> NO
+
+All-supplier EW long (aero+grid+semicap+ag+mining+rail) vs all-downstream EW short, beta-hedged:
+full Sharpe **+0.13** (13-18 -0.09, 19-22 -0.31, 23-26 +0.88, 25-26 +0.07); corr(long,short)=+0.77.
+Long-only all-suppliers EW = full Sharpe **+0.77**. Combining makes it *more* correlated and worse.
+**aero-supply/airlines only has merit standalone** (full +0.80) -- diluting it kills it. BOOKMARK:
+run aero-supply/airlines as its own L/S book, not blended.
+
+### Reverse-correlation hunt vs the electrification long book (monthly returns)
+
+| asset | full | 2019-22 | 2023-26 | |
+|---|---|---|---|---|
+| VIXY | **-0.60** | -0.78 | -0.41 | negative every regime; ~-30%/yr carry -> tactical tail hedge only |
+| UUP / USD | -0.31 | -0.46 | -0.04 | genuine, cheap, faded in 2023-26 |
+| TLT | -0.22 | -0.18 | +0.30 | hedge except in a rate shock |
+| GLD | +0.02 | +0.04 | -0.03 | uncorrelated, not negative |
+
+Everything else +0.3..+0.75. No holdable negatively-correlated return leg exists; VIX and the
+dollar are the only real negatives and both are tactical.
+
+### "Firm thermal wins as the grid gets solved, solar pushed down"
+
+The economic argument is coherent (AI load needs firm 24/7 power; as transmission/equipment is
+built the bottleneck becomes dispatchable gen -> gas turbines, nuclear restarts, coal deferrals;
+distributed solar loses its value prop to an abundant grid + NEM reform + high financing cost +
+Chinese panel glut). **But the data says it is the trade that already happened, not a hedge:**
+
+- long FIRM (GEV NRG VST TLN CEG CCJ UEC BWXT) / short solar: Sharpe +1.73..+1.79 in 2023-26,
+  ~0 to -0.3 before -- identical regime pattern to grid/solar, now largely priced.
+- FIRM is **+0.60 correlated** with the grid-equipment long book; in that book's worst 40 months
+  FIRM averaged **-5.7%** (vs +1.9% normally) -- falls harder, not a hedge.
+- In those same worst months resi-solar fell only -1.3% -- so in a sharp AI-power selloff, being
+  short solar *hurts*. Confirms the "solar bounce = we're in trouble" risk.
+
+**Net:** no durable short/hedge for this book anywhere. Long-only core stands; any drawdown
+protection is a small GLD (uncorrelated) + a tactical VIX/USD overlay, sized by the rates+credit
+signal. Firm-thermal is more of the same beta, not a diversifier.
