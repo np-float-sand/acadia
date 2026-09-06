@@ -1,0 +1,443 @@
+<title>Electrification Strategy Proposal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --bg:#f7f5f1;
+    --surface:#ffffff;
+    --ink:#1b1f24;
+    --ink-soft:#5b626b;
+    --accent:#a8560f;
+    --accent-2:#c2751f;
+    --line:#e6e0d6;
+    --good:#3f6b4b;
+    --bad:#9a3b3b;
+    --shadow:0 1px 2px rgba(20,24,29,.04),0 10px 28px -14px rgba(20,24,29,.14);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171c;
+      --surface:#1b1f25;
+      --ink:#e9e6e0;
+      --ink-soft:#9aa1aa;
+      --accent:#e0954a;
+      --accent-2:#eaa969;
+      --line:#2b3038;
+      --good:#82b28f;
+      --bad:#d98a8a;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171c;
+    --surface:#1b1f25;
+    --ink:#e9e6e0;
+    --ink-soft:#9aa1aa;
+    --accent:#e0954a;
+    --accent-2:#eaa969;
+    --line:#2b3038;
+    --good:#82b28f;
+    --bad:#d98a8a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -16px rgba(0,0,0,.6);
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Newsreader",Georgia,"Times New Roman",serif;
+    font-size:1.0625rem;
+    line-height:1.62;
+    font-optical-sizing:auto;
+  }
+  .wrap{max-width:44rem;margin-inline:auto;padding-inline:1.5rem}
+
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+  a:hover{border-bottom-color:var(--accent)}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+  code{
+    font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.86em;
+    background:color-mix(in srgb,var(--accent) 10%,transparent);
+    color:var(--accent);
+    padding:.08em .38em;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  /* ---- masthead ---- */
+  .masthead{
+    border-bottom:1px solid var(--line);
+    padding-block:3.4rem 2.4rem;
+  }
+  .eyebrow{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-weight:600;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 1.1rem;
+  }
+  h1{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-weight:700;
+    font-size:clamp(2.1rem,6vw,2.9rem);
+    line-height:1.06;
+    letter-spacing:-.018em;
+    text-wrap:balance;
+    margin:0 0 1rem;
+  }
+  .standfirst{
+    font-size:1.2rem;
+    line-height:1.5;
+    color:var(--ink-soft);
+    max-width:34rem;
+    margin:0 0 1.9rem;
+    text-wrap:pretty;
+  }
+  .statline{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0;
+    margin:0 0 1.5rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    background:var(--surface);
+    box-shadow:var(--shadow);
+  }
+  .statline > div{
+    flex:1 1 8rem;
+    padding:.85rem 1rem .95rem;
+    border-right:1px solid var(--line);
+  }
+  .statline > div:last-child{border-right:0}
+  .statline dt{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-size:.68rem;
+    font-weight:600;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:.28rem;
+  }
+  .statline dd{
+    margin:0;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:1.28rem;
+    font-weight:500;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.01em;
+  }
+  .meta{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-size:.82rem;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .meta span{margin-inline:.5ch;opacity:.5}
+
+  /* ---- reading ladder ---- */
+  .ladder{
+    padding-block:2.6rem 1rem;
+    position:relative;
+  }
+  .ladder::before{
+    content:"";
+    position:absolute;
+    left:calc(1.5rem + 4px);
+    top:3.9rem;
+    bottom:5.2rem;
+    width:2px;
+    background:linear-gradient(var(--line),var(--line));
+  }
+  @media (min-width:34rem){
+    .ladder::before{left:calc((100% - 44rem)/2 + 1.5rem + 4px)}
+  }
+  .tier{
+    position:relative;
+    padding-left:2.4rem;
+    margin-bottom:2.9rem;
+  }
+  .tier::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.55rem;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--accent);
+  }
+  .tier h2{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-weight:600;
+    font-size:1.16rem;
+    letter-spacing:-.005em;
+    margin:0 0 .2rem;
+  }
+  .tier .aud{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 1rem;
+  }
+  .tier ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.9rem}
+  .tier li{
+    position:relative;
+    padding-left:1.15rem;
+    text-wrap:pretty;
+  }
+  .tier li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.72em;
+    width:5px;
+    height:5px;
+    border-radius:1px;
+    background:var(--accent-2);
+  }
+  .tier--grad li{font-size:1rem;line-height:1.58}
+
+  /* ---- evidence ---- */
+  section.block{
+    border-top:1px solid var(--line);
+    padding-block:2.6rem;
+  }
+  section.block > h2{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-weight:700;
+    font-size:1.45rem;
+    letter-spacing:-.012em;
+    margin:0 0 .4rem;
+  }
+  section.block > p.lede{
+    color:var(--ink-soft);
+    margin:0 0 1.6rem;
+    max-width:38rem;
+  }
+
+  .table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--surface);
+    box-shadow:var(--shadow);
+    margin-bottom:1.8rem;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:34rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.86rem;
+    font-variant-numeric:tabular-nums;
+  }
+  caption{
+    caption-side:top;
+    text-align:left;
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-size:.74rem;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:.85rem 1rem .2rem;
+  }
+  th,td{padding:.6rem 1rem;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{
+    font-weight:500;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink-soft);
+  }
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:last-child td{font-weight:500}
+  td.neg{color:var(--bad)}
+  td.pos{color:var(--good)}
+
+  .verdicts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:1rem}
+  .verdict{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:.9rem;
+    align-items:start;
+    padding:1rem 1.15rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--surface);
+  }
+  .tag{
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-size:.66rem;
+    font-weight:700;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    padding:.32rem .55rem;
+    border-radius:4px;
+    white-space:nowrap;
+    align-self:start;
+  }
+  .tag.adopt{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+  .tag.reject{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+  .tag.hold{background:color-mix(in srgb,var(--ink-soft) 16%,transparent);color:var(--ink-soft)}
+  .verdict p{margin:0;font-size:.98rem;line-height:1.55;text-wrap:pretty}
+  .verdict strong{font-weight:600}
+
+  .open-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.85rem}
+  .open-list li{
+    padding-left:1.5rem;
+    position:relative;
+    text-wrap:pretty;
+  }
+  .open-list li::before{
+    content:"›";
+    position:absolute;
+    left:0;
+    top:-.05em;
+    color:var(--accent);
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-weight:700;
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding-block:2rem 3.5rem;
+    font-family:"Libre Franklin",system-ui,sans-serif;
+    font-size:.8rem;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+  footer .draft{
+    display:inline-block;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-size:.68rem;
+    color:var(--accent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
+    border-radius:4px;
+    padding:.25rem .5rem;
+    margin-bottom:.9rem;
+  }
+  footer code{white-space:normal}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Investment proposal &middot; review draft</p>
+    <h1>Electrification Strategy</h1>
+    <p class="standfirst">A rules-based long-only electrification-equipment book with a valuation-extension de-lever and a gold/Treasury sleeve. Shipped variant: <code>thematic +val+sleeve</code>.</p>
+    <dl class="statline">
+      <div><dt>Sharpe</dt><dd>0.85</dd></div>
+      <div><dt>Max drawdown</dt><dd>&minus;24%</dd></div>
+      <div><dt>SPY beta</dt><dd>0.59</dd></div>
+      <div><dt>vs VOLT ETF</dt><dd>0.58 / &minus;25%</dd></div>
+    </dl>
+    <p class="meta">2026-09-06 <span>&bull;</span> backtest 2017&ndash;2026 <span>&bull;</span> enhanced thematic beta, not alpha</p>
+  </div>
+</header>
+
+<main class="wrap ladder">
+
+  <section class="tier">
+    <h2>Own the picks and shovels, with two shock absorbers</h2>
+    <p class="aud">if you&rsquo;re five</p>
+    <ul>
+      <li>We buy equal slices of the companies that make the electrical parts for the AI and data-center power boom, and tidy the basket up a few times a year.</li>
+      <li>When those stocks jump up too fast we hold a bit less, and we keep some gold and government bonds on the side as a cushion for when the boom stumbles.</li>
+      <li>We lean toward the &ldquo;keep-the-grid-running&rdquo; companies and away from the &ldquo;build-brand-new-data-centers&rdquo; ones, so if towns start blocking data centers we get hurt less.</li>
+    </ul>
+  </section>
+
+  <section class="tier">
+    <h2>A disciplined way to own the theme</h2>
+    <p class="aud">if you&rsquo;re ten</p>
+    <ul>
+      <li>It&rsquo;s a rules-based basket of ~10 US electrification / grid-equipment stocks (the ones the electrification ETFs agree on), equal-weighted, rebalanced quarterly, and dialed to a steady 20% risk level &mdash; a disciplined way to own the theme, not a stock-picking bet; 2017&ndash;2026 test Sharpe 0.85, worst drop &minus;24%, vs the VOLT ETF&rsquo;s 0.58 and &minus;25%.</li>
+      <li>Two shock absorbers: a rule that trims the basket when it has run far above its own trend or far ahead of the market, and a 15% sleeve of gold + Treasuries that pays off in the two macro ways the story breaks &mdash; a credit/growth scare (bonds rise) or a government-spending / currency-debasement episode (gold rises).</li>
+      <li>For the risk the sleeve can&rsquo;t cover &mdash; a political backlash (data-center moratoriums, permit denials) with no recession &mdash; we tilt ~70/30 toward grid-maintenance names over greenfield data-center-power names; in the months tested where data-center stocks fell on their own, the grid-maintenance names were roughly flat.</li>
+    </ul>
+  </section>
+
+  <section class="tier tier--grad">
+    <h2>Construction, overlays, and the backlash gap</h2>
+    <p class="aud">if you&rsquo;re a first-year grad</p>
+    <ul>
+      <li><strong>Construction.</strong> Electrification-equipment universe by &ge;2-of-4 thematic-ETF overlap + GICS sub-industry filter + 252-day listing gate, equal-weight (25% cap), 42-day reporting lag, 20% trailing-realised-vol target (1.5&times; cap) &mdash; 2017&ndash;2026 Sharpe 0.85 / MaxDD &minus;24% / SPY &beta; 0.59 (VOLT: 0.58 / &minus;25%). Enhanced thematic beta, explicitly not alpha; pre-live gate is a point-in-time membership + profitability rebuild.</li>
+      <li><strong>Overlays.</strong> (i) Graduated valuation-extension de-lever &mdash; multiplier 1.0 / 0.8 / 0.6 on price-vs-200dMA (15% / 35%) and 12-month return vs SPY (25% / 50%), a mild top-trim worth ~0&ndash;3pp of MaxDD; (ii) 15% GLD/IEF sleeve hedging the financing-tightening (duration) and debasement / geopolitical (gold) tails of the industrial-policy regime that funds the buildout &mdash; +13% contribution across the &ldquo;rates fall while AI-capex unwinds&rdquo; months, and it raises Sharpe.</li>
+      <li><strong>Idiosyncratic-backlash handling.</strong> A 70/30 revenue tilt toward grid-reliability / T&amp;D / broad-electrification names (&beta; 0.36 to the greenfield-DC-power sleeve), net-neutral on headline metrics and roughly flat in the tested idiosyncratic-DC-selloff months; a conditional merchant-power short was tested and rejected; index/name puts are the only cause-agnostic hedge and carry a premium cost not in the backtest.</li>
+    </ul>
+  </section>
+
+</main>
+
+<section class="block">
+  <div class="wrap">
+    <h2>Backlash test</h2>
+    <p class="lede">No historical data-center-backlash episode exists in the 2017&ndash;2026 sample. The proxy: the 12 worst months for the data-center-power sleeve (VRT, GEV) where SPY was flat or up (&ge; &minus;1%) &mdash; i.e. those names fell for their own reasons, not a market crash.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Mean return across the 12 proxy months, and exposure to the DC-power narrative</caption>
+        <thead>
+          <tr><th>Sleeve</th><th>Mean, 12 proxy mo.</th><th>Corr. w/ VRT</th><th>&beta; to DC-power</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>DC-power (VRT, GEV)</td><td class="neg">&minus;7.2%</td><td>+0.98</td><td>1.00</td></tr>
+          <tr><td>Grid-maintenance</td><td class="pos">+0.4%</td><td>+0.60</td><td>0.36</td></tr>
+          <tr><td>Merchant power</td><td>+0.3%</td><td>&mdash;</td><td>0.35</td></tr>
+          <tr><td>SPY</td><td class="pos">+2.8%</td><td>&mdash;</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="verdicts">
+      <li class="verdict">
+        <span class="tag adopt">Adopt</span>
+        <p><strong>Grid-maintenance tilt.</strong> A 70/30 grid/DC construction is net-neutral on full-period Sharpe/MaxDD (1.02 vs 1.00) but materially cuts exposure to an idiosyncratic DC de-rating. It trades a little rate-shock protection for it (Rate-22 episode &minus;26% vs &minus;21%).</p>
+      </li>
+      <li class="verdict">
+        <span class="tag reject">Reject</span>
+        <p><strong>Conditional merchant-power short.</strong> Trigger (DC-power underperforming grid-maintenance over 126d) fires 34% of the time; every short weight lowers Sharpe (1.00 &rarr; 0.93 at 0.25&times;) and deepens MaxDD (&minus;25% &rarr; &minus;28%). Merchant power does not reliably fall in an idiosyncratic DC selloff.</p>
+      </li>
+      <li class="verdict">
+        <span class="tag hold">Note</span>
+        <p><strong>Puts.</strong> The only cause-agnostic hedge &mdash; covers a de-rating whatever the cause &mdash; at ~3&ndash;8%/yr premium drag. Blocked on options data; not modelled.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>Open &amp; pre-live</h2>
+    <ul class="open-list">
+      <li>Rebuild universe membership and the profitability screen point-in-time (spec &sect;1, &sect;3.3) &mdash; blocks live capital, not the pitch.</li>
+      <li>Wire the 70/30 grid-maintenance tilt as a selectable construction in <code>electrification_strategy/universe.py</code>.</li>
+      <li>Options-collar sizing once an options-data feed exists.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="draft">Review draft</span><br>
+    Backs onto the <code>electrification_strategy/</code> package (BUILT), <code>docs/electrification-strategy-v1-results.md</code>, <code>docs/electrification-short-leg-insurance-probe-results.md</code>, and spec <code>docs/superpowers/specs/2026-09-06-electrification-strategy-design.md</code>. Backlash test: <code>scratchpad/backlash_hedge.py</code> (throwaway). Numbers are backtest on a 2026-vintage universe &mdash; survivorship-caveated.
+  </div>
+</footer>
