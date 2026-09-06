@@ -198,3 +198,33 @@ Ship **`screen`** as the universe (PM override of the pre-registered `marquee pl
 Stack: **`screen +val+sleeve`** (recent Sharpe 1.35 / MaxDD −17% / feared +13.6%; full
 0.69 / −24%) as the shipped variant, or `screen plain` if the mandate wants max return and
 can wear the deeper drawdown. `thematic` (7 names, incomplete data) is not shippable.
+
+## Follow-up (2026-09-06): rate-conditional rotation into utilities -- REJECT
+
+Tested rotating the `screen` book into XLU when the 6-month change in the 10y real yield
+is negative (rates falling), funded from the supplier book. `scratchpad/utility_rotation.py`.
+
+| structure | full Sharpe | MaxDD | fair-window Sharpe |
+|---|---|---|---|
+| `screen`, no rotation | 0.70 | -28% | 1.18 |
+| + 0.30 XLU when rates falling | 0.63 | -30% | 1.00 |
+| + 0.45 XLU when rates falling | 0.56 | -32% | 0.88 |
+| graduated (w proportional to fall speed) | 0.72 | -28% | 1.19 |
+| shipped GLD/IEF 15% sleeve (rate-agnostic) | 0.73 | -24% | 1.26 |
+| shipped sleeve + 0.30 XLU when falling | 0.63 | -26% | 1.04 |
+| unconditional 30% XLU (~ what VOLT does) | 0.72 | -28% | 1.13 |
+
+**Hurts Sharpe at any meaningful weight.** XLU standalone is Sharpe 0.38 / MaxDD -36% -- a
+worse asset than the supplier book; the rate signal is "on" 42% of days, mostly during
+falling-rate *risk-on* stretches (2019-H2, 2024) where XLU lagged; and it is redundant with
+the IEF leg of the sleeve already shipped (which captures "rates fall -> duration rallies"
+without XLU's equity drawdown). VOLT's structural ~30% utility weight is *why its Sharpe is
+lower*, not a feature to copy. Nothing wired.
+
+## Figure
+
+`docs/electrification-strategy-exposure.png` (in the proposal HTML): 3 panels for
+`screen +val+sleeve` -- growth of $1, rolling 1y Sharpe, and net weight in the supplier
+basket. The book is trimmed below its 0.85 baseline ~73% of days (vol target); the
+valuation rule specifically is active (mult < 1) ~42%, bottoming at 0.6; deepest combined
+trim 0.14 in Apr-2020. Overlays barely move rolling Sharpe -- they buy the smaller drawdown.
