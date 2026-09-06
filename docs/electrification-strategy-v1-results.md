@@ -98,3 +98,30 @@ Stable across ±20% threshold scaling (Sharpe 0.72–0.77, MaxDD flat) — not k
   borrow + ~2.5%/yr dividend cost and an ugly ride in rate-rising bull markets. It is the
   runner-up here, not the winner.
 - One macro cycle for the part that reduces drawdowns — structural logic, not proof.
+
+## Follow-up (2026-09-06): data-center-backlash hedge test
+
+Can a *political/NIMBY* de-rating (moratoriums, permit denials) with **no macro downturn**
+be hedged? The GLD/Treasury sleeve cannot help there (no growth scare, no debasement move).
+No historical backlash episode exists in-sample; proxy = the 12 worst months for the
+DC-power sleeve (VRT, GEV) where SPY was flat/up (>= -1%). Throwaway: `scratchpad/backlash_hedge.py`.
+
+| | DC-power | grid-maint | merchant | SPY |
+|---|---|---|---|---|
+| mean across the 12 proxy months | **-7.2%** | **+0.4%** | +0.3% | +2.8% |
+| monthly corr with VRT | +0.98 | +0.60 | -- | -- |
+| beta to the DC-power sleeve | 1.00 | 0.36 | 0.35 | -- |
+
+- **Grid-maintenance tilt -- ADOPT.** 70/30 grid/DC construction (grid-maint = ETN HUBB PWR
+  MYRG PRIM EMR AME RRX POWL ATKR AEIS; DC-power = VRT GEV) is net-neutral on full-period
+  Sharpe/MaxDD (1.02 vs 1.00 in the scratchpad harness) but cuts exposure to an
+  idiosyncratic DC de-rating; trades ~5pp of Rate-22 protection for it. To be wired as a
+  selectable construction in `universe.py`.
+- **Conditional merchant-power short -- REJECT.** Trigger (DC-power underperforming
+  grid-maint over 126d) fires 34% of days; every short weight lowers Sharpe (1.00 -> 0.93 at
+  0.25x) and deepens MaxDD (-25% -> -28%). Merchant power doesn't reliably fall in an
+  idiosyncratic DC selloff.
+- **Puts** -- only cause-agnostic hedge; ~3-8%/yr premium; blocked on options data.
+
+Proposal (3-tier, IC review): `docs/electrification-strategy-proposal-v2.md` /
+`docs/electrification-strategy-proposal-v2.html`.
