@@ -1,194 +1,155 @@
-# Grid Buildout / Electrification Strategy — Consolidated Results Ledger
+# Project Results Ledger — grid / power-buildout equity strategies
 
-**Purpose:** the single source of truth for the AI-power / grid-buildout / electrification research
-program. Every conversation updates *this file* rather than spawning another standalone doc.
+**Purpose.** One running record of every strategy, signal, and construction attempt in this
+project, with its pre-registered verdict and key numbers. Every working session appends here.
+Detailed write-ups stay in their own `docs/*-results.md` files; this doc is the index + synthesis.
 
-## Update protocol (for every future chat)
-
-1. **Append, don't rewrite.** Add a row to the relevant ledger table; never delete a past result.
-2. Each new probe gets: a one-line ledger row here (name · data class · verdict · `docs/<file>` link)
-   **and** its own detailed `docs/<name>-results.md`. This file is the index; the detail doc is the record.
-3. Update **§1 Current state** and **§7 Stop-rule counter** if the probe changes them.
-4. Keep the memory index (`~/.claude/.../memory/MEMORY.md`) in sync — one line per negative result.
-5. Convert relative dates to absolute. Note which conversation / date.
-
-Last updated: **2026-09-06**.
+**Last updated:** 2026-09-06
 
 ---
 
-## 1. Current state
+## How to update this doc (for every future session)
 
-**What shipped:** `electrification_strategy/` — a rules-based **long-only enhanced-thematic-beta**
-strategy. Honest label: *enhanced thematic beta, not alpha.*
-
-- **Universe:** US names in ≥2 of the electrification ETFs {VOLT, ELFY, ZAP, GRID}, filtered to
-  GICS Electrical Equipment + Construction & Engineering; point-in-time membership + 42-day lag.
-- **Weighting:** equal-weight, 25% single-name cap, quarterly reconstitution.
-- **Risk:** 20% annualised vol target (1.5× cap, slack held at rf).
-- **Overlay:** 0–15% diversifier sleeve (GLD + short Treasuries) sized by a real-yield +
-  HY-credit-spread signal.
-- **Backtest 2016–2026:** CAGR 17.3% / Sharpe 0.71 / MaxDD −25.9% / SPY β 0.78. Positive Sharpe
-  every sub-window (2016–18 0.29, 2019–22 0.54, 2023–26 1.48). Since VOLT's Dec-2024 launch it
-  matches the ETF on return with better risk control — the edge over just buying VOLT is
-  discipline + a track that reconstructs to 2016, not return.
-- **Primary risk:** a sustained falling-rate, risk-on reversal (washed-out clean-energy rallies,
-  the theme de-rates). Docs: `electrification-strategy-proposal-v2.md`, `electrification-strategy-v1-results.md`,
-  `handoff_2026-09-05-electrification-strategy.md`.
-
-**Long/short variant (Phase-2, not shipped):** long the ~33 industrial suppliers / short the
-consumer clean-energy sleeve (ENPH SEDG RUN NOVA CHPT EVGO BLNK STEM), short weight scaled
-0 → 0.55× by the 6-month change in the 10-year real yield. 2013–26: CAGR 14.0% / Sharpe 0.62 /
-MaxDD −31% / β 0.70 — same Sharpe & CAGR as long-only, *wider* drawdown. Short-leg +3.4%/yr in
-2023–26 (t=2.6) but full-cycle +0.1%/yr (t=0.1). Structure is right; the rate signal alone does
-not earn its place — needs more consumer-vs-industrial signals (valuation, revision breadth,
-policy calendar, credit).
-
-**Pithy description:** *long the transition's profitable suppliers, short its consumer pure-plays*
-— grid/DER version: *long who builds the grid, short who plugs in*.
-
-**Accumulated conclusion:** no signal-based stock-selection or timing edge exists in this theme at
-this sample (one macro regime, ~15 yr of grid data, ~3.7 yr of the data-center era). The trade
-stands on **structural logic (who the customer is) + trailing performance**, pitched with full
-disclosure of crowding + regime risk.
+1. When a probe/build reaches a verdict, add one row to the **Attempts ledger** table for its
+   phase (chronological, newest last). Keep the row to: date · name · what it tested · verdict ·
+   the single most important number · link to the full write-up.
+2. If the verdict changes a standing conclusion (something got adopted, reverted, or the
+   stop-rule moved), update **Standing conclusion** and **What is shipped** too.
+3. Keep verdict language pre-registered and blunt: `PASS` / `FAIL` / `NOT ADOPTED` /
+   `NOT YET TESTABLE` / `ADOPTED` / `REVERTED`. No spin — negative results are the main product
+   of this project and are logged as first-class outcomes.
+4. Attempt numbering across the buildout-theme search is historically fuzzy (sources say
+   "~14", "#12", "#15", "~16", "~17" for overlapping things). Don't fight it — use dates as the
+   spine and give an approximate running count.
 
 ---
 
-## 2. Construction rule — the one constructive methodology output
+## Standing conclusion (as of 2026-09-06)
 
-**The 4-criterion "customer + 2 of 3" classifier** (see memory `capex-cycle-pair-classifier`,
-session 2026-09-02/03). Mechanically reproduces the hand-picked book, removing the hindsight
-objection.
+**No signal-based timing edge has survived a pre-registered gate in the grid/power-buildout
+theme after ~15–17 attempts spanning three independent data classes** — demand *forecasts*
+(PJM Table B-9), physical *flow* (transmission congestion, FTR prices, LMP spreads), and firm
+*commitments* (utility capex-guidance revisions). The commitment class was the last untried
+angle and it failed like the others (this session, `capex-guidance-signal-results.md`).
 
-- **Pool:** listed pure-plays in electrification/grid (10-K Item 1: grid T&D equipment, DC power &
-  cooling, grid-scale storage, power EPC, residential/distributed solar, EV charging, BTM storage).
-- **4 criteria:** (1) customer — B2B institutional vs retail/household [mandatory axis];
-  (2) profitable — op margin > 0 AND FCF > 0; (3) valuation duration — real earnings/P-E vs EV-Sales;
-  (4) policy dependence — not subsidy-gated vs 10-K risk factors lean on ITC/45X/NEM/NEVI.
-- **Assignment:** pool pure-play + customer axis matches + ≥2 of {profit, duration, policy}.
-  LONG = institutional customer; SHORT = mirror. Neither → excluded (e.g. FLNC).
-- **Result:** LONG 17 (ETN HUBB NVT VRT GEV PWR MYRG PRIM POWL ATKR WCC ABBNY SBGSY PRYMY HTHIY
-  NXT FSLR) / SHORT 8 (ENPH SEDG RUN CHPT BLNK STEM EVGO WBX). Long-only EW Sharpe ~1.55,
-  beta-hedged+vol-tgt pair ~1.95 (2023–26) = hand-picked's 1.99. Strict (all 4) ≈ loose.
-- **Does NOT:** fix regime dependence (still ~−0.7 pre-2023); generalize (EV only — nuclear/space/
-  cannabis/hydrogen/genomics fail; precondition = institutional side in a *real* capex up-cycle);
-  qualify as a factor (loads negative on quality, ~40% is PAVE/TAN sector rotation, rest is
-  one-regime concentration, t≈1.6 full-sample).
+The defensible ways to hold this theme, all **construction / risk-management, not signal**:
 
-Raw (unhedged) dollar-neutral long/short Sharpe ≈ **1.2–1.4** (2023–26); the ~2.2 from earlier
-handoffs required the beta-hedge + 20%-vol-target overlay and one window.
+- **Equal-weight `grid_equipment_basket`** (9 US names) — cleared its decision gate vs XLI
+  (`grid-equipment-basket-step1-results.md`). This is the recommended core.
+- **+ Layer-1 risk overlay** (price trend gate + 20% vol target) — the one robust positive
+  across every regime tested; the honest read is "hold less when the trend is down and vol is
+  high," everything past that is tuned.
+- **Concentrated, index-hedged long/short** (long the 9 + foreign ADRs / short the GRID ETF or
+  a DER sleeve) — a strong trailing record (Sharpe ~2 in 2023–26 with beta-hedge + vol-target,
+  ~1.2–1.35 plain) but pitch it as a **style / relative-value** trade with explicit crowding,
+  regime, and short-squeeze risk — not as an edge.
+- The **capex-cycle-pair classifier** (4-criterion "customer + 2 of 3" screen) mechanically
+  reproduces the long/DER-short book without hindsight name-picking, but does not time or
+  generalize it.
 
----
-
-## 3. Signal-attempt ledger — timing / demand signals
-
-**All failed.** ~17+ distinct attempts. Verdict shorthand: FAIL = no tradable edge; CONF = works
-only as confirmation/dashboard, not a signal.
-
-| # | attempt | data class | verdict | detail doc |
-|---|---|---|---|---|
-| 1 | disclosed-backlog-growth tilt | fundamental | FAIL (over-weighted FLNC; ≈ equal-weight) | grid-equipment-basket-step1-results.md |
-| 2 | value-chain maker-vs-contractor tilt / pair | fundamental | Gate 1 weak-PASS, Gate 2 FAIL | grid-equipment-value-chain-results.md |
-| 3 | backlog-surprise factor (1,778-event breadth study) | fundamental | FAIL (non-monotone, ~1wk bump reverses) | backlog-surprise-factor-results.md |
-| 4 | grid-demand sensitivity factor (Proposal D) | physical nowcast | FAIL (rank-IC t = −0.47) | triage_2026-08-31-proposals-bda.md |
-| 5 | transmission rate-base compounders (FERC Form 1) | regulatory | FAIL (Q5−Q1 Sharpe −0.61, no residual α) | transmission-rate-base-results.md |
-| 6 | Proposal A — zone-matched congestion pair | physical | killed at triage (breadth) | triage_2026-08-31-proposals-bda.md |
-| 7 | Layer 1 — price trend gate + vol target | price | ADOPTED as overlay (helps primary DD, hurts 2020–22) | grid-regime-layer2-results.md |
-| 8 | Layer 2 — grid-congestion regime (6-rung ladder) | physical (LMP congestion) | FAIL (no rung cleared gate); briefly adopted, REVERTED | grid-regime-layer2-results.md |
-| 8a | Option A — DC-minus-rest-of-PJM relative congestion | physical | FAIL (erased prior-window edge = COVID coincidence) | grid-regime-layer2-results.md §9 |
-| 8b | Option B — signal-tilted basket/short-utilities pair | physical | FAIL (signal backwards) | grid-regime-layer2-results.md §9 |
-| 9 | big-four hyperscaler capex-deceleration de-risk | fundamental | FAIL (fires ~a year late; lagging confirmation) | handoff_2026-09-01-grid-buildout-long-short.md §3.5 |
-| 10 | backlog *coverage*-alone tilt | fundamental | FAIL (≈ equal-weight; no data pre-2023) | backlog-coverage-signal-results.md |
-| 11 | PJM data-center MW-revision timing (Table B-9, 6 vintages) | regulatory forecast | FAIL (de-risked into a rally; quarterly corr≈0) | pjm-large-load-vintages-2026-09-03.md |
-| 12 | category-demand → maker-rotation (Census M3 / PPI / IP NAICS 3353) | national industry | FAIL (fwd-1m IC t=0.78; fwd-3m all from 2019–22) | category-demand-rotation-results.md |
-| 13 | capex-guidance revision signal (Deliverable D — 15 utilities' 5-yr guidance) | regulatory/transcript | FAIL (rank-IC negative every horizon; scaler misses G1) | capex-guidance-signal-results.md |
-| 14 | Henry Hub / forward power-gas signal (+ 25-signal GBM/RF kitchen sink) | commodity | FAIL (2023–26 OOF IC vanishes on 2018–26; overfit) | hhub-forward-gas-signal-results.md |
-| 15 | VA transmission-filings project-$ (Deliverable A — 72 Dominion CPCN cases) | regulatory | FAIL as timing (quarterly corr≈0); CONF — DC-$ share 0.27→0.85 | va-transmission-filings-probe-results.md |
-| 16 | non-price name selection (RTEP, patents, ISO queues) | regulatory/IP | FAIL — no external dataset reproduces the name list (names customers, not suppliers) | pjm-large-load-vintages-2026-09-03.md |
-| 17 | PJM capacity-auction (BRA) clearing prices as timing | market | FAIL — lags equity 18–24mo, inverted, no exit signal | pjm-large-load-vintages-2026-09-03.md |
-
-Related non-strategy negatives (older): FTR-bid signal, RT/DA spread, outage/reserve-margin
-(EIA-860 `status` is annual-scale — dead), interconnection-queue velocity (not testable, <2
-vintages — start collecting for a ~2028 test).
+**Next-move options** (from `handoff_2026-09-01 §7`, still current): ship the discretionary
+thematic position and keep the **county data-center permit capture (Deliverable E)** running
+for a ~2028 re-test with real history; or move the signal search to a less-arbitraged theme.
 
 ---
 
-## 4. Name-weighting ledger — cross-sectional tilts on the long book
+## What is shipped / live
 
-**All failed to beat equal-weight.** 17 correlated names in one regime is too thin a cross-section.
-
-| tilt | verdict |
-|---|---|
-| backlog growth (top½ ×1.25 / bottom½ ×0.75) | FAIL — Sharpe 1.363 vs EW 1.360, CAGR lower |
-| backlog coverage (YoY Δ) | FAIL — 1.446 vs 1.448, drawdown worse; inert pre-2023 |
-| value-chain maker vs contractor | FAIL Gate 2 |
-| within-book 6-month cross-sectional momentum (top-6 / top-9) | FAIL — Sharpe 1.07 / 1.29 vs EW 1.41, deeper DD |
-| DC-power sub-sector overweight (VRT/GEV/POWL/ETN 2.5×) | marginal — +0.09 Sharpe 2023–26 (in noise), −0.12 pre-2023 |
-| national category-demand × category→name matrix | FAIL — see ledger #12 |
-
-Conclusion: run **equal-weight, 25% cap**. Equal-weight already captures the VRT/GEV/POWL run
-because it holds them.
-
----
-
-## 5. Short-leg / hedge ledger — CLOSED (2026-09-05)
-
-**No holdable negatively-correlated leg exists.** ~25 short/hedge candidates tested.
-
-| candidate class | result |
-|---|---|
-| clean energy (solar / EV / storage / hydrogen — the DER sleeve) | +0.25–0.6 corr, 2023–26 only, anti-hedge in the feared solar-squeeze scenario |
-| firm generation (gas turbine / nuclear / IPP) | +0.60 corr, falls *harder* in drawdowns (priced beta, not a hedge) |
-| 7 other industries (aero-supply, airlines, etc.) | only aero-supply works standalone; blending destroys it |
-| China broad | +0.03 recent corr but 0.85 SPY β, recurring fat left tail, no exit signal |
-| retail/office REITs (DC-moratorium redirect thesis) | +0.58 corr, regime-dependent — same pattern as all others |
-| genuine negatives | only VIXY (−0.60, −30%/yr carry) and USD (−0.31, faded post-2022) — tactical only |
-| best *structure* found | GLD/short-duration 15% sleeve + real-yield-gated DLR+EQIX short 0.25×: MaxDD −31→−26, β 0.76→0.57, Sharpe held 0.83, +13% in the feared scenario, 3.3%/yr drag (but ~15%/yr inside a rate-rising bull). Sleeve-alone is 90% of it with no short. |
-
-Docs: `electrification-short-leg-insurance-probe-results.md`, `electrification-ls-strategy-note.md`
-§§6–8, `handoff_2026-09-05-electrification-strategy.md` §§1c, 2.
-
----
-
-## 6. Open / untried
-
-| item | status | doc |
+| Component | State | Notes |
 |---|---|---|
-| **Deliverable C** — PUC data-center tariff/ESA contracted-MW (commitment data) | scoped, not built; feasibility-gate on history depth (<2024) | handoff_2026-09-03-transmission-project-filings.md §6 |
-| **Deliverable E** — county DC permit / zoning / abatement filings (most-leading) | scoped, not built; also a data-collection project to start now | handoff_2026-09-03-transmission-project-filings.md §6 |
-| Deliverable D — utility capex-guidance revisions | **BUILT, FAILED** (ledger #13) | capex-guidance-signal-results.md |
-| labor-bottleneck data (BLS OEWS electrician/lineworker wages, job-postings) as backlog-conversion signal | survived the round-2 triage check; needs a cheap correlation check first | triage_2026-09-04-differentiation-ideas-round2.md #7 |
-| cat-bond / reinsurance pricing (Artemis.bm) as leading indicator for utility wildfire-liability equity | survived triage; data may be subscription-only; check lead vs lag first | triage_2026-09-04-differentiation-ideas-round2.md #10 |
-| interconnection-queue velocity | not testable (<2 vintages) — archive quarterly vintages now, test ~2028 | handoff_2026-09-01-grid-buildout-long-short.md §5.1 |
-| EIA STEO ELWHU_* forward wholesale power series | real free forward *power* series (~16mo tail, per hub) — not yet backtested (needs STEO archive for point-in-time + spark-spread test) | hhub-forward-gas-signal-results.md |
-| RT/DA (real-time − day-ahead) LMP spread — cross-sectional | never built; low prior (DA congestion showed ~0 equity corr) | handoff_2026-09-01-grid-buildout-long-short.md §8.1 |
-
-Round-2 triage also killed 8 thematic adjacencies as already-crowded/re-rated (crypto-to-AI
-hosting, wildfire-liability short, power-semis, gas midstream, nuclear PPA, European grid RV,
-demand-response/VPP, water-rights) — see `triage_2026-09-04-differentiation-ideas-round2.md`.
+| `grid_equipment_basket` equal-weight core | **recommended** | 9 names, quarterly rebal, 25% cap; gate PASS vs XLI |
+| Layer-1 overlay (`--overlay`, `OVERLAY_*` in `config.py`) | **recommended overlay** | trend gate + vol target; robust positive, rest is tuned |
+| Layer-2 congestion regime (`REGIME_ENABLED`) | **built, `False`** | strict gate not passed; reverted 2026-09-01 (no OOS edge over price-gate) |
+| Backlog-growth tilt (`--tilt backlog`) | built, **not adopted** | didn't beat equal-weight on both Sharpe + CAGR |
+| Value-chain tilt / pair (`--construction`) | built, **conditional-short only** | Gate 1 weak-PASS, Gate 2 FAIL |
+| `--capex-guidance` (Deliverable D report) | built, **negative result** | signal not wired live anywhere |
+| `grid_resilience` business-model-aware factor | built, off-by-default flags | `BUSINESS_MODEL_ARCH`, `USE_ICR`, `PEER_GROUP_CONSTRUCTION` all off pending validation |
+| `electrification_strategy` v1 | built | best plain thematic Sharpe ~0.85; see below |
 
 ---
 
-## 7. Stop-rule counter
+## Attempts ledger
 
-**~17 signal attempts, all FAIL.** Pre-committed stop rule (from the transmission-filings handoff):
-if Deliverables **C** and **E** also return quarterly rank-IC ≈ 0 like Table B-9 and the VA probe
-→ that's ~19 attempts → **stop looking for a data-center demand signal; ship the trade as a
-discretionary thematic position** (`electrification_strategy/` long-only core, per
-`handoff_2026-09-05-electrification-strategy.md` §1a) and keep the E + queue-velocity captures
-running for a 2028 re-test.
+### A. Grid-resilience (original regulated-utility long/short) — signal & construction
+
+| Date | Attempt | What it tested | Verdict | Key result | Write-up |
+|---|---|---|---|---|---|
+| 2026-06/07 | Business-model-aware factor architecture | separate merchant vs regulated factor logic | BUILT | Sharpe 0.331 (pre-data-drift); off-by-default | memory `session-2026-06-analysis` |
+| 2026-08-13 | DC load signal (PJM interconnection-queue level + momentum) | queue growth as a regulated-name demand signal | BUILT / MERGED | feature complete; **equity-price data drift discovered** — historical Sharpe 0.331/0.272 not to be trusted until re-validated | `compact_2026-08-13-dc-load-signal-results.md` |
+| 2026-08-19 | Peer-group (basket-vs-basket) construction | split universe into merchant/mixed/regulated, build L/S within each to cancel sector beta | FAIL (hypothesis) | core hypothesis does not hold on backtest; `PEER_GROUP_CONSTRUCTION=False` | `compact_2026-08-19-peer-group-construction-results.md` |
+| 2026-08-26 | Multi-source DC-demand exposure signal | blend PJM queue + ERCOT + hyperscaler deals into one exposure score | FAIL (bar) | coverage 8/~11 names; "material, not sign-flip" bar not cleared; behind `--regulated-signal dc-multi` | `compact_2026-08-26-dc-multi-source-signal-results.md` |
+| 2026-08 | ICR (interest-coverage-ratio) factor component | low-ICR as a short-candidate signal during rate stress | BUILT, unvalidated | `USE_ICR=False`; yfinance history too short pre-2022 | CLAUDE.md "Future Work" |
+
+### B. Grid-buildout / equipment-basket theme — the signal search
+
+Approx. running count in brackets; historically imprecise (see note above).
+
+| Date | Attempt | What it tested | Verdict | Key result | Write-up |
+|---|---|---|---|---|---|
+| 2026-08-29 | **Equal-weight thematic basket (Step 1)** | 9 US grid/DC-electrical names, equal-weight, vs XLI | **PASS** | CAGR 59.8% vs XLI 20.2%; Sharpe 1.36 vs 0.95 (short window, GEV covers back ~60%) | `grid-equipment-basket-step1-results.md` |
+| 2026-08-29 | Backlog-growth weight tilt (Step 2) | tilt by trailing YoY disclosed-backlog growth | NOT ADOPTED | Sharpe +0.003 but CAGR −0.61 pp, deeper DD; over-weighted FLNC | `grid-equipment-basket-step1-results.md` |
+| 2026-08-29 | Value-chain reframe (maker-vs-contractor tilt + intra-theme hedge) | pricing-power makers over price-taker contractors | Gate 1 weak-PASS / Gate 2 FAIL | use the conditional short only; built + merged | `grid-equipment-value-chain-results.md` |
+| 2026-08-31 | Backlog-*surprise* event-study factor | RPO surprise vs trailing-4Q mean → cross-sectional CAR, 91 names / 1,778 events | FAIL | quintile CARs non-monotone; no Q5−Q1; stop before Phase 2 | `backlog-surprise-factor-results.md` |
+| 2026-08-31 | Transmission rate-base compounders (proposal B) | rank ~34 utilities by FERC transmission-rate-base growth | FAIL (all 3 conditions) | rank-IC −0.018 (t −0.35); L/S Sharpe −0.61; no residual alpha. 4th cross-sectional attempt to fail | `transmission-rate-base-results.md` |
+| 2026-08-31 | Big-four hyperscaler capex-deceleration de-risk trigger | MSFT/GOOGL/AMZN/META capex YoY roll-over → scale basket back | FAIL | slow annual number can't time a basket trading the live narrative (TDD) | git `3293733`; `triage_2026-08-31-differentiation-ideas.md` |
+| 2026-08-31 | **Layer-1 risk overlay** (trend gate + vol target) | hold basket only above MA-100, scale to 20% vol | **ADOPTED** | the one robust positive across regimes; edge = converting the −42% DeepSeek DD to ~−9%; rest is tuned | `handoff_2026-08-29-grid-equipment-basket.md` |
+| 2026-08-31 | Layer-2 grid-congestion regime signal | zonal PJM transmission-congestion $ + reserve tightness → monthly exposure multiplier | Gate NOT passed → ADOPTED (PM) → **REVERTED 2026-09-01** | beats layer-1 on Sharpe not primary Calmar (2.16 vs 2.32); OOS shows no edge over plain price-gate; `REGIME_ENABLED=False` | `grid-regime-layer2-results.md` |
+| 2026-09-02 | FTR bid-implied forward-congestion signal [~#12] | MW-weighted buy-side FTR obligation bids at DC-heavy PJM zone sinks → exposure multiplier | FAIL | tracks layer-1-only almost exactly on both windows despite real multiplier variation | `ftr-bid-signal-results.md` |
+| 2026-09-02 | Backlog-coverage-alone tilt [~#13] | YoY change in backlog coverage (RPO ÷ TTM revenue), unblended | FAIL | no independent information beyond what already failed | `backlog-coverage-signal-results.md` |
+| 2026-09-02/03 | Capex-cycle-pair classifier | 4-criterion "customer + 2 of 3" screen to reproduce the grid/DER book without hindsight | PARTIAL | mechanically rebuilds the book (~1.55 long-only / ~1.95 hedged Sharpe); does **not** time or generalize (EV only) | memory `capex-cycle-pair-classifier` |
+| 2026-09-03 | PJM MW-revision signal (Table B-9 load-forecast vintages) [~#12] | Δ accepted data-center MW between annual vintages → basket timing / de-risk | FAIL | acting on the 2026 stall cost ~+15% excess / ~+30% absolute; de-risked into a rally; quarterly corr ≈ 0 | `pjm-large-load-vintages-2026-09-03.md` |
+| 2026-09-03 | VA transmission-filings probe (Deliverable A) | 72 Dominion VA CPCN cases → DC-driven project-$ fraction as timing / name-weighting | FAIL (timing + weighting) | DC-$ fraction rises 0.27→0.85 (confirmation only, 2022 level shift); quarterly corr ≈ 0; one TO, can't weight | `va-transmission-filings-probe-results.md` |
+| 2026-09-03 | Category-demand → maker-rotation probe [~#16] | Census M3 / IP / PPI equipment-category demand × hand-built category→name matrix → cross-sectional tilt | FAIL | works 2019–22 (rank-IC t ≈ 2.4), dead 2023–26 (t = 0.6); 26% of book unmapped | `category-demand-rotation-results.md` |
+| 2026-09-04/06 | **Capex-guidance revision signal (Deliverable D)** [~#15] | aggregate 15-utility 5-yr capex-guidance revisions ($ + size-weighted %, whole-panel + DC-attributed w/ point-in-time EM fill) as monthly rank-IC timing signal + de-risk/scaler overlay. First test of **commitment** data. | FAIL (both legs) | feasibility PASS 14/15 (NEE out). Every primary rank-IC negative, none \|t\|≥2 (best −1.54); de-risk leg **not exercised** (composite z never < +0.212); scaler fails G1 across the plateau; DC-attributed cut **not yet testable** (all DC-$ vintages 2026-dated). 9/10 sub-threshold \|t\|≥1.5 cells negative → weak *consistent inverse* sign (crowding read). Nothing wired live. | `capex-guidance-signal-results.md` |
+| 2026-09-04/05 | Henry Hub / forward power-price signal [~#17] | free gas/power proxies (NG front-month, UNL 12-mo strip, contango, ETFs) as forward basket signal | FAIL (data-blocked) | no forward relationship survives a regime split or SMH control; kitchen-sink GBM/RF overfits (2023–26 OOF IC vanishes on 2018–26). EIA STEO `ELWHU_*` forward power series noted but not yet backtested | `hhub-forward-gas-signal-results.md` |
+
+### C. Electrification strategy (broader thematic book, newest)
+
+| Date | Attempt | What it tested | Verdict | Key result | Write-up |
+|---|---|---|---|---|---|
+| 2026-09-06 | Electrification strategy v1 | 12-cell grid (marquee/frozen/thematic × plain/+val/+sleeve/+short) long-only enhanced thematic beta ≈ VOLT | BUILT | best plain Sharpe ~0.85 (thematic), MaxDD ~−28%; value + sleeve trims vol & DD at 2–4%/yr drag | `electrification-strategy-v1-results.md` |
+| 2026-09-06 | Short-leg-as-insurance probe | any thematic short sized purely to cut downturn risk at 3–6%/yr drag | PARTIAL | no thematic short works alone (DER sleeve is an anti-hedge in the feared solar-squeeze case). Best structure: GLD/short-duration 15% sleeve + real-yield-gated DLR+EQIX short 0.25× → MaxDD −31→−26, beta 0.76→0.57, Sharpe held; sleeve alone is 90% of it | `electrification-short-leg-insurance-probe-results.md` |
 
 ---
 
-## 8. Module & key-doc index
+## Synthesis — why the signal search keeps failing
 
-| path | what |
-|---|---|
-| `electrification_strategy/` | **the shipped strategy** — long-only enhanced-thematic-beta, CLI `python -m electrification_strategy` |
-| `grid_equipment_basket/` | earlier 9–17-name theme basket + Layer-1/2 overlays + all the failed signal modules (`grid_regime.py`, `capex_signal.py`, `capex_guidance_signal.py`, `category_demand.py`, `ftr_signal.py`, `backlog_data.py`, `value_chain.py`) |
-| `grid_resilience/` | the original GSI / stress-beta utility long/short; also hosts shared data fetchers + the VA / PJM-large-load / transmission seed data |
-| `grid_demand_factor/`, `transmission_rate_base/`, `backlog_factor/`, `dc_demand_basket/` | negative-result probe packages (see root README blockquote) |
-| `docs/handoff_2026-09-05-electrification-strategy.md` | current master state for the shipped strategy |
-| `docs/handoff_2026-09-01-grid-buildout-long-short.md` | the long/short investigation of record (pre-electrification-package) |
-| `docs/handoff_2026-09-03-transmission-project-filings.md` | the regulatory-filings data source — Deliverable A (built, failed), C/D/E scope |
-| `docs/electrification-ls-strategy-note.md` | the full long/short + hedge investigation (§§1–8) |
-| memory `capex-cycle-pair-classifier`, `pjm-mw-revision-signal-negative`, `va-transmission-filings-probe-negative`, `capex-guidance-signal-negative`, `hhub-forward-gas-signal-negative`, `category-demand-rotation-negative`, `electrification-short-leg-insurance-probe` | per-probe memory records |
+1. **Three data classes, same result.** Demand *forecasts* (Table B-9) are slow, annual,
+   methodology-constrained, and revised as easily down as up. Physical *flow* (congestion, FTR,
+   LMP) is real-time but the equity move front-runs it — the basket trades the live AI-capex
+   narrative, not the grid's physics. Firm *commitments* (capex guidance) are forward-obligation
+   by construction and still don't lead: by the time utilities are loudly raising 5-yr plans, the
+   equipment stocks have already re-rated.
+
+2. **Only one macro cycle.** Every "it worked" sub-result (category-demand, the Table B-9 annual
+   lead, the value-chain Gate 1) lives entirely in the 2019–22 pre-AI window and dies in 2023–26,
+   or is n≈5–8 with one shared inflection. There is one AI-power capex cycle in the data and
+   most signals are just fitting its shape.
+
+3. **The consistent-inverse sign** (capex-guidance §4.4): weak but directionally coherent —
+   heavier guidance-raising precedes *lower* forward basket returns. If anything is worth
+   revisiting it is a signal read *inverted* (fade the loudest guidance) or as one input in a
+   combined/nonlinear model, on infrastructure that now exists — not in the thesis direction.
+
+4. **Construction beats signal here.** The equal-weight basket cleared its gate; the trend-gate
+   + vol-target overlay is the one durable positive; the pair classifier removes the hindsight
+   objection. The edge, to the extent there is one, is "own the theme with disciplined risk
+   management," not "time it."
+
+---
+
+## Still open / untried
+
+- **County data-center permit / zoning / abatement capture (Deliverable E)** — the most-leading
+  data considered; assemble the quarterly approved-MW series now, re-test ~2028 with real history.
+- **PUC data-center tariff / ESA contracted-MW (Deliverable C)** — reuses the docket stack;
+  history barely predates 2024, so feasibility-gate hard before spending on it.
+- **EIA STEO `ELWHU_*` forward *power* price series** (~16-mo tail, per hub, 2010–) — a genuine
+  free forward power feed; needs the STEO archive for point-in-time + a spark-spread test.
+- **Combined / nonlinear model** using the capex-guidance panel + big-four hyperscaler capex as
+  *joint* predictors (not one-as-control), and/or tail-only conditioning — cheap follow-up on
+  built infrastructure.
+- **Deliverable D re-run ~2027** — the DC-attributed half was structurally untestable (all DC-$
+  vintages 2026-dated); the machinery is built and waiting for history.
+- **grid_resilience off-by-default flags** (`BUSINESS_MODEL_ARCH`, `USE_ICR`,
+  `PEER_GROUP_CONSTRUCTION`) — never validated on post-data-drift prices.
