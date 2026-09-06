@@ -61,13 +61,14 @@ See `output/grid_search_results.csv` for all 243 combinations ranked by Sharpe.
   genuinely annual-only names. `value_chain_report` no longer crashes under `--prior-regime` (Gate 2
   is reported `n/a` for a window with no 2024-H2 episode).
 
-## Results Ledger (keep updated every session)
+## Research Log (keep updated every session)
 
-`docs/RESULTS.md` is the canonical running record of every strategy / signal / construction
-attempt in this project and its pre-registered verdict. **Whenever a probe or build reaches a
-verdict, append a row to the relevant table in `docs/RESULTS.md`** (date · name · what it tested ·
-verdict · key number · link to the full `docs/*-results.md`), and update its Standing Conclusion /
-What-Is-Shipped / Still-Open sections if the verdict moves them. Blunt pre-registered verdict
-language only (`PASS` / `FAIL` / `NOT ADOPTED` / `NOT YET TESTABLE` / `ADOPTED` / `REVERTED`) —
-negative results are first-class here. The "How to update this doc" section at the top of
-`docs/RESULTS.md` has the format.
+`docs/RESEARCH-LOG.md` is the single canonical running record of every strategy / signal /
+construction attempt in this line of research and its pre-registered verdict — one file, not a
+new standalone doc per session. **Whenever a probe or build reaches a verdict, add a row to the
+relevant table in `docs/RESEARCH-LOG.md` §3** (thread · when · outcome · link to the full
+`docs/*-results.md`), and update §1 (current strategy), §2 (accumulated conclusion), and §4 (open
+items) if the verdict moves them. Blunt pre-registered verdict language only (`PASS` / `FAIL` /
+`NOT ADOPTED` / `BUILT` / `NOT YET TESTABLE` / `SCOPED, NOT RUN` / `ADOPTED` / `REVERTED` /
+`KEEPER`) — negative results are first-class here. The "Update convention" line at the top of
+`docs/RESEARCH-LOG.md` has the format.

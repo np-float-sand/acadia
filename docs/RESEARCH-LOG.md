@@ -84,7 +84,7 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | PJM MW-revision (Load Forecast Table B-9), 6 vintages | 2026-09-03 | FAILED — lagging, de-risked into a rally (cost ~+15pp excess) | `docs/pjm-large-load-vintages-2026-09-03.md` |
 | FTR bid-implied forward congestion | 2026-09-02 | FAILED — same gate as layer-2; tracks layer-1 exactly | `docs/ftr-bid-signal-results.md` |
 | Big-4 hyperscaler capex-deceleration de-risk | 2026-08-31 | FAILED — fires ~a year late; lagging confirmation | `grid_equipment_basket/capex_signal.py` |
-| Utility 5-yr capex-guidance revisions (Deliverable D) | 2026-09-04 | FAILED — rank-IC negative at every horizon; DC-attributed cut untestable pre-2027 | `docs/capex-guidance-signal-results.md` |
+| Utility 5-yr capex-guidance revisions (Deliverable D) — first test of the "commitment" data class | 2026-09-04 → 2026-09-06 | FAILED both legs. Feasibility PASS 14/15 (NEE out, documented). Every primary rank-IC negative, none \|t\|≥2 (best −1.54); de-risk leg **not exercised** (composite z never < +0.212, so the multiplier is flat 1.0 — its "FAIL" was really the vol-target-only baseline); two-sided scaler fails G1 across the plateau; DC-attributed cut **not yet testable** (all DC-$ vintages 2026-dated, z-score never warms) → re-run ~2027. **9 of 10 sub-threshold \|t\|≥1.5 cells are negative** — a weak but *consistent inverse* sign (crowding / already-priced read); if revisited, test inverted / in a combined model, not thesis-direction. Nothing wired live. Built: seed panel + loader + `capex_guidance_signal.py` + `--capex-guidance`. | `docs/capex-guidance-signal-results.md` |
 | Category-demand → maker rotation (Census M3 / PPI panel) | 2026-09-03 | FAILED — fwd-1m IC t=0.8; fwd-3m IC 100% pre-AI; dead 2023–26 | `docs/category-demand-rotation-results.md` |
 | Henry Hub / forward-gas signal (5 rounds incl. GBM/RF, IS-OOS split) | 2026-09-05 | FAILED — no regime-robust relationship; overfits the 43-mo window | `docs/hhub-forward-gas-signal-results.md` |
 | STEO `ELWHU_*` forward power price (~16-mo forecast tail, free) | 2026-09-05 | SCOPED, NOT RUN — needs STEO archive for point-in-time spark-spread test | `docs/hhub-forward-gas-signal-results.md` §Round 3 |
@@ -122,7 +122,7 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 | Thematic-catalyst detector (utility load-forecast filings name a new large-load category) | 2026-09-02 | idea-generation tool, not a trading signal — PJM named "Data Centers" 1 day before ChatGPT | `docs/thematic-catalyst-detection-2026-09-02.md` |
 | VA/Dominion transmission-project demand DB (Deliverable A) | 2026-09-03 | BUILT (72-case seed + loader + SCC Breeze API) — DC-$ share confirms the buildout; not a signal | `docs/va-transmission-filings-probe-results.md` |
 | Data-center commitment signals — Part 2 (C = PUC ESA/tariff MW, E = county permits) | 2026-09-03 | SCOPED; D failed; C + E not yet built | `docs/handoff_2026-09-03-transmission-project-filings.md` §6 |
-| Interconnection-queue *velocity* (Δ large-load MW by zone, vintages) | ongoing | NOT TESTABLE yet — needs ≥8–12 quarterly vintages (~2028); start the capture now | `docs/handoff_2026-09-01…` §8.6 |
+| Interconnection-queue *velocity* (Δ large-load MW by zone, vintages) | 2026-09-02 → 2026-09-03 | Superseded by the row above — first probed 2026-09-02 with only 2 annual vintages (inconclusive), then a later session pulled 6 vintages (2021–2026, PDF+xlsx Table B-9) and got a definitive FAILED verdict | `docs/pjm-large-load-vintages-2026-09-03.md` |
 | Differentiation-idea triages (rounds 1 & 2, ~13 ideas) | 2026-08-31 / 09-04 | 8 of 10 (round 2) dead — already mainstream / re-rated | `docs/triage_2026-09-04-differentiation-ideas-round2.md` |
 | RT/DA LMP spread cross-sectional split | 2026-09-01 | pivoted to FTR (failed); the RT/DA idea itself still literally untried | `docs/handoff_2026-08-15-rt-da-spread-signal.md` |
 | Earnings-estimate-revision / analyst-breadth momentum | — | NOT ATTEMPTED — needs ≥3yr point-in-time consensus EPS feed | `docs/handoff_2026-09-01…` §8.2 |
@@ -147,6 +147,13 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 9. **STEO forward-power spark-spread** — pull the STEO monthly archive, build the point-in-time
    PJM-West / ERCOT forward series, test the implied-heat-rate move.
 10. Keep the **interconnection-queue-velocity** quarterly capture running for a ~2028 test.
+11. **Capex-guidance signal, revisited** — cheap follow-ups on built infrastructure
+    (`capex_guidance_signal.py`, the 15-utility panel): (a) test the signal *inverted* (fade the
+    loudest guidance-raising) given the consistent negative sign; (b) use the capex-guidance panel
+    + big-four hyperscaler capex as *joint* predictors (not one-as-control) and/or tail-only
+    conditioning; (c) re-run the DC-attributed cut ~2027 when >1 yr of dated DC-$ disclosure exists.
+    Low prior, but the machinery is done. Also scoped but unbuilt: Deliverable C (PUC DC tariff/ESA
+    contracted-MW) and E (county DC permits) — `handoff_2026-09-03-transmission-project-filings.md` §6.
 
 ---
 
