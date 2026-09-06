@@ -14,7 +14,6 @@ import pandas as pd
 
 from grid_equipment_basket.backtest import compute_metrics
 from grid_equipment_basket.basket import simulate_basket
-from grid_equipment_basket.overlay import vol_target_scalar
 from grid_equipment_basket import hedges as _geh
 
 from electrification_strategy import config, hedge_overlay, universe, valuation_overlay
@@ -35,19 +34,28 @@ def basket_returns(cand_prices, construction, start, end):
     return br.returns
 
 
+def _vol_scalar(base_r):
+    """Daily vol-target leverage: 20% / trailing-21d realised vol, capped 1.5x,
+    sized on yesterday's vol (matches the 2026-09-06 probe; the month-held
+    grid_equipment_basket.overlay.vol_target_scalar re-levers too slowly through
+    fast crashes and deepened MaxDD by ~15pp)."""
+    rv = base_r.rolling(config.VOL_LOOKBACK).std() * np.sqrt(config.ANN)
+    return (config.VOL_TARGET / rv).clip(upper=config.VOL_MAX_LEVERAGE).shift(1)
+
+
 def compose(base_r, spy_ret, use_valuation, val_scale=1.0):
     """base_r -> vol-target -> optional valuation multiplier, slack at rf."""
     if base_r.empty:
         return base_r
-    vscal = vol_target_scalar(base_r, config.VOL_LOOKBACK, config.VOL_TARGET,
-                              config.VOL_MAX_LEVERAGE).reindex(base_r.index).fillna(1.0)
+    vscal = _vol_scalar(base_r)
     if use_valuation:
         level = (1.0 + base_r).cumprod()
         vmult = valuation_overlay.extension_multiplier(
-            level, spy_ret.reindex(base_r.index), scale=val_scale).reindex(base_r.index).fillna(1.0)
+            level, spy_ret.reindex(base_r.index), scale=val_scale)
     else:
         vmult = pd.Series(1.0, index=base_r.index)
-    exposure = (vmult * vscal).clip(upper=config.VOL_MAX_LEVERAGE)
+    exposure = (vmult.reindex(base_r.index).fillna(1.0)
+                * vscal.reindex(base_r.index)).clip(upper=config.VOL_MAX_LEVERAGE).fillna(1.0)
     return exposure * base_r.fillna(0.0) + (1.0 - exposure) * config.RF / config.ANN
 
 

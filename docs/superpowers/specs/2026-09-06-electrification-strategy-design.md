@@ -1,7 +1,10 @@
 # Electrification Strategy — v1 design spec
 
 **Date:** 2026-09-06
-**Status:** design (approved in brainstorming; not yet built)
+**Status:** BUILT 2026-09-06 — results: `docs/electrification-strategy-v1-results.md`
+(winner: `thematic +val+sleeve`, Sharpe 0.85 / MaxDD −24%; 8/12 cells pass the pre-registered
+rule). Two deviations logged in the results doc: daily vol-target (not the month-held
+`overlay.vol_target_scalar`) and valuation extension measured on the plain basket index.
 **Package:** `electrification_strategy/` (new top-level, parallel to `grid_equipment_basket/`)
 **Research provenance (read for context):**
 `docs/electrification-ls-strategy-note.md` (long-only core, short-leg search),
