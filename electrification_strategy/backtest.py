@@ -112,7 +112,7 @@ def _effective_n(weights_row):
 
 
 # -- comparison grid / reporting -------------------------------------------
-def run_comparison(start, end, prices, dfii10, constructions=("marquee", "frozen", "thematic")):
+def run_comparison(start, end, prices, dfii10, constructions=universe.CONSTRUCTIONS):
     spy_ret = prices["SPY"].pct_change()
     tan_ret = prices[config.FEARED_PROXY].pct_change() if config.FEARED_PROXY in prices.columns else None
     volt_ret = prices["VOLT"].pct_change() if "VOLT" in prices.columns else pd.Series(dtype=float)

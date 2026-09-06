@@ -25,11 +25,13 @@ pre-registered rule. Writes `metrics.csv`, `episode_drawdowns.csv`, `plateau.jso
 | name | inclusion | notes |
 |---|---|---|
 | `marquee` | `grid_equipment_basket.config.UNIVERSE` (the 9) | reference |
-| `frozen` | seed pool & sub-industry map & (in >=1 of VOLT/ELFY/ZAP/GRID/PAVE) & `profitable_2026` | our quality screen (~20 names) |
-| `thematic` | in >=2 of {VOLT, ELFY, ZAP, GRID}, filtered to sub-industry + listing gate | thematic-ETF consensus (~10 names), no profitability screen |
+| `frozen` | seed pool & sub-industry map & (in >=1 of VOLT/ELFY/ZAP/GRID/PAVE) & `profitable_2026` | quality screen, ETF-gated (~15 names) |
+| `thematic` | in >=2 of {VOLT, ELFY, ZAP, GRID}, filtered to sub-industry + listing gate | thematic-ETF consensus (~7 names); depends on incomplete ETF-holdings data |
+| **`screen`** (recommended) | seed pool & sub-industry map & `customer_institutional` & (>=2 of {`profitable_2026`, `earnings_valued`, `low_policy_dependence`}) | **our supplier rule, NO ETF gate** (~27 names). Picked on stated properties. 0% utilities / pipelines / components -- the thesis distinction from VOLT (which is ~43% those). Beats VOLT on a fair window (2025-01->2026-08): CAGR 33% vs 24%, Sharpe 1.18 vs 0.82. |
 
-All three: equal-weight, 25% single-name cap, quarterly reconstitution, 42-day reporting
-lag, 252-trading-day listing gate.
+All four: equal-weight, 25% single-name cap, quarterly reconstitution, 42-day reporting
+lag, 252-trading-day listing gate. `screen` is the recommended universe (see
+`../docs/electrification-strategy-v1-results.md`).
 
 ## Overlays (frozen params -- `config.py`)
 
@@ -53,10 +55,12 @@ lag, 252-trading-day listing gate.
 ## Caveats (carry into any pitch)
 
 - **Enhanced thematic beta, not alpha.** ~All the return is the electrification theme.
-- **Universe is 2026-vintage, back-cast.** Membership, the ETF snapshot, and
-  `profitable_2026` are not point-in-time; only the listing-date gate is. **Pre-live
-  gate:** rebuild membership from point-in-time holdings / GICS vintages and make the
-  profitability screen time-varying before any live capital.
+- **Universe is 2026-vintage, back-cast.** The seed pool, the ETF snapshot, and the four
+  judgment columns (`profitable_2026`, `customer_institutional`, `earnings_valued`,
+  `low_policy_dependence`) are not point-in-time; only the listing-date gate is.
+  The ETF snapshot is top-25-only for GRID/PAVE/ELFY. **Pre-live gate:** make the
+  judgment columns time-varying, and (for `thematic`/`frozen`) obtain a full
+  point-in-time holdings feed. `screen` has no ETF dependency.
 - **Valuation overlay is a mild trim**, not a crash shield.
 - **The DLR.EQIX short** carries borrow + dividend cost, 2-name concentration, and an
   ugly ride in rate-rising bull markets; its evidence is two rate episodes.
