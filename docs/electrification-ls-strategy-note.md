@@ -132,3 +132,53 @@ through the cycle.
   plateau test, not optimisation.
 - One macro cycle (2022→) for the part that makes money. The structural hypothesis is the reason to
   expect *some* persistence; it is not proof.
+
+---
+
+## 6. Is there a real hedge / does the short leg generalise? (2026-09-05)
+
+### What rises when the long leg falls — nothing reliable
+
+| candidate | monthly corr w/ long leg (full / 2023-26 / 2019-22) | note |
+|---|---|---|
+| resi solar | +0.25 / +0.30 / +0.47 | moves *with* the long leg; "short" only pays via dispersion in risk-off |
+| solar + EV-charging | +0.36 / +0.50 / — | best 2023-26 L/S (Sh 2.08) & 2025-26 (1.27); worst 2019-22 (-0.54) |
+| TAN | +0.45 / +0.50 / +0.54 | shorting yourself |
+| **GLD** | **+0.00 / -0.02 / +0.05** | only genuinely uncorrelated asset, all regimes |
+| TLT / IEF | -0.08 / **+0.36** / -0.19 | hedges a pure growth scare; *positively* correlated in a rate shock — fails when needed |
+| XLU / SPLV | +0.30..+0.49 | same customers; 15% sleeve cuts DD ~3-4pp, Sharpe flat |
+
+2026-06->08 drawdown (long leg -16%, unrecovered): GLD +11%, XLE +20%, COWZ +16% rose; TAN -20%,
+resi-solar -32% fell harder. Drawdown tools, each for one failure mode: small **GLD** sleeve
+(all-regime), some **duration** (growth-scare only), or a small **long** in beaten-down solar (the
+convex hedge on "rates fall + AI-capex unwinds" — best through-cycle barbell Sharpe 0.72, but
+-0.5 Sharpe drag in 2023-26).
+
+### "Long suppliers / short downstream" does NOT generalise
+
+Beta-hedged L/S, 20% vol-tgt, by window Sharpe (2013-18 / 2019-22 / 2023-26 / full):
+
+| pair | corr | Sharpes | |
+|---|---|---|---|
+| grid-equip / resi-solar (ours) | +0.17 | -0.35 / -0.33 / +1.94 / +0.31 | regime flip |
+| oilsvc / E&P | +0.87 | -1.14 / -0.48 / +0.53 / -0.47 | not even a spread |
+| semicap / memory+PC | +0.65 | +0.46 / +1.02 / **-0.10** / +0.47 | inverts 2023-26 |
+| mining-machinery / metals | +0.63 | +0.27 / -0.36 / +0.40 / +0.13 | mixed |
+| ag-equip / ag-commodity | +0.61 | +0.10 / +0.63 / +0.06 / +0.25 | stable but weak |
+| **aero-supply / airlines** | +0.54 | **+0.65 / +0.95 / +0.85 / +0.80** | only durable one |
+| biopharma-tools / biotech | +0.63 | +0.66 / +0.84 / -0.55 / +0.38 | inverts 2023-26 |
+
+Only aero-supply/airlines is positive every window — a specific aftermarket-annuity story, not
+"picks-and-shovels" as a factor. Our grid/solar pair is a 2023-26 dispersion event, not a
+manifestation of a durable cross-industry anomaly.
+
+### Conclusion
+
+- The **long leg** is defensible ("own the profitable suppliers in a real capex up-cycle").
+- The **short leg is not structural** — it replicates nowhere. Keep it only as a *tactical
+  dispersion trade* for rising-rate / wide-credit regimes, sized by the §4 composite, disclosed
+  as non-durable.
+- For drawdown control use a **diversifier sleeve** (small GLD + duration + low-vol), not a
+  correlated clean-energy short.
+- If the mandate is truly "a durable long/short," **aero-supply / airlines** has far more
+  cross-cycle evidence than this theme and is worth a separate look.
