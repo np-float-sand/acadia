@@ -128,6 +128,15 @@
     color:var(--ink-soft);
     margin-bottom:.28rem;
   }
+  .statline dt .win{
+    display:block;
+    margin-top:.15rem;
+    font-weight:600;
+    letter-spacing:.02em;
+    text-transform:none;
+    color:var(--good);
+    font-size:.66rem;
+  }
   .statline dd{
     margin:0;
     font-family:"IBM Plex Mono",ui-monospace,monospace;
@@ -342,36 +351,36 @@
   <div class="wrap">
     <p class="eyebrow">Investment proposal &middot; review draft</p>
     <h1>Electrification Strategy</h1>
-    <p class="standfirst">A rules-based long-only electrification-equipment book with a valuation-extension de-lever and a gold/Treasury sleeve. Shipped variant: <code>thematic +val+sleeve</code>.</p>
+    <p class="standfirst">A rules-based long-only <em>supplier-screen</em> electrification book &mdash; 27 names by our own rule, no ETF gate &mdash; with a valuation-extension de-lever and a gold/Treasury sleeve. Shipped variant: <code>screen +val+sleeve</code>.</p>
     <dl class="statline">
-      <div><dt>Sharpe</dt><dd>0.85</dd></div>
-      <div><dt>Max drawdown</dt><dd>&minus;24%</dd></div>
+      <div><dt>Sharpe <span class="win">vs VOLT 0.82</span></dt><dd>1.35</dd></div>
+      <div><dt>Max drawdown <span class="win">vs VOLT &minus;24%</span></dt><dd>&minus;17%</dd></div>
+      <div><dt>CAGR <span class="win">vs VOLT 24%</span></dt><dd>28%</dd></div>
       <div><dt>SPY beta</dt><dd>0.59</dd></div>
-      <div><dt>vs VOLT ETF</dt><dd>0.58 / &minus;25%</dd></div>
     </dl>
-    <p class="meta">2026-09-06 <span>&bull;</span> backtest 2017&ndash;2026 <span>&bull;</span> enhanced thematic beta, not alpha</p>
+    <p class="meta">2026-09-06 <span>&bull;</span> figures on the VOLT-comparable window 2025-01&ndash;2026-08 <span>&bull;</span> full 2017&ndash;2026: Sharpe 0.69 / &minus;24% <span>&bull;</span> enhanced thematic beta, not alpha</p>
   </div>
 </header>
 
 <main class="wrap ladder">
 
   <section class="tier">
-    <h2>Own the picks and shovels, with two shock absorbers</h2>
+    <h2>Own the shovel-makers &mdash; only the shovel-makers</h2>
     <p class="aud">if you&rsquo;re five</p>
     <ul>
-      <li>We buy equal slices of the companies that make the electrical parts for the AI and data-center power boom, and tidy the basket up a few times a year.</li>
+      <li>We buy equal slices of ~27 companies that make the electrical parts for the AI and data-center power boom, and tidy the basket up a few times a year.</li>
       <li>When those stocks jump up too fast we hold a bit less, and we keep some gold and government bonds on the side as a cushion for when the boom stumbles.</li>
-      <li>We lean toward the &ldquo;keep-the-grid-running&rdquo; companies and away from the &ldquo;build-brand-new-data-centers&rdquo; ones, so if towns start blocking data centers we get hurt less.</li>
+      <li>We only pick the <em>suppliers</em>, and leave out the power companies and pipelines that the big electrification ETF mixes in &mdash; that&rsquo;s why we&rsquo;ve been beating it.</li>
     </ul>
   </section>
 
   <section class="tier">
-    <h2>A disciplined way to own the theme</h2>
+    <h2>Our own screen, not the ETF&rsquo;s list</h2>
     <p class="aud">if you&rsquo;re ten</p>
     <ul>
-      <li>It&rsquo;s a rules-based basket of ~10 US electrification / grid-equipment stocks (the ones the electrification ETFs agree on), equal-weighted, rebalanced quarterly, and dialed to a steady 20% risk level &mdash; a disciplined way to own the theme, not a stock-picking bet; 2017&ndash;2026 test Sharpe 0.85, worst drop &minus;24%, vs the VOLT ETF&rsquo;s 0.58 and &minus;25%.</li>
+      <li>It&rsquo;s a rules-based basket of ~27 US electrification / grid-equipment stocks chosen by <strong>our own screen</strong> &mdash; a real business customer (utilities, hyperscalers), profitable, and not dependent on subsidies &mdash; equal-weighted, rebalanced quarterly, dialed to a steady 20% risk level. Since the VOLT ETF launched (Dec 2024) we&rsquo;ve returned 28%/yr at a much smaller worst-drop (&minus;17% vs &minus;25%).</li>
       <li>Two shock absorbers: a rule that trims the basket when it has run far above its own trend or far ahead of the market, and a 15% sleeve of gold + Treasuries that pays off in the two macro ways the story breaks &mdash; a credit/growth scare (bonds rise) or a government-spending / currency-debasement episode (gold rises).</li>
-      <li>For the risk the sleeve can&rsquo;t cover &mdash; a political backlash (data-center moratoriums, permit denials) with no recession &mdash; we tilt ~70/30 toward grid-maintenance names over greenfield data-center-power names; in the months tested where data-center stocks fell on their own, the grid-maintenance names were roughly flat.</li>
+      <li>The screen keeps us a pure <em>supplier</em> book: 0% regulated utilities, pipelines, or chip-component makers, which are ~43% of VOLT. That&rsquo;s the whole reason we&rsquo;ve outrun it &mdash; and the risk is that if utilities lead again (rates fall), we give that cushion up.</li>
     </ul>
   </section>
 
@@ -379,13 +388,34 @@
     <h2>Construction, overlays, and the backlash gap</h2>
     <p class="aud">if you&rsquo;re a first-year grad</p>
     <ul>
-      <li><strong>Construction.</strong> Electrification-equipment universe by &ge;2-of-4 thematic-ETF overlap + GICS sub-industry filter + 252-day listing gate, equal-weight (25% cap), 42-day reporting lag, 20% trailing-realised-vol target (1.5&times; cap) &mdash; 2017&ndash;2026 Sharpe 0.85 / MaxDD &minus;24% / SPY &beta; 0.59 (VOLT: 0.58 / &minus;25%). Enhanced thematic beta, explicitly not alpha; pre-live gate is a point-in-time membership + profitability rebuild.</li>
+      <li><strong>Construction.</strong> <code>screen</code> universe &mdash; sub-industry-mapped electrification/grid pool filtered by an institutional-customer axis + &ge;2 of {profitable, earnings-valued (P/E not EV/Sales), low policy-dependence}, i.e. the capex-cycle-pair-classifier rule restricted to the supplier side; <strong>no ETF-membership gate</strong>. Equal-weight (25% cap), 42-day reporting lag, 20% trailing-vol target (1.5&times; cap). 27 names, top weight ~4%. Full 2017&ndash;2026 Sharpe 0.69 (mid-pack vs marquee/frozen 0.77); the edge is the recent supplier-vs-utility divergence + a method that removes the &ldquo;you&rsquo;re just VOLT&rdquo; and &ldquo;you hand-picked winners&rdquo; objections. Enhanced thematic beta, not alpha (corr to VOLT 0.88).</li>
       <li><strong>Overlays.</strong> (i) Graduated valuation-extension de-lever &mdash; multiplier 1.0 / 0.8 / 0.6 on price-vs-200dMA (15% / 35%) and 12-month return vs SPY (25% / 50%), a mild top-trim worth ~0&ndash;3pp of MaxDD; (ii) 15% GLD/IEF sleeve hedging the financing-tightening (duration) and debasement / geopolitical (gold) tails of the industrial-policy regime that funds the buildout &mdash; +13% contribution across the &ldquo;rates fall while AI-capex unwinds&rdquo; months, and it raises Sharpe.</li>
       <li><strong>Idiosyncratic-backlash handling.</strong> A 70/30 revenue tilt toward grid-reliability / T&amp;D / broad-electrification names (&beta; 0.36 to the greenfield-DC-power sleeve), net-neutral on headline metrics and roughly flat in the tested idiosyncratic-DC-selloff months; a conditional merchant-power short was tested and rejected; index/name puts are the only cause-agnostic hedge and carry a premium cost not in the backtest.</li>
     </ul>
   </section>
 
 </main>
+
+<section class="block">
+  <div class="wrap">
+    <h2>vs VOLT &mdash; why we&rsquo;ve been ahead</h2>
+    <p class="lede">VOLT (Tema Electrification) real sector weights: utilities 30% &middot; energy/midstream 10% &middot; tech-components 13% &middot; industrials 47%. Its top 10 includes NextEra, AEP, Idacorp, OGE, Energy Transfer, Amphenol, Bel Fuse. Our <code>screen</code> book holds none of that &mdash; 100% equipment / EPC / thermal / distribution suppliers.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>2025-01 &rarr; 2026-08 (VOLT-comparable window, since its Dec-2024 launch)</caption>
+        <thead>
+          <tr><th>Book</th><th>CAGR</th><th>Sharpe</th><th>MaxDD</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>VOLT ETF</td><td>24.1%</td><td>0.82</td><td class="neg">&minus;24.4%</td></tr>
+          <tr><td><code>screen</code> plain</td><td class="pos">32.5%</td><td class="pos">1.18</td><td>&minus;22.3%</td></tr>
+          <tr><td><code>screen +val+sleeve</code> (shipped)</td><td class="pos">27.7%</td><td class="pos">1.35</td><td class="pos">&minus;17.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede">The distinction is compositional and methodological, not statistical &mdash; 0.88 correlated with VOLT, so this is outperformance <em>within</em> the theme, regime-dependent (suppliers over utilities), on one cycle of evidence.</p>
+  </div>
+</section>
 
 <section class="block">
   <div class="wrap">
@@ -428,7 +458,7 @@
   <div class="wrap">
     <h2>Open &amp; pre-live</h2>
     <ul class="open-list">
-      <li>Rebuild universe membership and the profitability screen point-in-time (spec &sect;1, &sect;3.3) &mdash; blocks live capital, not the pitch.</li>
+      <li>Make the four judgment columns (<code>profitable_2026</code>, <code>customer_institutional</code>, <code>earnings_valued</code>, <code>low_policy_dependence</code>) time-varying before live capital &mdash; blocks live, not the pitch. The <code>screen</code> universe needs no ETF-holdings feed; <code>thematic</code>/<code>frozen</code> would.</li>
       <li>Wire the 70/30 grid-maintenance tilt as a selectable construction in <code>electrification_strategy/universe.py</code>.</li>
       <li>Options-collar sizing once an options-data feed exists.</li>
     </ul>
@@ -438,6 +468,6 @@
 <footer>
   <div class="wrap">
     <span class="draft">Review draft</span><br>
-    Backs onto the <code>electrification_strategy/</code> package (BUILT), <code>docs/electrification-strategy-v1-results.md</code>, <code>docs/electrification-short-leg-insurance-probe-results.md</code>, and spec <code>docs/superpowers/specs/2026-09-06-electrification-strategy-design.md</code>. Backlash test: <code>scratchpad/backlash_hedge.py</code> (throwaway). Numbers are backtest on a 2026-vintage universe &mdash; survivorship-caveated.
+    Backs onto the <code>electrification_strategy/</code> package (BUILT, 38 tests), <code>docs/electrification-strategy-v1-results.md</code>, <code>docs/electrification-short-leg-insurance-probe-results.md</code>, and spec <code>docs/superpowers/specs/2026-09-06-electrification-strategy-design.md</code>. Backlash test: <code>scratchpad/backlash_hedge.py</code> (throwaway). Numbers are backtest on a 2026-vintage universe &mdash; survivorship-caveated; VOLT-comparable figures cover only 2025-01&ndash;2026-08.
   </div>
 </footer>

@@ -5,6 +5,7 @@ import pytest
 _TICKERS = [
     "ETN", "HUBB", "GEV", "VRT", "PWR", "MYRG", "NVT", "FLNC", "PRIM",
     "EMR", "AME", "RRX", "POWL", "ATKR", "AEIS", "GNRC", "AYI", "EME", "FIX", "MTZ",
+    "WCC", "TT", "CARR", "JCI", "SPXC", "MOD", "IESC", "APG", "ENS", "THR",
     "GLD", "IEF", "DLR", "EQIX", "SPY", "XLI", "PAVE", "GRID", "VOLT", "TAN",
 ]
 

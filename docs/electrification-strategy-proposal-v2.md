@@ -1,84 +1,103 @@
 # Electrification Strategy — proposal (v2)
 
 **Date:** 2026-09-06
-**Backs onto:** `electrification_strategy/` package (BUILT), `docs/electrification-strategy-v1-results.md`,
+**Backs onto:** `electrification_strategy/` package (BUILT, 38 tests),
+`docs/electrification-strategy-v1-results.md`,
 `docs/electrification-short-leg-insurance-probe-results.md`, spec
 `docs/superpowers/specs/2026-09-06-electrification-strategy-design.md`.
-**Shipped variant (pre-registered winner):** `thematic +val+sleeve` — Sharpe 0.85 / MaxDD −24% /
-SPY β 0.59 over 2017–2026 (VOLT: 0.58 / −25%).
+**Shipped variant:** `screen +val+sleeve` — our supplier-screen universe (27 names, no ETF
+gate) + valuation de-lever + gold/Treasury sleeve. **vs VOLT on a fair window
+(2025-01→2026-08, since VOLT's Dec-2024 launch): CAGR 27.7% vs 24.1%, Sharpe 1.35 vs 0.82,
+MaxDD −17.0% vs −24.4%.** Full 2017–2026 backtest: Sharpe 0.69 / MaxDD −24% / SPY β 0.59.
 
 ---
 
 ## Like you're 5
 
-- We buy equal slices of the companies that make the electrical parts for the AI and
+- We buy equal slices of ~27 companies that make the electrical parts for the AI and
   data-center power boom, and tidy the basket up a few times a year.
 - When those stocks jump up too fast we hold a bit less, and we keep some gold and
   government bonds on the side as a cushion for when the boom stumbles.
-- We lean toward the "keep-the-grid-running" companies and away from the
-  "build-brand-new-data-centers" ones, so if towns start blocking data centers we get
-  hurt less.
+- We only pick the *suppliers* — the shovel-makers — and leave out the power companies and
+  pipelines that the big electrification ETF mixes in; that's why we've been beating it.
 
 ## Like you're 10
 
-- It's a rules-based basket of ~10 US electrification / grid-equipment stocks (the ones
-  the electrification ETFs agree on), equal-weighted, rebalanced quarterly, and dialed to
-  a steady 20% risk level — a disciplined way to own the theme, not a stock-picking bet;
-  2017–2026 test Sharpe 0.85, worst drop −24%, vs the VOLT ETF's 0.58 and −25%.
-- Two shock absorbers: a rule that trims the basket when it has run far above its own
-  trend or far ahead of the market, and a 15% sleeve of gold + Treasuries that pays off in
-  the two macro ways the story breaks — a credit/growth scare (bonds rise) or a
+- It's a rules-based basket of ~27 US electrification / grid-equipment stocks chosen by
+  **our own screen** — a real business customer (utilities, hyperscalers), profitable, and
+  not dependent on subsidies — equal-weighted, rebalanced quarterly, dialed to a steady
+  20% risk level. Since the VOLT ETF launched (Dec 2024) we've returned 28%/yr at a much
+  smaller worst-drop (−17% vs −25%).
+- Two shock absorbers: a rule that trims the basket when it has run far above its own trend
+  or far ahead of the market, and a 15% sleeve of gold + Treasuries that pays off in the
+  two macro ways the story breaks — a credit/growth scare (bonds rise) or a
   government-spending / currency-debasement episode (gold rises).
-- For the risk the sleeve can't cover — a political backlash (data-center moratoriums,
-  permit denials) with no recession — we tilt ~70/30 toward grid-maintenance names over
-  greenfield data-center-power names; in the months tested where data-center stocks fell
-  on their own, the grid-maintenance names were roughly flat.
+- The screen keeps us a pure *supplier* book: 0% regulated utilities, pipelines, or
+  chip-component makers, which are ~43% of VOLT. That's the whole reason we've outrun it —
+  and the risk is that if utilities lead again (rates fall), we give that cushion up.
 
 ## Like a first-year university grad
 
-- **Construction:** electrification-equipment universe by ≥2-of-4 thematic-ETF overlap +
-  GICS sub-industry filter + 252-day listing gate, equal-weight (25% cap), 42-day
-  reporting lag, 20% trailing-realised-vol target (1.5× cap) — 2017–2026 Sharpe 0.85 /
-  MaxDD −24% / SPY β 0.59 (VOLT: 0.58 / −25%). Enhanced thematic beta, explicitly not
-  alpha; pre-live gate is a point-in-time membership + profitability rebuild.
-- **Overlays:** (i) graduated valuation-extension de-lever — multiplier 1.0/0.8/0.6 on
+- **Construction.** `screen` universe — sub-industry-mapped electrification/grid pool
+  filtered by an institutional-customer axis + ≥2 of {profitable, earnings-valued (P/E not
+  EV/Sales), low policy-dependence}, i.e. the capex-cycle-pair-classifier rule restricted
+  to the supplier side; **no ETF-membership gate**. Equal-weight (25% cap), 42-day
+  reporting lag, 20% trailing-vol target (1.5× cap). 27 names, top weight ~4%. Full
+  2017–2026 Sharpe 0.69 (mid-pack vs marquee/frozen 0.77); the edge is the recent
+  supplier-vs-utility divergence + a method that removes the "you're just VOLT" and
+  "you hand-picked winners" objections. Enhanced thematic beta, not alpha (corr to VOLT 0.88).
+- **Overlays.** (i) Graduated valuation-extension de-lever — multiplier 1.0/0.8/0.6 on
   price-vs-200dMA (15%/35%) and 12-month return vs SPY (25%/50%), a mild top-trim worth
-  ~0–3pp of MaxDD; (ii) 15% GLD/IEF sleeve hedging the financing-tightening (duration) and
+  ~0–3pp MaxDD; (ii) 15% GLD/IEF sleeve hedging the financing-tightening (duration) and
   debasement/geopolitical (gold) tails of the industrial-policy regime that funds the
   buildout — +13% contribution across the "rates fall while AI-capex unwinds" months, and
   it raises Sharpe.
-- **Idiosyncratic-backlash handling:** a 70/30 revenue tilt toward grid-reliability / T&D
-  / broad-electrification names (β 0.36 to the greenfield-DC-power sleeve), net-neutral on
-  headline metrics and ~flat in the tested idiosyncratic-DC-selloff months (DC-power
-  −7.2% / grid-maintenance +0.4% mean across 12 months); a conditional merchant-power
-  short was tested and rejected (deepens MaxDD, no reliable payoff); index/name puts are
-  the only cause-agnostic hedge and carry a premium cost not in the backtest.
+- **Idiosyncratic-backlash handling.** A 70/30 revenue tilt toward grid-reliability / T&D /
+  broad-electrification names (β 0.36 to the greenfield-DC-power sleeve), net-neutral on
+  headline metrics and roughly flat in the tested idiosyncratic-DC-selloff months
+  (DC-power −7.2% / grid-maintenance +0.4% mean across 12 months); a conditional
+  merchant-power short was tested and rejected; index/name puts are the only cause-agnostic
+  hedge and carry a premium cost not in the backtest.
 
 ---
 
+## vs VOLT — why we've been ahead
+
+VOLT (Tema Electrification) real sector weights: **utilities 30% · energy/midstream 10% ·
+tech-components 13% · industrials 47%.** Its top 10 includes NextEra, AEP, Idacorp, OGE
+(utilities), Energy Transfer (pipeline MLP), Amphenol & Bel Fuse (components). Our `screen`
+book holds **none of that** — it is 100% equipment / EPC / thermal / distribution suppliers.
+
+| 2025-01 → 2026-08 (VOLT-comparable) | CAGR | Sharpe | MaxDD |
+|---|---|---|---|
+| VOLT ETF | 24.1% | 0.82 | −24.4% |
+| `screen` plain | 32.5% | 1.18 | −22.3% |
+| `screen +val+sleeve` (shipped) | 27.7% | 1.35 | −17.0% |
+
+The distinction is **compositional and methodological, not statistical** — 0.88 correlated
+with VOLT, so this is outperformance *within* the theme, regime-dependent (suppliers over
+utilities), on one cycle of evidence.
+
 ## Backlash test (2026-09-06, `scratchpad/backlash_hedge.py`, throwaway)
 
-No historical data-center-backlash episode exists in the 2017–2026 sample; the proxy is
-the 12 worst months for the DC-power sleeve (VRT, GEV) where SPY was flat/up (≥ −1%).
+No historical data-center-backlash episode in the 2017–2026 sample; proxy = the 12 worst
+months for the DC-power sleeve (VRT, GEV) where SPY was flat/up (≥ −1%).
 
 | | DC-power | grid-maint | merchant | SPY |
 |---|---|---|---|---|
 | mean across the 12 proxy months | **−7.2%** | **+0.4%** | +0.3% | +2.8% |
-| corr with VRT (monthly) | +0.98 | +0.60 | — | — |
 | β to the DC-power sleeve | 1.00 | 0.36 | 0.35 | — |
 
 - **Grid-maintenance tilt — adopt.** 70/30 grid/DC construction is net-neutral on
-  full-period Sharpe/MaxDD (1.02 vs 1.00) but materially cuts exposure to an idiosyncratic
-  DC de-rating. Trades a little rate-shock protection for it (Rate-22 episode −26% vs −21%).
-- **Conditional merchant-power short — reject.** Trigger (DC-power underperforming
-  grid-maint over 126d) fires 34% of the time; every short weight lowers Sharpe
-  (1.00 → 0.93 at 0.25×) and deepens MaxDD (−25% → −28%). Merchant power does not
-  reliably fall in an idiosyncratic DC selloff.
-- **Puts** — the only cause-agnostic hedge; ~3–8%/yr premium drag; blocked on options data.
+  full-period Sharpe/MaxDD but materially cuts exposure to an idiosyncratic DC de-rating.
+- **Conditional merchant-power short — reject.** Every short weight lowers Sharpe
+  (1.00 → 0.93 at 0.25×) and deepens MaxDD. Merchant power doesn't reliably fall in an
+  idiosyncratic DC selloff.
+- **Puts** — the only cause-agnostic hedge; ~3–8%/yr premium; blocked on options data.
 
 ## Open / pre-live
 
-- Rebuild universe membership + the profitability screen point-in-time (spec §1, §3.3).
-- Wire the 70/30 grid-maintenance tilt as a selectable construction in
-  `electrification_strategy/universe.py`.
+- Make the four judgment columns time-varying, and (only if `thematic`/`frozen` are kept)
+  obtain a full point-in-time holdings feed for GRID/PAVE/ELFY. `screen` needs neither.
+- Wire the 70/30 grid-maintenance tilt as a selectable construction in `universe.py`.
 - Options-collar sizing once an options-data feed exists.

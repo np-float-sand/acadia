@@ -21,12 +21,12 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(prog="electrification_strategy")
     ap.add_argument("--start", default=config.START_DEFAULT)
     ap.add_argument("--end", default=_default_end())
-    ap.add_argument("--universe", choices=["marquee", "frozen", "thematic", "all"], default="all")
+    ap.add_argument("--universe", choices=["marquee", "frozen", "thematic", "screen", "all"], default="all")
     ap.add_argument("--output", default="./output_electrification")
     ap.add_argument("--no-plot", action="store_true")
     args = ap.parse_args(argv)
 
-    cons = ("marquee", "frozen", "thematic") if args.universe == "all" else (args.universe,)
+    cons = universe.CONSTRUCTIONS if args.universe == "all" else (args.universe,)
 
     cand = sorted(set(config.MARQUEE_UNIVERSE) | set(universe.load_seed().index))
     tickers = sorted(set(cand) | set(config.BENCHMARKS) | set(config.HEDGE_SLEEVE_TICKERS)

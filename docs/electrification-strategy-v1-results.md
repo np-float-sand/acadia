@@ -125,3 +125,76 @@ DC-power sleeve (VRT, GEV) where SPY was flat/up (>= -1%). Throwaway: `scratchpa
 
 Proposal (3-tier, IC review): `docs/electrification-strategy-proposal-v2.md` /
 `docs/electrification-strategy-proposal-v2.html`.
+
+## Follow-up (2026-09-06): `screen` construction + real ETF holdings
+
+Added a 4th universe construction and rebuilt `etf_membership_2026.csv` from real published
+holdings (stockanalysis.com / issuer pages). Package tests: 38 passing.
+
+### Corrected ETF membership
+
+Real holdings show the thematic ETFs are utility/midstream-heavy, not supplier-pure:
+VOLT sector weights **utilities 30% / energy-midstream 10% / tech-components 13% /
+industrials 47%**; ZAP is ~80% regulated utilities; ELFY is LNG/uranium/mining-heavy;
+GRID is foreign-utility + big-tech (NVDA, CSCO, TSLA, ORCL). Of our seed pool the ETFs
+actually hold far fewer names than the earlier hand-guess assumed. Effect:
+`thematic` (>=2 of 4) shrank 10 -> **7 names** (ETN HUBB GEV PWR NVT AME JCI; lost VRT,
+POWL, AEIS); `frozen` (>=1 of 5 + profitable) 23 -> **15**. GRID/PAVE/ELFY are
+top-25-visible only (128/102/116 holdings) -- a "false" for those is "not in the top 25",
+not confirmed absent. **A full point-in-time holdings feed for GRID/PAVE/ELFY is a
+pre-live gate for `thematic`/`frozen`. `screen` has no ETF dependency.**
+
+### `screen` -- our supplier rule, no ETF gate
+
+`customer_institutional AND (>=2 of {profitable_2026, earnings_valued,
+low_policy_dependence})`, on the sub-industry pool + listing gate. The
+capex-cycle-pair-classifier "customer + 2 of 3" rule, long/supplier side only. Three new
+documented judgment columns in `universe_seed.csv` (2026-vintage, same caveat class).
+Yields **27 names** -- excludes GNRC (customer), FLNC/STEM (0 of 3); keeps GEV/PRIM/MTZ at
+2 of 3 (they fail low_policy_dependence). Zero utilities / pipelines / components by
+construction.
+
+### The 16-cell grid (2017-06 -> 2026-08)
+
+```
+cell                            CAGR     Vol  Sharpe    MaxDD   beta    drag  feared corrVOLT
+marquee plain                 19.5%  20.6%    0.77 -26.8%   0.71   0.0%   0.0%     0.83
+marquee +val+sleeve           15.3%  15.5%    0.74 -22.6%   0.56   4.2%  12.9%     0.81
+frozen  plain                 19.4%  20.6%    0.77 -31.5%   0.75   0.0%   0.0%     0.88
+frozen  +val+sleeve           15.7%  15.5%    0.76 -27.0%   0.59   3.7%  13.0%     0.86
+thematic plain                17.8%  20.5%    0.71 -28.3%   0.73   0.0%   0.0%     0.86
+thematic +val+sleeve          15.6%  16.2%    0.73 -24.0%   0.59   2.2%  13.3%     0.85
+screen  plain                 17.7%  20.4%    0.70 -28.2%   0.75   0.0%   0.0%     0.88
+screen  +val+sleeve           14.4%  15.4%    0.69 -24.0%   0.59   3.3%  13.6%     0.86
+```
+(marquee/thematic/frozen +short and screen +short rows in `output_electrification/metrics.csv`.)
+
+Pre-registered winner this run: **`marquee plain`** (full Sharpe 0.77, MaxDD −26.8% just
+clears the −27% bar); 10/16 cells pass. The rule maximises raw Sharpe s.t. constraints, so
+the most concentrated unprotected book games it -- a fragile pick.
+
+### vs VOLT on a fair window (2025-01 -> 2026-08; VOLT launched Dec-2024)
+
+| | CAGR | Sharpe | MaxDD |
+|---|---|---|---|
+| VOLT ETF | 24.1% | 0.82 | −24.4% |
+| screen plain | 32.5% | 1.18 | −22.3% |
+| screen +val+sleeve | 27.7% | 1.35 | −17.0% |
+
+`screen` beats VOLT on all three (+8pp CAGR / +0.36 Sharpe plain; +3.6 / +0.53 / +7pp DD
+with overlays) because it excludes VOLT's ~43% utilities/midstream/components, which lagged
+in 2025-26. Corr to VOLT 0.88 -- outperformance *within* the theme, regime-dependent
+(suppliers over utilities), one cycle.
+
+### Recommendation -- discretionary override
+
+Ship **`screen`** as the universe (PM override of the pre-registered `marquee plain`):
+- beats VOLT on a fair window on all three metrics, with a clean stated method;
+- deepest book (27 names, top weight ~4%) -- lowest concentration;
+- removes the two biggest pitch objections ("you're just VOLT"; "you hand-picked winners")
+  and the incomplete-ETF-holdings dependency that now blocks `thematic`/`frozen`;
+- costs only ~0.03-0.07 full-window Sharpe vs the other constructions.
+
+Stack: **`screen +val+sleeve`** (recent Sharpe 1.35 / MaxDD −17% / feared +13.6%; full
+0.69 / −24%) as the shipped variant, or `screen plain` if the mandate wants max return and
+can wear the deeper drawdown. `thematic` (7 names, incomplete data) is not shippable.

@@ -64,15 +64,15 @@ def test_effective_n():
 def test_run_comparison_grid_shape(synthetic_prices, synthetic_dfii10):
     res = backtest.run_comparison("2018-01-01", "2024-12-31", synthetic_prices, synthetic_dfii10)
     assert set(res["cells"]) == {
-        (con, lab) for con in ("marquee", "frozen", "thematic")
+        (con, lab) for con in ("marquee", "frozen", "thematic", "screen")
         for lab in ("plain", "+val", "+val+sleeve", "+val+sleeve+short")
     }
     for cell in res["cells"].values():
         assert set(cell) >= {"metrics", "beta", "corr_volt", "episode_dd", "feared_pnl",
                              "calm_drag", "subwindow_sharpe", "drag_vs_plain", "returns"}
         assert set(cell["episode_dd"]) == set(config.EPISODES)
-    assert {"marquee", "frozen", "thematic"} == set(res["eff_n"])
-    assert res["eff_n"]["frozen"] > res["eff_n"]["marquee"]
+    assert {"marquee", "frozen", "thematic", "screen"} == set(res["eff_n"])
+    assert res["eff_n"]["screen"] > res["eff_n"]["marquee"]   # supplier screen is deeper
     assert len(res["plateau"]) == len(config.VAL_PLATEAU_SCALES)
     assert {"SPY", "XLI", "PAVE", "GRID", "VOLT"} <= set(res["benchmarks"])
 

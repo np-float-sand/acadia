@@ -1,10 +1,14 @@
 # Electrification Strategy — v1 design spec
 
 **Date:** 2026-09-06
-**Status:** BUILT 2026-09-06 — results: `docs/electrification-strategy-v1-results.md`
-(winner: `thematic +val+sleeve`, Sharpe 0.85 / MaxDD −24%; 8/12 cells pass the pre-registered
-rule). Two deviations logged in the results doc: daily vol-target (not the month-held
-`overlay.vol_target_scalar`) and valuation extension measured on the plain basket index.
+**Status:** BUILT 2026-09-06 — results: `docs/electrification-strategy-v1-results.md`.
+v1 winner (pre-registered) `thematic +val+sleeve`; **v1.1 added a 4th construction `screen`**
+(our supplier rule, no ETF gate, 27 names) + rebuilt ETF membership from real holdings.
+**Shipped by PM override: `screen +val+sleeve`** — beats VOLT on the fair window
+(2025-01→2026-08): CAGR 27.7% vs 24.1%, Sharpe 1.35 vs 0.82, MaxDD −17% vs −24%; full
+2017–2026 Sharpe 0.69. Deviations logged in the results doc: daily vol-target (not the
+month-held `overlay.vol_target_scalar`), valuation extension on the plain basket index,
+`screen` uses static judgment flags (time-varying is a pre-live gate).
 **Package:** `electrification_strategy/` (new top-level, parallel to `grid_equipment_basket/`)
 **Research provenance (read for context):**
 `docs/electrification-ls-strategy-note.md` (long-only core, short-leg search),
