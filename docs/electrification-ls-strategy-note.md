@@ -224,3 +224,45 @@ Chinese panel glut). **But the data says it is the trade that already happened, 
 **Net:** no durable short/hedge for this book anywhere. Long-only core stands; any drawdown
 protection is a small GLD (uncorrelated) + a tactical VIX/USD overlay, sized by the rates+credit
 signal. Firm-thermal is more of the same beta, not a diversifier.
+
+---
+
+## 8. Broader short-leg search + China stress test (2026-09-05) -- CLOSED
+
+Tested 12 short-leg candidates beyond clean energy (legacy autos, airlines, China broad, China
+internet, commodity chemicals, bond-proxy defensives, rate-sensitive REITs, freight/trucking,
+semis, profitless DER-tech, regional banks, consumer big-ticket durables). Bar: beta-hedged L/S
+Sharpe positive in BOTH pre-AI windows (2013-18 and 2019-22).
+
+Only two cleared: **china_broad (FXI+MCHI)** and **consumer big-ticket (WHR MHK LEG SWK)**.
+Consumer big-ticket: +0.67 correlated, falls -7.9% in the long book's worst months -- a correlated
+"quality industrial vs junky durables" pair, not a hedge.
+
+**China broad -- least-correlated candidate (corr +0.32 full / +0.03 in 2023-26), positive every
+window (L/S Sharpe 0.20 / 0.45 / 1.48 / full 0.60), only -3.6% in the long book's worst months.
+Economic story: long US reshoring/deglobalisation winner, short the deglobalisation loser.**
+Stress test kills it as a standalone:
+
+- **SPY beta 0.86 / 0.51 / 0.88** -- not a hedge, a directional bet with a China drag.
+- **Fat left tail = the feared scenario.** 6 of the spread's 8 worst months had China UP while elec
+  fell (-15.9% Jul-2014, -14.7% Oct-2018 & Feb-2020, -9.8% Jul-2026 with China +12.4%).
+  Episodes: China rally H1-2025 spread -8% (elec -10%, China +11%); 2026 selloff spread -10%
+  (elec -13%, China +10%). When China decouples and rallies on its own catalyst, the short
+  compounds the loss.
+- **No continuous exit signal works.** China-relative-momentum + yuan-strength kill switch drops
+  full Sharpe 0.60 -> 0.23 (whipsaw; China catalysts too fast to confirm). Self-referential
+  "spread trailing-12m < 0" cuts DD -41%->-29% but zeros the pre-AI edge (19-22 +0.42 -> -0.02)
+  and sits in cash 33% of the time.
+- **Only mild positive:** 20% China short as a barbell tilt on the long-only core lifts full
+  Sharpe 0.66 -> 0.71 and 2019-22 0.48 -> 0.59 -- +0.05, at the cost of the divergence-blowup risk.
+
+### Short-leg search: CLOSED
+
+No good short exists for the electrification-equipment long book:
+- clean energy (solar / EV / storage / hydrogen): +0.25..+0.6 correlated, works 2023-26 only
+- firm-gen (gas turbine / nuclear / IPP): +0.60 correlated, falls harder in drawdowns
+- other industries: correlated (autos/chem/freight/semis) or only aero-supply/airlines standalone
+- China broad: least correlated but 0.85 SPY beta, recurring fat left tail, no working exit signal
+
+**Final: long-only core + diversifier sleeve (small GLD + tactical VIX/USD sized by rates+credit).
+Any L/S expression is a disclosed tactical dispersion trade, not a durable strategy leg.**
