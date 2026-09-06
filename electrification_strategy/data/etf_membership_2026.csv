@@ -1,0 +1,35 @@
+# SNAPSHOT 2026-09 -- approximate, derived from public issuer holdings pages.
+# MUST be refreshed from issuer holdings files before any live use (see README).
+# VOLT=Tema Electrification, ELFY=iShares Future Electrification, ZAP=Range Electrification,
+# GRID=First Trust Clean Edge Smart Grid, PAVE=Global X US Infrastructure Development.
+ticker,VOLT,ELFY,ZAP,GRID,PAVE
+ETN,true,true,true,true,true
+HUBB,true,true,true,true,true
+GEV,true,true,true,true,true
+VRT,true,true,true,false,true
+PWR,true,true,true,true,true
+MYRG,true,false,false,false,true
+NVT,true,true,true,true,true
+FLNC,true,false,false,false,false
+PRIM,true,false,false,false,true
+EMR,false,true,false,false,true
+AME,false,true,false,true,false
+RRX,false,true,false,false,true
+POWL,true,false,true,false,true
+ATKR,false,false,false,false,true
+AEIS,true,false,false,true,false
+GNRC,false,false,true,true,true
+AYI,false,false,false,false,true
+ENS,false,false,false,false,false
+THR,false,false,false,false,false
+EME,false,false,false,false,true
+FIX,false,false,false,false,true
+MTZ,false,false,false,false,true
+IESC,false,false,false,false,false
+APG,false,false,false,false,false
+TT,false,false,false,false,true
+CARR,false,false,false,false,true
+JCI,false,false,false,false,true
+SPXC,false,false,false,false,true
+MOD,false,false,false,false,false
+STEM,false,false,false,false,false
