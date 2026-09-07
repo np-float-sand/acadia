@@ -175,10 +175,14 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 13. **Quality / balance-sheet weighting** of the basket (leverage × margin stability × FCF
     conversion) vs equal-weight, with a residual-vs-low-vol-factor control. Scoped, not run;
     low prior, ~half a day. (`handoff_2026-09-01…` §8.4)
-14. **Round-2 triage survivors — spike before build:** (#7) labor-bottleneck data (BLS QCEW
-    electrical-contractor employment/wages by county — public, ~5–6 mo lag); (#10) cat-bond /
-    reinsurance pricing (Artemis.bm) as a leading indicator for utility wildfire-liability equity
-    risk. Cheap correlation/availability checks first. (`triage_2026-09-04-differentiation-ideas-round2.md`)
+14. ~~Round-2 triage survivors — spike before build~~ **RESOLVED 2026-09-06, both DEAD:**
+    (#7) labor-bottleneck data (BLS QCEW) — real, DC-specific wage/employment divergence
+    confirmed, but no county-level revenue attribution exists for any public equity, and the
+    national-aggregate margin-correlation version fails a pre/post-2022 sub-period split;
+    one unresolved thread (IESC margin vs. DC-hub wage index, 4-qtr lag) not chased further.
+    (#10) cat-bond/reinsurance pricing — zero reaction in SRRIX/ILS to the actual 2026-08-31
+    EIX/PCG wildfire-liability crash; wrong peril (physical vs. legislative) entirely. See §6
+    "2026-09-04 → 09-06" below and `docs/triage_2026-09-04-differentiation-ideas-round2.md`.
 15. **State-level net-metering/DER policy dockets as a short-side entry trigger** (e.g. CA NEM 3.0 —
     dated, public, telegraphed months before the final PUC vote). Untried — everything tried so far
     is a long-side physical/price signal; nothing has used a regulatory-calendar input. (session
