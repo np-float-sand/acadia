@@ -119,6 +119,10 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | GLD / long-duration / VIX / USD | GLD ~0 corr (uncorrelated diversifier — KEPT in the sleeve); TLT hedges a growth scare but +0.36 in a rate shock; VIXY −0.60 (bleeds carry); USD −0.31 (faded) — tactical only |
 | Conditional rate-signal short (short weight ∝ Δ 10y real yield) | full-cycle **wash** (+3.4%/yr 2023–26, −1%/yr otherwise, net +0.1%/yr, t=0.1); β barely moves; DD wider — documented as Phase-2 pending non-rate signals |
 | DLR·EQIX short as fixed insurance | runner-up in the package grid — trims MaxDD ~1.4pp for ~1.2pp/yr drag; optional |
+| DER sleeve SHORT, re-tested on `screen +val+sleeve` (2026-09-06) | **anti-hedge, worse at every size** — full Sharpe 0.69→0.36 (0.15×) → −0.18 (0.40×); MaxDD −24%→−42%→−83%; feared-scenario P&L −36% to −95%. Re-confirms the earlier verdict |
+| DER sleeve LONG when real yields falling, 0→10% (2026-09-06) | **mild PASS** — Sharpe 0.69→0.77, CAGR +2.4pp, MaxDD −24→−27, +7% feared, rescues 2019–22. Candidate = open item #17, not wired |
+| rate-conditional rotation INTO utilities (XLU) (2026-09-06) | **REJECT** — Sharpe 0.69→0.63 (0.30×), MaxDD deepens; redundant with the IEF sleeve leg; XLU is a worse asset (Sh 0.38 / DD −36%). VOLT's ~30% utility weight is *why its Sharpe is lower* |
+| conditional merchant-power short (VST/NRG/CEG/TLN), backlash-triggered (2026-09-06) | **REJECT** — every weight lowers Sharpe (1.00→0.93), deepens MaxDD; merchant doesn't reliably fall in an idiosyncratic DC selloff |
 Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrification-short-leg-insurance-probe-results.md`.
 
 ### Idea-generation / other
@@ -182,7 +186,15 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 16. **Hyperscaler capex growth as an entry accelerator**, not the already-failed exit de-risk use
     of the same data (`capex_signal.py` failed as a de-risk trigger — fires ~a year late; never
     tried as "capex reaccelerating past a threshold" to size *into* the spread). Untried. (session
-    2026-09-02, §6 below)
+    2026-09-02, §6 below) — **this is the "load surprise done right"**: the demand-data classes all
+    failed as *timing* because they lag a 2–4-yr-backlog business, but an *entry accelerator* is
+    more tolerant of lag (you're confirming a trend, not calling a turn).
+17. **Solar rotation when real yields fall** — a small conditional LONG in the beaten-down DER
+    sleeve (ENPH/SEDG/CHPT/RUN/BLNK/STEM), sized 0→10% by "6-mo Δ 10y real yield < 0", on
+    `screen +val+sleeve`. Tested 2026-09-06: full Sharpe 0.69→0.77, CAGR 14.4→16.8%, MaxDD
+    −24→−27%, +7% in the feared solar-squeeze months, and it *rescues* the 2019–22 sub-window
+    (Sharpe +0.51→+0.78). **Candidate, NOT wired** — trigger fires 42% of days (too loose), adds
+    disclosed tail risk. Opposite sign of the rejected DER *short* (§3). (session 2026-09-06, §6)
 
 ---
 
@@ -211,6 +223,61 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 
 Per-conversation log. Each chat appends a dated block here for what it did; the
 substance goes in §1–§5, this is just attribution + a pointer.
+
+### 2026-09-04 → 09-06 — Round-2 differentiation triage (10 ideas), #7/#10 spiked to conclusion, independent capex-guidance-signal verification
+
+Brainstormed 10 new differentiation ideas outside the marquee grid-equipment basket
+(crypto-miner-to-AI-hosting, wildfire liability, power semis, gas midstream, nuclear
+PPA/restart, water utilities, EU grid equipment, demand-response/VPP, labor-bottleneck
+data, cat-bond/reinsurance pricing), then live-checked each against September-2026
+market state before any build. **8 of 10 dead on arrival** — every sector-adjacency
+idea had already re-rated 30–140% YTD with explicit sell-side/retail coverage naming
+the same thesis (Siemens Energy +138%, VICR +138%, TeraWulf's $19B Anthropic lease,
+EIX −23%/PCG −18% same-day on the 2026-08-31 wildfire-liability bill). Full triage:
+`docs/triage_2026-09-04-differentiation-ideas-round2.md`.
+
+- **#7 (labor-bottleneck data) — spiked to a full negative, not just scoped.** Live
+  BLS QCEW API (NAICS 2382, county-level, ~5–6 mo lag, free/public) confirmed a real,
+  DC-specific wage/employment divergence (Loudoun VA electrical-contractor jobs
+  8,672→18,027 2020–26; wage growth 16–18% YoY in DC-hub counties vs 6% national in
+  2025Q4). But no county-level revenue attribution exists for any public equipment
+  maker or contractor (EMCOR/IES/MYR Group disclose data-center revenue by *end-market
+  segment*, not geography), so the tradeable version had to be reframed as a national
+  aggregate wage-index vs. EME/IESC/MYRG operating margin. That correlation looked real
+  (up to r=+0.52, p=0.002) but **did not survive a pre/post-2022 sub-period split or
+  first-differencing** — a shared-secular-uptrend artifact, same failure shape as the
+  big-4 capex-deceleration signal. Rebuilding on the actual DC-hub counties (not the
+  diluted national number) confirmed the underlying divergence is real (DC-hub-minus-
+  national spread 0.27pp pre-2022 → 1.88pp post-2022) but only one of 24 tested
+  margin-correlation cells (IESC, 4-quarter lag, t≈4.2/2.7) stayed sign-stable across
+  the sub-period split — flagged as the single most credible unresolved thread, not
+  validated. Tested directly against the grid-equipment basket's own returns too
+  (bypassing the contractor-margin channel entirely): no correlation at any lag
+  (n=17 quarters). **Verdict: DEAD as a signal** — the wage divergence is real but
+  untradeable in every channel tested.
+- **#10 (cat-bond/reinsurance pricing) — spiked to a clean kill.** SRRIX (12+ yr daily
+  NAV) and the Brookmont cat-bond ETF (ILS) both showed **zero reaction** to the
+  2026-08-31 EIX/PCG wildfire-liability crash, and SRRIX moved *after*, not before,
+  the Jan-2025 LA wildfire ignition. Cat bonds trigger on physical wildfire loss; the
+  risk actually repricing CA utility equity is legislative/liability-cap risk — a
+  different peril entirely with no cross-exposure. **Verdict: DEAD, cleanly** — not a
+  data problem, a mechanism mismatch.
+- **Independent verification of the capex-guidance signal (Deliverable D) — corroborates
+  the FAIL, adds one flagged-and-fixed bug.** Using the data layer directly (built by a
+  parallel session this same window), ran the pre-registered §5 methodology
+  (HAC/Newey-West rank-IC + Δ10y/SMH control regression) on the primary $ series: **no
+  horizon clears both bars** (1mo t=−0.68/−0.61, 3mo t=−1.28/−2.00, 6mo t=−0.96/−1.59)
+  — independently consistent with the master ledger's own "best −1.54" FAIL verdict
+  below, and every coefficient tested negative, matching the "consistent inverse sign"
+  note. Also ran the disclosure-date event study proposed as D's cheap pre-check: no
+  abnormal basket reaction at day-0/+1/+5 around any of the 35 real capex-guidance
+  revision dates (benchmarked against like-for-like rolling windows, not naive
+  daily-vs-multiday) — a genuine null, consistent with (not proof of) the information
+  living in the aggregate rather than any single disclosure. **Found and reported a
+  real bug** in `capex_guidance_signal.py`'s `guidance_composite` (`.fillna(daily)`
+  silently substituted raw dollar values for a legitimate NaN warmup period, corrupting
+  any downstream rank-IC) — fixed by the parallel build in `c2e1444` before this
+  session's own corrected re-test.
 
 ### 2026-08-31 → 09-06 — Proposals B/D/A triage, transmission-rate-base build, Layer-1 overlay
 
@@ -360,3 +427,34 @@ session — see their own ledger rows/docs.
 - **Robustness fix**: `_pjm_get` (`grid_resilience/data/grid_data.py`) retried on HTTP 429 but not
   on a transient read-timeout, which crashed a 96-month sequential FTR backfill partway through.
   Now retries both — `tests/data/test_pjm_retry.py`.
+
+### 2026-09-06 — `screen` supplier construction, backlash tilt, hedge/rotation re-tests, behaviour figure
+
+Parallel electrification-strategy conversation. Built the `screen` universe, re-tested the
+hedge/rotation menu against it, and produced the v2 proposal + a behaviour figure. Substance in
+§1 / §3 / §4; this is attribution.
+
+- **`screen` construction — the current ship.** 4th universe = the `capex-cycle-pair-classifier`
+  rule (institutional customer + ≥2 of {profitable, earnings-valued, low-policy-dependence}),
+  supplier side only, **no ETF gate** → 27 names, 0% utilities/pipelines/components. Rebuilt
+  `etf_membership_2026.csv` from real published holdings (VOLT ~30% utilities / 10% midstream /
+  13% components; `thematic` shrank 10→7, `frozen` 23→15; GRID/PAVE/ELFY top-25-visible only).
+  Shipped `screen +val+sleeve` by PM override of the pre-registered `marquee plain` (games the
+  raw-Sharpe rule via concentration + no protection). Beats VOLT on the fair window: CAGR 27.7
+  vs 24.1, Sharpe 1.35 vs 0.82, MaxDD −17 vs −24. Merged to `main`. Package now 38 tests, 4
+  constructions in the CLI + comparison grid.
+- **Data-center-backlash hedge test** (`scratchpad/backlash_hedge.py`; no in-sample episode,
+  proxy = 12 worst DC-power months with SPY flat/up): **grid-maintenance tilt ADOPT** (70/30
+  grid-maint/DC-power, net-neutral headline, β 0.36 to the DC-power sleeve, +0.4% vs DC-power
+  −7.2%) → open item #2; **conditional merchant-power short REJECT**.
+- **Rotation re-tests:** rate-conditional rotation INTO utilities (XLU) — REJECT; DER sleeve
+  SHORT re-tested on `screen` — anti-hedge, worse at every size; DER sleeve LONG when real yields
+  fall (0→10%) — mild PASS → open item #17. (§3 table rows added.)
+- **Behaviour figure** `docs/electrification-strategy-exposure.png` (embedded in the proposal
+  HTML) — growth / rolling 1-yr Sharpe (+ SPY, VOLT context) / net supplier-basket weight
+  (trimmed <0.85 baseline ~73% of days; valuation rule active ~42%; deepest trim 0.14 Apr-2020).
+- **v2 proposal** `docs/electrification-strategy-proposal-v2.{md,html}` (3-tier: like-I'm-5 / -10
+  / new-grad) + Artifact `claude.ai/code/artifact/c5db7bcc-11aa-41e5-9048-161308ecb3a7`.
+- **Demand-signal follow-ups:** open items **#15** (regulatory-calendar DER short trigger — the
+  only untried signal *class*) and **#16** (hyperscaler capex growth as an *entry* accelerator,
+  not the failed lagging *exit* de-risk) both stand for whoever picks this up next.
