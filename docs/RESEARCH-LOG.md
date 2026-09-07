@@ -84,6 +84,8 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | PJM MW-revision (Load Forecast Table B-9), 6 vintages | 2026-09-03 | FAILED — lagging, de-risked into a rally (cost ~+15pp excess) | `docs/pjm-large-load-vintages-2026-09-03.md` |
 | FTR bid-implied forward congestion | 2026-09-02 | FAILED — same gate as layer-2; tracks layer-1 exactly | `docs/ftr-bid-signal-results.md` |
 | Big-4 hyperscaler capex-deceleration de-risk | 2026-08-31 | FAILED — fires ~a year late; lagging confirmation | `grid_equipment_basket/capex_signal.py` |
+| Layer-2 Option A — DC-minus-rest-of-PJM *relative* congestion | 2026-09-01 | FAILED — still misses primary-window Calmar; removing the common-mode component **erases** the prior-window edge (Sharpe 0.61→0.21), proving the absolute signal's 2020–22 "win" was the COVID demand-collapse coincidence | `docs/grid-regime-layer2-results.md` §7 |
+| Layer-2 OOS update (PJM zone LMP Jan–Aug 2026) | 2026-09-01 | congestion overlay did **not** beat the plain price-gate OOS (Sharpe 1.03 vs 1.16); drawdown protection held. Basis for the `REGIME_ENABLED` revert | `docs/grid-regime-layer2-results.md` §9 |
 | Utility 5-yr capex-guidance revisions (Deliverable D) — first test of the "commitment" data class | 2026-09-04 → 2026-09-06 | FAILED both legs. Feasibility PASS 14/15 (NEE out, documented). Every primary rank-IC negative, none \|t\|≥2 (best −1.54); de-risk leg **not exercised** (composite z never < +0.212, so the multiplier is flat 1.0 — its "FAIL" was really the vol-target-only baseline); two-sided scaler fails G1 across the plateau; DC-attributed cut **not yet testable** (all DC-$ vintages 2026-dated, z-score never warms) → re-run ~2027. **9 of 10 sub-threshold \|t\|≥1.5 cells are negative** — a weak but *consistent inverse* sign (crowding / already-priced read); if revisited, test inverted / in a combined model, not thesis-direction. Nothing wired live. Built: seed panel + loader + `capex_guidance_signal.py` + `--capex-guidance`. | `docs/capex-guidance-signal-results.md` |
 | Category-demand → maker rotation (Census M3 / PPI panel) | 2026-09-03 | FAILED — fwd-1m IC t=0.8; fwd-3m IC 100% pre-AI; dead 2023–26 | `docs/category-demand-rotation-results.md` |
 | Henry Hub / forward-gas signal (5 rounds incl. GBM/RF, IS-OOS split) | 2026-09-05 | FAILED — no regime-robust relationship; overfits the 43-mo window | `docs/hhub-forward-gas-signal-results.md` |
@@ -102,6 +104,7 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Cross-sectional price momentum, wide 44-name universe | 2026-09-05 | FAILED — 2023–24 burst only (+2.5 Sharpe), +0.24 since; sector bet on EPCs | `research/xsec_factors_ls/mom_stress.py` |
 | Cointegration pairs stat-arb (wide universe) | 2026-09-05 | FAILED — OOS Sharpe ~0.3–0.5, one −0.9 year | `research/xsec_factors_ls/pairs.py` |
 | Un-crowd the universe (POWL/ATKR/AZZ/…) | 2026-08-31 | FAILED — underperforms marquee, deeper DD, 0.84 corr | `docs/triage_2026-08-31-differentiation-ideas.md` |
+| Layer-2 Option B — signal-tilted long-basket / short-rest-of-PJM-utilities pair | 2026-09-01 | FAILED the pre-registered *spread-informative* check — the basket beat XLU **more** when the signal said congestion was easing (+18 bp/day) than tightening (+7 bp/day); the signal was backwards. Any Sharpe gain over a static pair came from a smaller average short, not signal content | `docs/grid-regime-layer2-results.md` §8 |
 | Within-17-name 6-mo momentum + DC-power sub-sector overweight (backward analysis) | 2026-09-06 | FAILED — momentum tilt loses to equal-weight (Sharpe 1.07 vs 1.41); DC-power 2.5× buys +0.09 Sharpe 2023–26 (in noise), −0.12 pre-2023; EW already holds them | RESEARCH-LOG §6 (2026-09-02→09-06) |
 
 ### Short-leg / hedge search — CLOSED
@@ -130,9 +133,10 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 | VA/Dominion transmission-project demand DB (Deliverable A) | 2026-09-03 | BUILT (72-case seed + loader + SCC Breeze API) — DC-$ share confirms the buildout; not a signal | `docs/va-transmission-filings-probe-results.md` |
 | Data-center commitment signals — Part 2 (C = PUC ESA/tariff MW, E = county permits) | 2026-09-03 | SCOPED; D failed; C + E not yet built | `docs/handoff_2026-09-03-transmission-project-filings.md` §6 |
 | Interconnection-queue *velocity* (Δ large-load MW by zone, vintages) | 2026-09-02 → 2026-09-03 | Superseded by the row above — first probed 2026-09-02 with only 2 annual vintages (inconclusive), then a later session pulled 6 vintages (2021–2026, PDF+xlsx Table B-9) and got a definitive FAILED verdict | `docs/pjm-large-load-vintages-2026-09-03.md` |
-| Differentiation-idea triages (rounds 1 & 2, ~13 ideas) | 2026-08-31 / 09-04 | 8 of 10 (round 2) dead — already mainstream / re-rated | `docs/triage_2026-09-04-differentiation-ideas-round2.md` |
+| Differentiation-idea triages (rounds 1 & 2, ~13 ideas) | 2026-08-31 / 09-04 | round 1: sell-the-overlay-as-insurance FAILED (premium 16–28 pp/yr vs ~10%/yr for puts), un-crowd FAILED, queue-velocity NOT TESTABLE. round 2: 8 of 10 dead — already mainstream / re-rated; survivors #7 labor-bottleneck QCEW data, #10 cat-bond pricing (spike-before-build) | `docs/triage_2026-08-31-differentiation-ideas.md`, `docs/triage_2026-09-04-differentiation-ideas-round2.md` |
+| Grid-buildout L/S proposal — long US+foreign buildout / short GRID (or DER sleeve), β-hedged + vol-tgt | 2026-09-01 | DOCUMENTED, not shipped as an edge — DC-era Sharpe ~1.1 vs GRID / ~2.2 vs DER sleeve, **negative pre-2023**; legs are +0.5 correlated (not a hedge); it's a crowded, regime-dependent style trade. Home-bias / sub-sector / sector-neutral decompositions: congestion signal has ~0 return correlation; the spread "lives in the short leg"; US-vs-ex-US premium is grid-specific but a minor contributor | `docs/handoff_2026-09-01-grid-buildout-long-short.md` §1–§3 |
 | RT/DA LMP spread cross-sectional split | 2026-09-01 | pivoted to FTR (failed); the RT/DA idea itself still literally untried | `docs/handoff_2026-08-15-rt-da-spread-signal.md` |
-| Earnings-estimate-revision / analyst-breadth momentum | — | NOT ATTEMPTED — needs ≥3yr point-in-time consensus EPS feed | `docs/handoff_2026-09-01…` §8.2 |
+| Earnings-estimate-revision / analyst-breadth momentum | — | NOT ATTEMPTED — needs ≥3yr point-in-time consensus EPS feed | `docs/handoff_2026-09-01-grid-buildout-long-short.md` §8.2 |
 
 ---
 
@@ -161,6 +165,16 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
     conditioning; (c) re-run the DC-attributed cut ~2027 when >1 yr of dated DC-$ disclosure exists.
     Low prior, but the machinery is done. Also scoped but unbuilt: Deliverable C (PUC DC tariff/ESA
     contracted-MW) and E (county DC permits) — `handoff_2026-09-03-transmission-project-filings.md` §6.
+12. **Backlog *pricing-power language* text-mining** — count/score lead-time, price-escalation and
+    backlog-margin language in 10-K/10-Q MD&A, per name per quarter. Distinct from backlog *size*
+    (growth, surprise, coverage — all FAILED). Untried. (`handoff_2026-09-01…` §8.3b)
+13. **Quality / balance-sheet weighting** of the basket (leverage × margin stability × FCF
+    conversion) vs equal-weight, with a residual-vs-low-vol-factor control. Scoped, not run;
+    low prior, ~half a day. (`handoff_2026-09-01…` §8.4)
+14. **Round-2 triage survivors — spike before build:** (#7) labor-bottleneck data (BLS QCEW
+    electrical-contractor employment/wages by county — public, ~5–6 mo lag); (#10) cat-bond /
+    reinsurance pricing (Artemis.bm) as a leading indicator for utility wildfire-liability equity
+    risk. Cheap correlation/availability checks first. (`triage_2026-09-04-differentiation-ideas-round2.md`)
 
 ---
 
@@ -221,6 +235,36 @@ substance goes in §1–§5, this is just attribution + a pointer.
   already established by parallel sessions, so contributed here rather than
   spawning another. Left the L2-overlay memory corrected (adoption reverted
   2026-09-01, `REGIME_ENABLED=False`).
+
+### 2026-08-31 → 09-01 — Layer-2 grid-congestion regime: full build, gate, revert; options A/B; grid-buildout L/S proposal
+
+Picked up `docs/handoff_2026-08-31-two-layer-overlay.md` and built Layer-2 end to end.
+
+- **Built `grid_equipment_basket/grid_regime.py`** — abs `|congestion $|` + reserve-tightness in
+  DC-heavy PJM zones (DOM/AEP/COMED/PPL), trailing-756d z-score → monthly exposure multiplier;
+  a **frozen 6-rung pre-registered ladder** (`config.REGIME_LADDER`), the gate (beat layer-1-only
+  on Sharpe **and** Calmar on both windows, on a plateau), `--overlay-l2` CLI, ~55 tests. Merged
+  to `main`. Spec `docs/superpowers/specs/2026-08-31-grid-regime-layer2-design.md`; results
+  `docs/grid-regime-layer2-results.md` (§1–§9).
+- **Gate result: no rung passed** — every rung beats layer-1 on Sharpe but not primary-window
+  Calmar (2.16 vs 2.32). Rung 1 was **adopted by PM override** (`REGIME_ENABLED=True`) on a
+  generalisation + physical-differentiator argument, then **reverted 2026-09-01** on the OOS
+  evidence (`REGIME_ENABLED=False`).
+- **Option A** (DC-minus-rest-of-PJM relative congestion) — FAILED; proved the absolute signal's
+  prior-window "win" was the COVID demand-collapse coincidence.
+- **Option B** (signal-tilted long-basket / short-rest-of-PJM-utilities pair) — FAILED the
+  spread-informative check (signal backwards).
+- **Big-4 capex-deceleration de-risk trigger** (`grid_equipment_basket/capex_signal.py`, TDD) —
+  FAILED; fires ~a year late, missed the DeepSeek drawdown entirely.
+- **Fetched PJM zone LMP Jan–Aug 2026** for a genuine OOS test; congestion overlay did not beat
+  the plain price-gate OOS.
+- **`docs/triage_2026-08-31-differentiation-ideas.md`** — sell-the-overlay-as-insurance (FAILED),
+  un-crowd-the-universe (FAILED), interconnection-queue velocity (NOT TESTABLE).
+- **`docs/handoff_2026-09-01-grid-buildout-long-short.md`** — the "Grid Buildout, GRID-hedged" L/S
+  proposal + the full prior record + §8 ordered next-conversation work plan; home-bias, sub-sector
+  and sector-neutral decompositions showing the congestion signal has ~0 return correlation and the
+  spread's return lives in the short leg. Also a 1-page tear-sheet artifact
+  (claude.ai/code/artifact/0e5f0591-94b0-48b0-a884-24097940f1e4 — stale, pre-OOS).
 
 ### 2026-09-02 → 09-06 — classifier generalization, spread attribution, capacity-auction & book-to-bill probes, DC-commitment-signal scoping
 
