@@ -19,3 +19,4 @@ output_electrification/
 
 # scratch / probe workspace (throwaway; findings live in docs/)
 scratchpad/
+research/capex_cycle_pair_classifier/_cache/
