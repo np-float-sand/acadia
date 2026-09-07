@@ -175,3 +175,42 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
   `docs/electrification-strategy-proposal.html` (earlier, ETF-holdings).
 - **Handoffs (context):** `handoff_2026-09-01-grid-buildout-long-short.md` (the full prior record),
   `handoff_2026-09-03-transmission-project-filings.md`, `handoff_2026-09-05-electrification-strategy.md`.
+
+---
+
+## 6. Session contributions
+
+Per-conversation log. Each chat appends a dated block here for what it did; the
+substance goes in §1–§5, this is just attribution + a pointer.
+
+### 2026-08-31 → 09-06 — Proposals B/D/A triage, transmission-rate-base build, Layer-1 overlay
+
+- **Triaged proposals B / D / A** (`docs/triage_2026-08-31-proposals-bda.md`): B
+  recommended and built; **A killed at triage** (zone-matched congestion pair —
+  loser-side universe too thin, below the breadth floor); **D built then failed**.
+- **Built `grid_demand_factor/`** (proposal D — rank stocks by return-β to a
+  grid-demand nowcast). Pre-registered gate **FAILED**: rank-IC −0.02 (t −0.47),
+  Q5−Q1 Sharpe 0.12, non-monotone, 6/6 variants fail; the nowcast is ~orthogonal
+  to equity returns. Negative result, no module shipped as a strategy.
+- **Built `transmission_rate_base/`** (proposal B — long fast FERC-transmission-
+  rate-base compounders / short flat, ~34 regulated utilities, full 14-task
+  gated build). Pre-registered gate **FAILED**: the five signal quintiles all
+  earned ~the utility-sector return; Q5−Q1 Sharpe −0.61, rank-IC −0.018 (t −0.35),
+  residual α −0.6 %/yr. Merged to `main` (`a1c4cb2`). FERC Form 1 extraction /
+  filer→parent-ticker map / HAC-OLS additivity / pre-registered-gate code kept as
+  reusable infra. `docs/transmission-rate-base-results.md`.
+- **Merged** the earlier `backlog-surprise-factor` and `strategy-triage-bda`
+  branches into `main`.
+- **Built `grid_equipment_basket/overlay.py`** — Layer-1 risk overlay (trend gate
+  MA-100 + 20 % vol target, month-held; `--overlay` CLI; `OVERLAY_*` config; 10
+  tests). Primary 2023–26: Sharpe 1.36→1.58, MaxDD −41 %→−18 % (plateau, not
+  knife-edge). **Prior 2020–22: HURTS** (Sharpe 0.69→0.20) — overfits the one
+  V-shaped DeepSeek drawdown. Merged to `main` (`2949d9a`).
+- **Wrote `docs/handoff_2026-08-31-two-layer-overlay.md`** — scoped the Layer-2
+  grid-congestion regime brainstorm, incl. the feasibility check that killed
+  interconnection-queue *velocity* as backtestable (only ~11 monthly ERCOT
+  snapshots existed at the time).
+- 2026-09-06: reviewed repo state for a consolidated results doc; found this log
+  already established by parallel sessions, so contributed here rather than
+  spawning another. Left the L2-overlay memory corrected (adoption reverted
+  2026-09-01, `REGIME_ENABLED=False`).
