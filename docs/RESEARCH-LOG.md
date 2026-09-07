@@ -469,33 +469,55 @@ session — see their own ledger rows/docs.
   on a transient read-timeout, which crashed a 96-month sequential FTR backfill partway through.
   Now retries both — `tests/data/test_pjm_retry.py`.
 
-### 2026-09-06 — `screen` supplier construction, backlash tilt, hedge/rotation re-tests, behaviour figure
+### 2026-09-06 — short-leg-as-insurance probe → crowding fixes → v1 package build → `screen` construction → backlash tilt → rotation re-tests → regulatory-calendar DER short
 
-Parallel electrification-strategy conversation. Built the `screen` universe, re-tested the
-hedge/rotation menu against it, and produced the v2 proposal + a behaviour figure. Substance in
-§1 / §3 / §4; this is attribution.
+One long electrification-strategy conversation. Chronological:
 
-- **`screen` construction — the current ship.** 4th universe = the `capex-cycle-pair-classifier`
-  rule (institutional customer + ≥2 of {profitable, earnings-valued, low-policy-dependence}),
-  supplier side only, **no ETF gate** → 27 names, 0% utilities/pipelines/components. Rebuilt
-  `etf_membership_2026.csv` from real published holdings (VOLT ~30% utilities / 10% midstream /
-  13% components; `thematic` shrank 10→7, `frozen` 23→15; GRID/PAVE/ELFY top-25-visible only).
-  Shipped `screen +val+sleeve` by PM override of the pre-registered `marquee plain` (games the
-  raw-Sharpe rule via concentration + no protection). Beats VOLT on the fair window: CAGR 27.7
-  vs 24.1, Sharpe 1.35 vs 0.82, MaxDD −17 vs −24. Merged to `main`. Package now 38 tests, 4
-  constructions in the CLI + comparison grid.
-- **Data-center-backlash hedge test** (`scratchpad/backlash_hedge.py`; no in-sample episode,
-  proxy = 12 worst DC-power months with SPY flat/up): **grid-maintenance tilt ADOPT** (70/30
-  grid-maint/DC-power, net-neutral headline, β 0.36 to the DC-power sleeve, +0.4% vs DC-power
-  −7.2%) → open item #2; **conditional merchant-power short REJECT**.
-- **Rotation re-tests:** rate-conditional rotation INTO utilities (XLU) — REJECT; DER sleeve
-  SHORT re-tested on `screen` — anti-hedge, worse at every size; DER sleeve LONG when real yields
-  fall (0→10%) — mild PASS → open item #17. (§3 table rows added.)
-- **Behaviour figure** `docs/electrification-strategy-exposure.png` (embedded in the proposal
-  HTML) — growth / rolling 1-yr Sharpe (+ SPY, VOLT context) / net supplier-basket weight
-  (trimmed <0.85 baseline ~73% of days; valuation rule active ~42%; deepest trim 0.14 Apr-2020).
-- **v2 proposal** `docs/electrification-strategy-proposal-v2.{md,html}` (3-tier: like-I'm-5 / -10
-  / new-grad) + Artifact `claude.ai/code/artifact/c5db7bcc-11aa-41e5-9048-161308ecb3a7`.
-- **Demand-signal follow-ups:** open items **#15** (regulatory-calendar DER short trigger — the
-  only untried signal *class*) and **#16** (hyperscaler capex growth as an *entry* accelerator,
-  not the failed lagging *exit* de-risk) both stand for whoever picks this up next.
+1. **Short-leg-as-insurance probe** (`scratchpad/hedge_probe.py`, `hedge_feasibility.py`;
+   `docs/electrification-short-leg-insurance-probe-results.md`). Re-opened the CLOSED short-leg
+   search on a *risk-reduction* bar (not durable-alpha): scored a 7-item menu (static/conditional
+   SPY short, firm-gen, DC-REITs, DER sleeve, crowding basket, GLD/IEF sleeve, de-lever) by
+   **insurance efficiency = avg episode-DD reduction ÷ CAGR drag**, with hard gates (no episode
+   deepened, feared-scenario P&L ≥ −2%, calm drag ≤ 6%/yr). Result: **no thematic short passes**
+   — DER sleeve is an *anti-hedge* (feared-scenario P&L −24% to −110%), firm-gen deepens the 2022
+   DD, crowding bleeds −45%/yr carry, composites are poisoned by any DER weight. **GLD/IEF 15%
+   sleeve wins** (insurance-efficiency 1.9, raises Sharpe); **conditional DLR·EQIX short** (gated
+   on 6-mo real-yield rise) is the runner-up (trims MaxDD ~1.4pp for ~1.2pp/yr drag).
+2. **Crowding fixes** (`scratchpad/crowding_probe.py`). Quality broadening (marquee-9 → ~20
+   profitable names) — keeps the return, 4pp shallower MaxDD, top weight 11%→5%; net-neutral
+   Sharpe. Valuation-extension de-lever (graduated 1.0/0.8/0.6 on price-vs-200dMA + 12m-vs-SPY) —
+   mild "sell-when-euphoric" trim, ~0–3pp MaxDD, plateau-stable. Both **ADOPTED** into the build.
+3. **v1 strategy package** — brainstorm → spec (`docs/superpowers/specs/2026-09-06-…`) → plan
+   (`docs/superpowers/plans/2026-09-06-…`) → 10-task TDD build → merged. Comparison harness:
+   {marquee, frozen, thematic} × {plain, +val, +val+sleeve, +val+sleeve+short}. Pre-registered
+   winner `thematic +val+sleeve` (Sharpe 0.85 / MaxDD −24%). Two deviations logged: daily
+   vol-target (not the month-held `overlay.vol_target_scalar`, which deepened MaxDD ~15pp),
+   valuation extension on the plain basket index.
+4. **`screen` construction — the current ship.** 4th universe = the `capex-cycle-pair-classifier`
+   rule (institutional customer + ≥2 of {profitable, earnings-valued, low-policy-dependence}),
+   supplier side only, **no ETF gate** → 27 names, 0% utilities/pipelines/components. Rebuilt
+   `etf_membership_2026.csv` from real published holdings (VOLT ~30% utilities / 10% midstream /
+   13% components; `thematic` shrank 10→7, `frozen` 23→15; GRID/PAVE/ELFY top-25-visible only).
+   Shipped **`screen +val+sleeve`** by PM override of the pre-registered `marquee plain` (which
+   games the raw-Sharpe rule via concentration + no protection). Full 2017–2026 Sharpe 0.69 /
+   MaxDD −24% / β 0.59; beats VOLT on the fair window (2025-01→2026-08): CAGR 27.7 vs 24.1,
+   Sharpe 1.35 vs 0.82, MaxDD −17 vs −24. Merged to `main`; 38 tests.
+5. **Data-center-backlash hedge test** (`scratchpad/backlash_hedge.py`; no in-sample episode,
+   proxy = 12 worst DC-power months with SPY flat/up): **grid-maintenance tilt ADOPT** (70/30
+   grid-maint/DC-power, net-neutral headline, β 0.36 to the DC-power sleeve, +0.4% vs DC-power
+   −7.2%) → open item #2; **conditional merchant-power short REJECT** (lowers Sharpe, deepens MaxDD).
+6. **Rotation re-tests** (`scratchpad/utility_rotation.py`): rate-conditional rotation INTO
+   utilities (XLU) — **REJECT** (worse asset, redundant with the IEF sleeve leg); DER sleeve
+   SHORT re-tested on `screen` — **anti-hedge**, worse at every size (Sharpe 0.69→0.36→−0.18,
+   MaxDD −24→−42→−83); DER sleeve LONG when real yields fall (0→10%) — **mild PASS**
+   (Sharpe 0.69→0.77, +7% feared, rescues 2019–22) → **open item #17**.
+7. **Behaviour figure** `docs/electrification-strategy-exposure.png` (embedded in the proposal
+   HTML) — growth / rolling 1-yr Sharpe (+ SPY, VOLT context) / net supplier-basket weight
+   (trimmed <0.85 baseline ~73% of days; valuation rule active ~42%; deepest trim 0.14 Apr-2020).
+8. **v2 proposal** `docs/electrification-strategy-proposal-v2.{md,html}` (3-tier: like-I'm-5 / -10
+   / new-grad) + Artifact `claude.ai/code/artifact/c5db7bcc-11aa-41e5-9048-161308ecb3a7`.
+9. **Load-surprise review** — confirmed every demand-data class already failed as *timing*;
+   linked open items **#15** (regulatory-calendar DER short trigger) and **#16** (capex as an
+   *entry* accelerator) as the untried angles.
+10. **Regulatory-calendar DER short trigger (open item #15) — tested this session; see the
+    ledger row + `docs/nem-calendar-der-short-results.md`.**
