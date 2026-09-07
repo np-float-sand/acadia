@@ -175,6 +175,14 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
     electrical-contractor employment/wages by county — public, ~5–6 mo lag); (#10) cat-bond /
     reinsurance pricing (Artemis.bm) as a leading indicator for utility wildfire-liability equity
     risk. Cheap correlation/availability checks first. (`triage_2026-09-04-differentiation-ideas-round2.md`)
+15. **State-level net-metering/DER policy dockets as a short-side entry trigger** (e.g. CA NEM 3.0 —
+    dated, public, telegraphed months before the final PUC vote). Untried — everything tried so far
+    is a long-side physical/price signal; nothing has used a regulatory-calendar input. (session
+    2026-09-02, §6 below)
+16. **Hyperscaler capex growth as an entry accelerator**, not the already-failed exit de-risk use
+    of the same data (`capex_signal.py` failed as a de-risk trigger — fires ~a year late; never
+    tried as "capex reaccelerating past a threshold" to size *into* the spread). Untried. (session
+    2026-09-02, §6 below)
 
 ---
 
@@ -325,3 +333,30 @@ transmission-project-filings handoff. All negative except the classifier and the
   newly-named large-load category) would have surfaced the *theme* ~7 months before the 2023
   equity re-rating, but not the specific supplier names (needs a second mapping step) and **not
   the DER short at all** (that is a separate rates/hedge decision). n = 1, idea-generation only.
+
+### 2026-09-02 — grid-buildout L/S: DER-sleeve-short verification, by-year performance, ex-ante-trigger brainstorm
+
+Independently verified the handoff's DER-sleeve-short number and asked whether the trade could
+have been found systematically rather than picked in hindsight. Built the FTR signal (#12),
+backlog-coverage-alone tilt (#13), and the thematic-catalyst-detector finding (above) in the same
+session — see their own ledger rows/docs.
+
+- **Reconstructed the DER-sleeve-short spread independently** (long US+foreign buildout, short
+  ENPH/SEDG/CHPT/RUN/BLNK/STEM, rolling-beta hedge, 20% vol target): Sharpe 2.28 (2023-01→2026-08,
+  matches the handoff's 2.23), 1.10 full 2020-26. By year: 2023 +111.8%/3.36, 2024 +97.0%/2.77,
+  2025 +34.1%/1.25, 2026 YTD +22.5%/1.38 — the only variant still positive in 2026 (the GRID-short
+  version is −6.3%/−0.55 YTD).
+- **Proposed a "financing-quality/duration divergence" narrative** for why it worked (programmatic
+  hyperscaler/utility capex vs. rate-sensitive consumer-financed DER, amplified by the 2022-23
+  hiking cycle + CA NEM 3.0). **Correction: superseded by the more rigorous spread-attribution
+  regression above** (this same §6 block, 2026-09-02→09-06 session) — neither quality nor duration
+  load on the spread; ~40% is PAVE/TAN sector rotation, the residual is one-regime concentration,
+  "not a factor." Log the financing-quality story as a narrative that didn't survive a formal
+  test, not as an established mechanism — don't re-cite it as the reason this worked.
+- **Ex-ante systematic-trigger brainstorm** (could this have been found mechanically?): (1)
+  thematic-catalyst detector — tested, see above; (2) open items #15–16 below (DER policy-docket
+  short trigger; capex-acceleration entry trigger) — both untried; (3) ruled out — real rates
+  alone, too coarse (flags "short duration growth" broadly, not DER specifically).
+- **Robustness fix**: `_pjm_get` (`grid_resilience/data/grid_data.py`) retried on HTTP 429 but not
+  on a transient read-timeout, which crashed a 96-month sequential FTR backfill partway through.
+  Now retries both — `tests/data/test_pjm_retry.py`.
