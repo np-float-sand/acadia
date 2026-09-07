@@ -1,8 +1,6 @@
 # research/
 
-Exploratory probe scripts from the AI-power / electrification research line
-(this branch of the work; the parallel electrification-strategy session keeps its
-throwaway scripts in the gitignored `scratchpad/`).
+Exploratory probe scripts from the AI-power / electrification research line.
 
 **Not production code.** Each script re-fetches data live (yfinance / FRED / EIA / SEC),
 runs one analysis, and prints tables. Re-run to regenerate. All verdicts are indexed in

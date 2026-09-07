@@ -82,6 +82,11 @@ Index (GSI: LMP z-score + congestion fraction + reserve tightness + named
 events). 18-ticker universe, 3 long / 5 short, monthly rebalance. See the
 repo root `README.md` for the full mechanism.
 
+**Consolidated signal evidence (June–Aug 2026):** `docs/grid-stress-signal-evidence.md`
+— IC ≈ +0.14 (t ≈ 1.9) on the clean non-PJM universe, not significant; breaks on PJM
+T&D names; whipsaws on VST/NRG; no config beats XLU on corrected data. Real-but-weak
+signal, kept as a risk-managed L/S wrapper, not claimed as an edge.
+
 ---
 
 ## Electrification Strategy (`electrification_strategy/`)
