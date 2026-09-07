@@ -89,6 +89,8 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Henry Hub / forward-gas signal (5 rounds incl. GBM/RF, IS-OOS split) | 2026-09-05 | FAILED — no regime-robust relationship; overfits the 43-mo window | `docs/hhub-forward-gas-signal-results.md` |
 | STEO `ELWHU_*` forward power price (~16-mo forecast tail, free) | 2026-09-05 | SCOPED, NOT RUN — needs STEO archive for point-in-time spark-spread test | `docs/hhub-forward-gas-signal-results.md` §Round 3 |
 | Backlog-surprise factor (1,778 events) | 2026-08-31 | FAILED — event-study gate FAILED | `docs/backlog-surprise-factor-results.md` |
+| PJM capacity-auction (BRA) clearing prices | 2026-09-03 | FAILED — lags equity 18–24 mo, inverted (best at the $29 low), no exit signal | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| Book-to-bill scaler (sleeve-aggregate order book) | 2026-09-06 | INFEASIBLE from XBRL — only PWR/MYRG/PRIM have usable RPO; makers report it in MD&A prose only | RESEARCH-LOG §6 (2026-09-02→09-06) |
 
 ### Cross-sectional / weighting (all FAILED)
 | thread | when | outcome | detail |
@@ -100,6 +102,7 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Cross-sectional price momentum, wide 44-name universe | 2026-09-05 | FAILED — 2023–24 burst only (+2.5 Sharpe), +0.24 since; sector bet on EPCs | `research/xsec_factors_ls/mom_stress.py` |
 | Cointegration pairs stat-arb (wide universe) | 2026-09-05 | FAILED — OOS Sharpe ~0.3–0.5, one −0.9 year | `research/xsec_factors_ls/pairs.py` |
 | Un-crowd the universe (POWL/ATKR/AZZ/…) | 2026-08-31 | FAILED — underperforms marquee, deeper DD, 0.84 corr | `docs/triage_2026-08-31-differentiation-ideas.md` |
+| Within-17-name 6-mo momentum + DC-power sub-sector overweight (backward analysis) | 2026-09-06 | FAILED — momentum tilt loses to equal-weight (Sharpe 1.07 vs 1.41); DC-power 2.5× buys +0.09 Sharpe 2023–26 (in noise), −0.12 pre-2023; EW already holds them | RESEARCH-LOG §6 (2026-09-02→09-06) |
 
 ### Short-leg / hedge search — CLOSED
 | candidate | outcome |
@@ -119,6 +122,10 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 | thread | when | outcome | detail |
 |---|---|---|---|
 | capex-cycle-pair classifier ("customer + 2 of 3" rule) | 2026-09-02 | **KEEPER** — mechanically reproduces the book; not a timing rule, doesn't generalize | memory `capex-cycle-pair-classifier` |
+| Classifier generalization (EV / hydrogen / nuclear / space / cannabis / genomics) + multi-pool | 2026-09-06 | EV only (post-mania ~0.7); nuclear inverts, space/cannabis self-reject. grid/DER+EV concurrent book ~1.69 Sharpe; more pools dilute. "2 live pairs, not 5." | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| grid/DER spread attribution (is it a factor?) | 2026-09-06 | NO — loads −1 on quality, ≈0 on duration/momentum; ~40 % is PAVE/TAN sector rotation; PAVE/XLI itself is Sharpe −0.51 (2023–26). Residual is one-regime concentration, not alpha. | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| US-industrial-policy L/S variant (46 policy suppliers / 13 non-policy industrials) | 2026-09-06 | NOT SHIPPED — β-hedged Sharpe 0.81 (2023–26) / 0.18 (2021–22); one macro bet, regime-dependent, PAVE/XLI benchmark negative | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| Non-price name selection (RTEP / patents / ISO queues → the 17-name book) | 2026-09-06 | FAILED — no external dataset reproduces the names; ISO/utility filings name customers not suppliers; patents skew to SOEs and miss all EPCs | RESEARCH-LOG §6 (2026-09-02→09-06) |
 | Thematic-catalyst detector (utility load-forecast filings name a new large-load category) | 2026-09-02 | idea-generation tool, not a trading signal — PJM named "Data Centers" 1 day before ChatGPT | `docs/thematic-catalyst-detection-2026-09-02.md` |
 | VA/Dominion transmission-project demand DB (Deliverable A) | 2026-09-03 | BUILT (72-case seed + loader + SCC Breeze API) — DC-$ share confirms the buildout; not a signal | `docs/va-transmission-filings-probe-results.md` |
 | Data-center commitment signals — Part 2 (C = PUC ESA/tariff MW, E = county permits) | 2026-09-03 | SCOPED; D failed; C + E not yet built | `docs/handoff_2026-09-03-transmission-project-filings.md` §6 |
@@ -214,3 +221,63 @@ substance goes in §1–§5, this is just attribution + a pointer.
   already established by parallel sessions, so contributed here rather than
   spawning another. Left the L2-overlay memory corrected (adoption reverted
   2026-09-01, `REGIME_ENABLED=False`).
+
+### 2026-09-02 → 09-06 — classifier generalization, spread attribution, capacity-auction & book-to-bill probes, DC-commitment-signal scoping
+
+The long conversation that produced the `capex-cycle-pair-classifier` (memory) and the
+transmission-project-filings handoff. All negative except the classifier and the handoff scope.
+
+- **Classifier — generalization test.** Applied the "customer + 2 of 3" rule to 6 other themes.
+  **EV supply chain** works post-mania (β-hedged+vol-tgt Sharpe ~0.7, 2022–26; −0.7 in the
+  2020–21 EV mania). Hydrogen (2000 & 2020), genomics ≈ 0; **nuclear/SMR inverts** (loses 2024–26 —
+  still mid-mania); **space & cannabis self-reject** (no institutional-supply sleeve — RKLB / SMG
+  are financially indistinguishable from the shorts). Precondition: the institutional side must be
+  in a *real* capex up-cycle — only grid/DER (utility + hyperscaler spend) and, weakly, EV clear it.
+- **Multi-pool concurrent book.** grid/DER + EV run together (equal risk, vol-tgt): blended
+  Sharpe ~1.69 / MaxDD −9 % (2022-06 → 2026-08); pairwise pair-return corr 0.1–0.4 (genuinely
+  diversifying) — **but** adding hydrogen / eVTOL / battery-tech (Sharpe 0.1 / 0.2 / −0.6) only
+  dilutes. "2 live pairs, not 5."
+- **grid/DER spread attribution.** Regressed the dollar-neutral spread on market + quality
+  (COWZ−SPY) + duration (TLT) + the PAVE−TAN sector pair. **Not** quality (loads −1), **not**
+  duration (≈ 0), **not** momentum. ~40 % is the PAVE/TAN infra-vs-solar sector rotation (R² 0.41);
+  residual "alpha" +53 %/yr (t 2.6 primary, 1.6 full-sample) is one-regime thematic concentration,
+  not a factor. **PAVE/XLI itself is Sharpe −0.51 over 2023–26** — the ETF version of the trade
+  loses money; the edge is entirely the concentrated name selection, on one macro cycle. Raw
+  unhedged dollar-neutral Sharpe ≈ 1.2–1.4; the ~2.2 in earlier handoffs needed the β-hedge +
+  20 % vol-target overlay and one window.
+- **US-industrial-policy L/S variant** (long ~46 policy-capex suppliers across 7 buckets — AI/DC,
+  semicap, aero/defense, reshoring E&C, water, grid, thermal — / short ~13 matched non-policy
+  quality industrials). β-hedged+vol-tgt Sharpe **0.81** (2023–26), **0.18** (2021–22), **0.45**
+  full; trimmed ~35-name version ~0.95. One disclosed macro bet (US industrial policy persists),
+  regime-dependent, PAVE/XLI benchmark negative. NOT SHIPPED.
+- **Non-price name selection — dead end.** No external dataset mechanically reproduces the
+  17-name book. ISO/utility planning data (PJM MW forecast Table B-9, RTEP $11.6 B/window, FERC
+  Form 1) names the *customers* (zones, utilities, TOs), not the suppliers. Patents (H02J / H01F /
+  H02B) skew to SOEs / Asian conglomerates and miss every EPC contractor; PatentsView's free API
+  is decommissioned. The book is a fundamental-character selection — the 4-criterion screen is
+  what reproduces it.
+- **PJM capacity-auction (BRA) clearing prices as timing — FAILED.** Lags the equity 18–24 months
+  (the 10× July-2024 print came after VRT was already +1,500 %), inverted (the play worked best
+  when prices were at their $29 low, Dec 2022), and there is **no exit signal** — 2026/27 cleared
+  $329, higher. Lagging confirmation, not a trigger. Possible *late*-exit rule: "first BRA to
+  clear materially lower YoY" — untested, no AI-era instance.
+- **Book-to-bill scaler — INFEASIBLE from XBRL.** Only the 3 EPC contractors (PWR / MYRG / PRIM)
+  have a clean deep `RevenueRemainingPerformanceObligation` series; ETN stopped tagging 2024-03,
+  VRT / HUBB / NVT never did, GEV starts 2024. Derived `(ΔRPO + rev) / rev` is too noisy to gate
+  on (PRIM 0.49 → 1.89 q/q). Equipment makers report book-to-bill in MD&A prose / calls only → a
+  multi-quarter hand-collection project, not a build.
+- **Retrieved** 6 PJM Load Forecast Table B-9 vintages (2021–2026, PDF + xlsx) →
+  `grid_resilience/data/seed/pjm_large_load_b9_vintages.csv`; write-up
+  `docs/pjm-large-load-vintages-2026-09-03.md`. Fed the MW-revision (FAILED) and non-price-selection
+  work above.
+- **Scoped** `docs/handoff_2026-09-03-transmission-project-filings.md` — prelim investigation of
+  FERC eLibrary + state PUC filings (they name project scope / cost / driver, **not** the EPC
+  contractor or equipment vendor) and **Part 2 (§6)**: data-center *commitment* signals —
+  Deliverable C (PUC DC tariff/ESA contracted-MW), D (utility capex-guidance — since built +
+  FAILED by a parallel session), E (county DC permit filings) — with pre-registered bars and a
+  ~17-attempt stop rule. Plus the §2 weighting-note refinements (zone tilt works for EPCs, not
+  equipment makers; work-type → supplier map, needs Order 1000 proposals not final orders).
+- **Thematic-catalyst detector — tested.** The process (watch utility load-forecast filings for a
+  newly-named large-load category) would have surfaced the *theme* ~7 months before the 2023
+  equity re-rating, but not the specific supplier names (needs a second mapping step) and **not
+  the DER short at all** (that is a separate rates/hedge decision). n = 1, idea-generation only.
