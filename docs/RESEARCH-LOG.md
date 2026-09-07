@@ -228,6 +228,43 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 Per-conversation log. Each chat appends a dated block here for what it did; the
 substance goes in §1–§5, this is just attribution + a pointer.
 
+### 2026-09-04 → 09-06 — Deliverable D BUILD: utility capex-guidance revision signal, end to end (FAILED)
+
+Built Deliverable D from `handoff_2026-09-03-transmission-project-filings.md §6` — the first
+test of the **commitment** data class — via a full 17-task subagent-driven build (brainstorm →
+spec `docs/superpowers/specs/2026-09-04-capex-guidance-signal-design.md` → plan → per-task
+implement/review → final whole-branch review → fix wave → scoped re-review). Committed to `main`
+`085735b`…`b3eaa3a` (+ this log entry). Distinct from the parallel session's *independent
+verification* block below — this is the build that produced the machinery it checked.
+
+- **What shipped:** `grid_resilience/data/utility_capex_guidance.py` (loader, feasibility count,
+  point-in-time EM-style DC-attributed imputation, panel aggregation) + hand/web-researched seed
+  `grid_resilience/data/seed/utility_capex_guidance.csv` (44 rows, 15 utilities, 84% H-confidence);
+  `grid_equipment_basket/capex_guidance_signal.py` (daily z-scored composite, one-directional
+  de-risk multiplier + two-sided scaler, HAC-OLS / rank-IC stats, `feasibility_gate`,
+  `timing_report`, `derisk_scaler_report`, `guidance_signal_report`, `guidance_table`);
+  `config.py` constants; `--capex-guidance` CLI + `_write_guidance_outputs`; ~54 new tests
+  (full suite 458→496 over the window, 0 regressions). Detail: `docs/capex-guidance-signal-results.md`.
+- **Verdict — FAILED both legs** (see §3 row). Feasibility PASS 14/15 (NEE excluded, documented).
+  Every primary rank-IC negative, none |t|≥2 (best −1.54). **De-risk leg not exercised** — the
+  `all_usd` composite z never drops below +0.212, so the multiplier is flat 1.0 across all 9 grid
+  combos / both windows; the final review caught the results doc mis-framing that as a merit FAIL
+  and it was corrected to "= the vol-target-only baseline." Two-sided scaler fails G1 across the
+  plateau. DC-attributed cut **not yet testable** (all DC-$ vintages 2026-dated) → re-run ~2027.
+- **§4.4 sub-threshold inventory** (added this session, at user request): 9 of 10 cells at
+  |t|≥1.5 are negative — a weak but *consistent inverse* sign. Open item 11 scopes the revisit
+  (test inverted / joint with big-4 hyperscaler capex / nonlinear).
+- **Final-review fix wave** (`ff32c58`) also fixed: a NaN-denominator bug inflating the `all_pct`
+  series ~2.4×→1.0× across the window; 4 empty-Series guards leaving a non-DatetimeIndex (crashed
+  `--capex-guidance` on a cold big-four cache); a 50-day look-ahead in the hyperscaler control
+  (now aligned to `known_date`).
+- The `.fillna(daily)` bug in `guidance_composite` (raw $ values substituted for NaN warmup) was
+  flagged both by the parallel verification session and independently by this build's Task-8
+  review; reverted in `c2e1444` before any gate ran on it.
+- Housekeeping: briefly created a duplicate `docs/RESULTS.md`, then found this log already
+  established and folded the content here (`f7ba06b`); added the `## Research Log` rule to
+  `CLAUDE.md` pointing every future session at §3.
+
 ### 2026-09-04 → 09-06 — Round-2 differentiation triage (10 ideas), #7/#10 spiked to conclusion, independent capex-guidance-signal verification
 
 Brainstormed 10 new differentiation ideas outside the marquee grid-equipment basket
