@@ -93,6 +93,7 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Backlog-surprise factor (1,778 events) | 2026-08-31 | FAILED — event-study gate FAILED | `docs/backlog-surprise-factor-results.md` |
 | PJM capacity-auction (BRA) clearing prices | 2026-09-03 | FAILED — lags equity 18–24 mo, inverted (best at the $29 low), no exit signal | RESEARCH-LOG §6 (2026-09-02→09-06) |
 | Book-to-bill scaler (sleeve-aggregate order book) | 2026-09-06 | INFEASIBLE from XBRL — only PWR/MYRG/PRIM have usable RPO; makers report it in MD&A prose only | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| **Regulatory-calendar DER short trigger** (open item #15 — short resi-solar in windows around scheduled adverse net-metering decisions) | 2026-09-06 | **FAILED** — first test of a regulatory-calendar signal *class*. Event study over 6 adverse milestones: mean DER return **+0.0% vs the book** (major-only −10.9%, but that is the one CA NEM 3.0 cluster; the Dec-2021 *proposal* milestone is +8.7% — short into a rip). Overlay on `screen +val+sleeve`: +0.04 Sharpe but MaxDD deepens 4–7pp, feared-scenario P&L −7% to −18%, timed-short sleeve −1.9%/yr standalone. n≈1 event; telegraphed policy already in the price. `nem_calendar.csv` kept as a reference for the discretionary risk monitor (open item #5), not wired. | `docs/nem-calendar-der-short-results.md` |
 
 ### Cross-sectional / weighting (all FAILED)
 | thread | when | outcome | detail |
@@ -183,10 +184,15 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
     (#10) cat-bond/reinsurance pricing — zero reaction in SRRIX/ILS to the actual 2026-08-31
     EIX/PCG wildfire-liability crash; wrong peril (physical vs. legislative) entirely. See §6
     "2026-09-04 → 09-06" below and `docs/triage_2026-09-04-differentiation-ideas-round2.md`.
-15. **State-level net-metering/DER policy dockets as a short-side entry trigger** (e.g. CA NEM 3.0 —
-    dated, public, telegraphed months before the final PUC vote). Untried — everything tried so far
-    is a long-side physical/price signal; nothing has used a regulatory-calendar input. (session
-    2026-09-02, §6 below)
+15. ~~State-level net-metering/DER policy dockets as a short-side entry trigger~~ — **TESTED
+    2026-09-06, FAILED.** First test of a regulatory-calendar signal class. Event study: no
+    consistent sign (mean DER +0.0% vs the book across 6 adverse milestones; the Dec-2021 NEM 3.0
+    *proposal* is +8.7% — short into a rip). Overlay: +0.04 Sharpe but deepens MaxDD 4–7pp,
+    feared-scenario P&L negative, timed short −1.9%/yr standalone. n≈1 event (CA NEM 3.0);
+    telegraphed policy is already priced. `electrification_strategy/data/nem_calendar.csv` kept
+    as a reference for the discretionary risk monitor (#5). Revisit only with more events
+    (~2027–28 state NEM-review wave) + a tight vote→effective window + framed as a scale-down of
+    the #17 long-solar tilt, not an outright short. `docs/nem-calendar-der-short-results.md`.
 16. **Hyperscaler capex growth as an entry accelerator**, not the already-failed exit de-risk use
     of the same data (`capex_signal.py` failed as a de-risk trigger — fires ~a year late; never
     tried as "capex reaccelerating past a threshold" to size *into* the spread). Untried. (session
@@ -210,7 +216,8 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 - **Kept data modules:** `grid_resilience/data/va_transmission_data.py` + seed
   `grid_resilience/data/seed/va_transmission_projects.csv`; `grid_resilience/data/seed/pjm_large_load_b9_vintages.csv`;
   `grid_equipment_basket/data/category_demand.py` (FRED panel — dashboard series, not a signal);
-  `grid_equipment_basket/ftr_signal.py` (negative result, kept).
+  `grid_equipment_basket/ftr_signal.py` (negative result, kept);
+  `electrification_strategy/data/nem_calendar.csv` (10 dated state net-metering events — #15 FAILED, kept as a risk-monitor reference).
 - **Exploratory probes (tracked):** `research/` — `va_transmission_probe/`,
   `category_demand_rotation/`, `forward_gas_power/`, `xsec_factors_ls/` (see `research/README.md`).
   The parallel electrification-strategy session keeps its throwaway scripts in the gitignored
@@ -519,5 +526,9 @@ One long electrification-strategy conversation. Chronological:
 9. **Load-surprise review** — confirmed every demand-data class already failed as *timing*;
    linked open items **#15** (regulatory-calendar DER short trigger) and **#16** (capex as an
    *entry* accelerator) as the untried angles.
-10. **Regulatory-calendar DER short trigger (open item #15) — tested this session; see the
-    ledger row + `docs/nem-calendar-der-short-results.md`.**
+10. **Regulatory-calendar DER short trigger (open item #15) — TESTED, FAILED.** Built a 10-event
+    NEM calendar (`electrification_strategy/data/nem_calendar.csv`). Event study: mean DER return
+    +0.0% vs the book across 6 adverse milestones (no consistent sign — the Dec-2021 NEM 3.0
+    *proposal* is +8.7%). Overlay on `screen +val+sleeve`: +0.04 Sharpe but MaxDD −24→−28→−31,
+    feared-scenario P&L −7% to −18%, timed-short sleeve −1.9%/yr standalone. n≈1 event; policy is
+    already priced. Nothing wired; calendar kept as a reference. `docs/nem-calendar-der-short-results.md`.

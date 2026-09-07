@@ -1,0 +1,15 @@
+# Dated state net-metering / DER-compensation regulatory events (public record).
+# direction: cut = reduces DER export compensation (bearish resi-solar) ; expand = restores/raises it
+# severity: major = large addressable market + strong market reaction ; minor = small state or gradual phase-in
+# milestone: proposal | vote | effective  (a single proceeding contributes several dated rows)
+state,proceeding,milestone,date,direction,severity,note
+CA,CPUC NEM 3.0 (R.20-08-020),proposal,2021-12-13,cut,major,"proposed decision — the 'solar tax' PD; sharp resi-solar selloff"
+CA,CPUC NEM 3.0 (R.20-08-020),vote,2022-12-15,cut,major,"final decision adopted (net billing tariff)"
+CA,CPUC NEM 3.0 (R.20-08-020),effective,2023-04-15,cut,major,"NBT effective for new interconnection applications"
+CA,CPUC VNEM/NEM-A (multifamily),vote,2023-11-16,cut,minor,"extends net-billing framework to multifamily / virtual NEM"
+IN,SEA 309,vote,2017-05-02,cut,minor,"phases out full retail net metering by 2022"
+NC,HB 589,vote,2017-07-27,cut,minor,"ends net metering; directs utilities to file new rates"
+FL,HB 741,vote,2022-03-09,cut,minor,"legislature passes NEM rollback"
+FL,HB 741 veto,vote,2022-04-27,expand,minor,"Gov. DeSantis vetoes the rollback — reversal"
+NV,PUCN net-metering docket,vote,2015-12-22,cut,major,"retroactive cut, no grandfathering (pre-window for a clean test)"
+NV,AB405,vote,2017-06-15,expand,major,"restores ~95% retail-rate net metering"
