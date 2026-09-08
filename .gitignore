@@ -20,3 +20,8 @@ output_electrification/
 # scratch / probe workspace (throwaway; findings live in docs/)
 scratchpad/
 research/capex_cycle_pair_classifier/_cache/
+research/electricity_earnings_exposure/_cache/
+
+# proposal_v3 build kit — regenerable
+research/electricity_earnings_exposure/proposal_v3/out/*.b64
+research/electricity_earnings_exposure/proposal_v3/out/pv3_px.parquet

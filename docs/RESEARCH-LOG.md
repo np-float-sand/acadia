@@ -7,7 +7,7 @@ docs; this is the index + verdicts + open items.
 **Update convention:** add new threads to the ledger (§3) with a one-line verdict + a link to the
 detail doc; keep §1 (current strategy) and §4 (open items) current; date every change.
 
-Last updated: **2026-09-06**.
+Last updated: **2026-09-07**.
 
 ---
 
@@ -26,6 +26,13 @@ Last updated: **2026-09-06**.
   window (2025-01→2026-08): **CAGR 27.7% vs VOLT 24.1%, Sharpe 1.35 vs 0.82, MaxDD −17% vs −24%**
   — it beats VOLT because it excludes VOLT's ~43% utilities/midstream/components.
   Docs: `docs/electrification-strategy-v1-results.md`, `docs/electrification-strategy-proposal-v2.md` (+ `.html`).
+  **Proposal v3** (2026-09-07, `docs/electrification-strategy-proposal-v3.html`, Artifact
+  `claude.ai/code/artifact/829dc90b-02a4-4caa-8abb-9eb8eed3c198`): the investment-committee
+  write-up — "Screened Electrification Equipment", VOLT/GRID/SPY comparison + `SPY+15% GLD/IEF`
+  benchmark, a systematic-risk/macro-bet table, and the full 9-candidate short-offset analysis
+  concluding **no equity short improves the book** (drawdown control = the built-in overlays +
+  an optional cash/T-bill weight; a 25% T-bill weight matches a `−XLI 0.25×` overlay at a higher
+  Sharpe). Reproducible build kit: `research/electricity_earnings_exposure/proposal_v3/`.
 - **Earlier parallel framing (this session):** ETF-holdings universe (≥2 of {VOLT, ELFY, ZAP,
   GRID} + GICS filter) + 20% vol target + GLD/IEF sleeve. 2016–2026 Sharpe 0.71 / MaxDD −26%.
   **Superseded** by `screen` — the ETF-holdings gate turned out to depend on incomplete
@@ -54,10 +61,16 @@ clean-energy complex rallies and the theme de-rates. Not hedged.
 
 ## 2. Accumulated conclusion
 
-Across **~25 signal attempts** (this project + predecessors), **no tradable timing or
+Across **~27 signal attempts** (this project + predecessors), **no tradable timing or
 cross-sectional edge has survived an honest out-of-sample / regime split.** Three independent
 demand-data classes — forecast (PJM load forecasts), physical-flow (congestion, FTR), and
-commitment (utility capex guidance) — have each failed. The defensible product is the
+commitment (utility capex guidance) — have each failed. A fourth framing — **electricity as a
+company-specific economic input** (physical power-cost/-revenue exposure → company earnings →
+equity mispricing), the "move one layer closer to the market" pivot — also failed its own
+pre-registered gate 1 (2026-09-07): a bottom-up fleet×price model tracks merchant-generator
+*revenue* but not *operating income* (hedges + non-gen segments sever the link), and a
+hand-mapped power-cost-exposure signal across ~18 power-intensive industrials leaves no
+fingerprint on gross margin and no factor-neutralised forward-return predictability. The defensible product is the
 **rules-based long-only book + risk overlays**, pitched as disciplined thematic beta, plus the
 **`capex-cycle-pair-classifier` construction rule** (the one constructive output: it mechanically
 reproduces the hand-picked book, removing the "you hand-picked winners" objection).
@@ -107,6 +120,8 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Un-crowd the universe (POWL/ATKR/AZZ/…) | 2026-08-31 | FAILED — underperforms marquee, deeper DD, 0.84 corr | `docs/triage_2026-08-31-differentiation-ideas.md` |
 | Layer-2 Option B — signal-tilted long-basket / short-rest-of-PJM-utilities pair | 2026-09-01 | FAILED the pre-registered *spread-informative* check — the basket beat XLU **more** when the signal said congestion was easing (+18 bp/day) than tightening (+7 bp/day); the signal was backwards. Any Sharpe gain over a static pair came from a smaller average short, not signal content | `docs/grid-regime-layer2-results.md` §8 |
 | Within-17-name 6-mo momentum + DC-power sub-sector overweight (backward analysis) | 2026-09-06 | FAILED — momentum tilt loses to equal-weight (Sharpe 1.07 vs 1.41); DC-power 2.5× buys +0.09 Sharpe 2023–26 (in noise), −0.12 pre-2023; EW already holds them | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| **Merchant-generation margin nowcast → 4-name L/S** (Probe A; VST/NRG/CEG/TLN) | 2026-09-07 | **FAILED at the retrodiction gate** — fleet×realised-ISO-price model tracks Δrevenue (pooled Spearman +0.45) but Δoperating-income is +−0 (−0.05, sign-agree 48%; CEG −0.46). Hedge MtM + retail/non-gen segments sever the realised-price→earnings link. A2 returns test not run. | `docs/electricity-earnings-exposure-probe-results.md` |
+| **Electricity-cost exposure cross-section** (Probe B; ~18 power-intensive industrials — Al / EAF steel / chlor-alkali / industrial gas / BTC miners) | 2026-09-07 | **FAILED the pre-registered 6-gate tree** — hand-mapped `−intensity·%Δ(state or hub power price)` signal: G1 Δgross-margin IC≈0 (t −0.6 / −0.2), G1 Δop-margin predictive t −1.9 (wrong sign; only *contemporaneous* t +2.2, an accounting identity), G2 fwd 1m/3m IC≈0, G3 FF5+MOM+sector-neutralised coef t +1.7 → +1.0. Only breadth (G4) passes. 2022–26 fwd-3m blip (t 1.96) collapses to t 0.7 on the wholesale-price proxy → proxy noise. | `docs/electricity-earnings-exposure-probe-results.md` |
 
 ### Short-leg / hedge search — CLOSED
 | candidate | outcome |
@@ -219,11 +234,16 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
   `grid_equipment_basket/ftr_signal.py` (negative result, kept);
   `electrification_strategy/data/nem_calendar.csv` (10 dated state net-metering events — #15 FAILED, kept as a risk-monitor reference).
 - **Exploratory probes (tracked):** `research/` — `va_transmission_probe/`,
-  `category_demand_rotation/`, `forward_gas_power/`, `xsec_factors_ls/` (see `research/README.md`).
+  `category_demand_rotation/`, `forward_gas_power/`, `xsec_factors_ls/`,
+  `electricity_earnings_exposure/` (2026-09-07 — merchant-margin nowcast + power-cost exposure
+  cross-section, both FAILED; `edgar.py` = reusable XBRL companyconcept helper) (see `research/README.md`).
   The parallel electrification-strategy session keeps its throwaway scripts in the gitignored
   `scratchpad/` (`crowding_probe`, `backlash_hedge`, `hedge_probe`, `hedge_feasibility`,
   `utility_rotation`, `make_exposure_plot`). None are production; re-run to regenerate.
-- **Proposals:** `docs/electrification-strategy-proposal-v2.md` / `.html` (canonical, `screen`),
+- **Proposals:** `docs/electrification-strategy-proposal-v3.html` (2026-09-07, investment-committee
+  write-up + short-offset analysis; build kit `research/electricity_earnings_exposure/proposal_v3/`
+  — `build_figures.py` → `assemble.py [--deploy --light --pdf]`),
+  `docs/electrification-strategy-proposal-v2.md` / `.html` (`screen`, 3-tier explainer),
   `docs/electrification-strategy-proposal.html` (earlier, ETF-holdings).
 - **Handoffs (context):** `handoff_2026-09-01-grid-buildout-long-short.md` (the full prior record),
   `handoff_2026-09-03-transmission-project-filings.md`, `handoff_2026-09-05-electrification-strategy.md`.
@@ -234,6 +254,61 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 
 Per-conversation log. Each chat appends a dated block here for what it did; the
 substance goes in §1–§5, this is just attribution + a pointer.
+
+### 2026-09-07 — "Electricity intelligence for equity alpha" pivot — two pre-registered spikes, both FAILED
+
+Responded to an external two-part critique ("dislocation alpha" + "Electricity Intelligence
+for Equity Alpha"): stop trying to rescue the GSI utility-equity factor; instead move one
+layer closer to the power market. Constraint fixed by the user: **output must be an equity
+signal — instruments are equities or at most equity options** (no power-market trading), which
+rules out the critique's headline RT/DA nodal-dislocation product. Ran the two in-mandate
+spikes it reduces to. Both reached pre-registered `FAIL` verdicts. Detail:
+`docs/electricity-earnings-exposure-probe-results.md`. Probes: `research/electricity_earnings_exposure/`
+(`edgar.py` XBRL companyconcept helper, `probe_a.py`, `universe.py`, `probe_b.py` — throwaway,
+tracked).
+
+- **Probe A — merchant-generation margin nowcast** (VST/NRG/CEG/TLN). Hand-coded fleet (GW by
+  company×market×fuel, acquisition effective-dates) × cached ERCOT/PJM DA hub price − Henry Hub
+  gas → quarterly economic-margin model, vs EDGAR XBRL `Revenues` / `OperatingIncomeLoss`
+  (energy filers don't tag `GrossProfit`). **Retrodiction gate FAILED**: Δmodel tracks
+  Δrevenue (pooled Spearman **+0.45**, sane) but Δoperating-income **−0.05** (sign-agree 48%;
+  CEG −0.46). Hedge mark-to-market + retail / non-generation segments sever the
+  realised-price→earnings link. A2 (returns test) not run per the pre-registered fall-through.
+  Independently re-confirms `grid-stress-signal-evidence.md` §5 (VST/NRG regime instability)
+  from the fundamentals side.
+- **Probe B — electricity-cost exposure cross-section** (~18 power-intensive industrials:
+  aluminium AA/CENX/KALU, EAF steel NUE/STLD/CMC/ATI, chlor-alkali OLN/WLK, industrial gas
+  APD/LIN, BTC/AI-hosting miners MARA/RIOT/CLSK/WULF/CIFR/IREN/BTDR). Hand-coded per-name
+  `{state: weight}` exposure vector × electricity-intensity constant; signal
+  `−intensity·%Δ(weighted power price)`, z-scored; price = EIA state industrial retail
+  (primary) and ERCOT/PJM DA hub (measurement check). **6-gate tree (from the proposal)
+  FAILED**: G1 Δgross-margin IC≈0 (t −0.6 / −0.2 across both price proxies), G1 Δop-margin
+  predictive t −1.9 (wrong sign — only *contemporaneous* t +2.2, an accounting identity the
+  10-Q already carries), G2 fwd-1m/3m return IC≈0, G3 FF5+MOM+sector-neutralised signal coef
+  t **+1.7 → +1.0**. Only G4 (breadth, 18 names) passes. The 2022–26 fwd-3m return blip
+  (t 1.96 on the retail-price proxy) collapses to t 0.7 on the wholesale proxy — proxy noise,
+  not a regime effect.
+- **Probe C — input-cost hedge screen** (follow-up, same session). Tested whether the
+  `electrification_strategy/` supplier book has hedgeable exposure to its real cost inputs
+  — copper (`HG=F`), grain-oriented electrical steel (`CLF` proxy), skilled labour (FRED
+  construction AHE + RHI/MAN/KFY/ASGN staffing basket) — over 184 names, all sectors,
+  109 months. **Gate 0 FAILED**: book beta to copper +0.02 (t 0.2), e-steel +0.02 (t 0.6),
+  labour ≈ 0 — market beta alone gives R² 0.58, the three input factors add nothing (they
+  pass costs through / had pricing power in the shortage). Tail check is *backwards*: in the
+  12 biggest copper/steel/labour shock months the book returned +3.6% / +5.0% / +5.8% excess
+  vs +1.5% typical — it **outperforms** when input costs spike. Screen surfaced only the
+  mechanical names (CLF itself, copper miners β≈1–1.7, staffing firms) — most with positive
+  book beta (more cyclical risk, not a hedge); the clean-beta ones (RIO/BHP/VALE/GOLD) have
+  mediocre standalone Sharpe. **No hedge warranted** — there is no input-cost risk to hedge.
+  `research/electricity_earnings_exposure/probe_c_inputcost_hedge.py`.
+- **Takeaway.** "Move one layer closer to the market" does not rescue the equity signal —
+  the binding constraint was never distance from the market; the equity payoff is a
+  multiple/narrative story (merchant gens) or a multi-input-cost margin story (industrials)
+  that a power-market model cannot see. Nothing wired. No open item added (the honest read is
+  the electricity-alpha research line is closed for the equity mandate; the shipped product
+  stays the `electrification_strategy/` long-only book). yfinance quarterly financials depth
+  for these names is only ~6–7 quarters — EDGAR XBRL `companyconcept` (the reused helper) is
+  the sourcing path for any future fundamentals work here.
 
 ### 2026-09-04 → 09-06 — Deliverable D BUILD: utility capex-guidance revision signal, end to end (FAILED)
 
