@@ -5,7 +5,8 @@
 **Goal:** Deliver the Addenda Capital engagement's Phase 1–3 SOW work against the Screened
 Electrification Equipment strategy (`electrification_strategy/`): close the short-interest and
 client-risk-data gaps, run a genuine pre-registered re-test of "stress beta" on the supplier
-universe, formalize the backtest/report, and produce the handoff documentation + updated SOW.
+universe, test a REIT-breadth probe (IRM/AMT) prompted by ssrn-5736562.pdf, formalize the
+backtest/report, and produce the handoff documentation + updated SOW.
 
 **Architecture:** Extends the existing `electrification_strategy/` package with two new
 diagnostic modules (`short_interest.py`, `risk_exposures.py`); reuses `grid_resilience/`'s
@@ -35,7 +36,7 @@ that gate's real outcome; formalizes existing backtest/report code into named SO
   the regime-based split, not the AI-boom-era `config.SUBWINDOWS`).
 - Any new power/energy-market data source ships only if it demonstrably improves a gated result
   — never for narrative flavor alone (spec's data-inclusion discipline).
-- `git tag` / release actions require explicit user confirmation at execution time (Task 14) —
+- `git tag` / release actions require explicit user confirmation at execution time (Task 15) —
   do not run them unattended.
 
 ---
@@ -53,14 +54,14 @@ that gate's real outcome; formalizes existing backtest/report code into named SO
   (indexed by `ticker`, columns `shares_short, short_ratio, short_pct_float,
   date_short_interest, fetched_at`); `crowding_diagnostic(history: pd.DataFrame,
   tickers: tuple[str, ...] = config.HEDGE_SHORT_TICKERS) -> pd.DataFrame` (latest snapshot per
-  ticker, sorted by `short_pct_float` descending) — both consumed by Task 7.
+  ticker, sorted by `short_pct_float` descending) — both consumed by Task 8.
 
 This closes proposal v5's own flagged gap ("Trading costs at scale are still to be estimated")
 for Option B's short leg, as a cost/liquidity diagnostic — not a new alpha signal (spec §3.1).
 Source: yfinance's per-ticker `Ticker(t).info` short-interest fields (already a project
 dependency via `grid_equipment_basket.data.prices`; no new external endpoint to integrate). This
 is a live-only snapshot (yfinance has no historical short-interest endpoint), so history
-accumulates from the first pipeline run forward — document that limitation in Task 9's report,
+accumulates from the first pipeline run forward — document that limitation in Task 10's report,
 not hidden.
 
 - [ ] **Step 1: Add the cache-file config constant**
@@ -230,7 +231,7 @@ short-interest endpoint is free, so history accumulates going forward."
   `align_to_universe(exposures, tickers, asof, lag_days=config.REBALANCE_LAG_DAYS) -> pd.DataFrame`
   (wide, index=ticker, columns=factor, point-in-time as of `asof - lag_days`);
   `portfolio_exposure_report(exposures, weights, asof, lag_days=config.REBALANCE_LAG_DAYS) -> pd.Series`
-  (index=factor) — consumed by Task 7's diagnostic wiring.
+  (index=factor) — consumed by Task 8's diagnostic wiring.
 
 No Addenda risk-model file exists yet (spec §3.3) — this ships against a placeholder schema with
 a documented swap-in point, not blocked on the client.
@@ -940,7 +941,228 @@ regression result as a working signal. Spec §3.4 FAIL branch."
 
 ---
 
-## Task 7: Wire risk-exposure and short-interest diagnostics into the backtest output
+## Task 7: REIT-breadth probe
+
+**Runs regardless of Task 6a/6b's branch — independent of the stress-beta gate outcome.**
+
+Added mid-plan: `ssrn-5736562.pdf` (Mamkhezri, Sun & Yang, March 2026, "The Hidden Cost of the
+Cloud") gives a causal estimate that data-center entry raises PJM's transmission-induced price
+component ~70% ($2.49/MWh) — strong grounding for the GSI congestion economics, but it says
+nothing about REITs or equities. The user's hypothesis is that data-center-exposed REITs could
+add breadth to the 27-name supplier universe. Tests it for real, same "only ship if it improves
+the signal" discipline as the stress-beta gate — not assumed yes or no.
+
+**Candidate scoping:** `DLR` and `EQIX` are excluded from consideration — they're already
+`config.HEDGE_SHORT_TICKERS`, the strategy's conditional short leg; being simultaneously long
+and conditionally short the same names is incoherent, so they stay exactly as they are. The
+actual candidates are `IRM` (Iron Mountain) and `AMT` (American Tower) — both have data-center
+segments and institutional (hyperscaler/enterprise) tenants — a real but modest breadth
+candidate set (27 → up to 29 names), not the 4-name set the idea might first suggest.
+
+**Files:**
+- Modify: `electrification_strategy/data/universe_seed.csv` (add `IRM`, `AMT` rows)
+- Modify: `electrification_strategy/config.py` (extend `SUB_INDUSTRIES`)
+- Modify: `electrification_strategy/universe.py` (add `"screen_reit"` construction)
+- Test: `tests/electrification_strategy/test_universe.py` (extend)
+- Create: `docs/electrification-reit-breadth-probe-results.md`
+
+**Interfaces:**
+- Consumes: `electrification_strategy.universe.{load_seed, members, target_fn}`,
+  `electrification_strategy.backtest.{run_comparison, pick_winner}`.
+- Produces: `"screen_reit"` added to `universe.CONSTRUCTIONS` — a superset of `"screen"`'s pool
+  plus any REIT-tagged names clearing the same bar — consumed by Task 9's real backtest run and
+  Task 10's findings report.
+
+- [ ] **Step 1: Add the REIT rows and sub-industry**
+
+Read `electrification_strategy/data/universe_seed.csv` first (already read during planning —
+header comments document each column's meaning). Using the `Edit` tool, add two rows and a
+comment documenting the REIT-specific interpretation of `earnings_valued`:
+
+```
+# data_center_reit rows (Task 7 probe): earnings_valued is interpreted as "trades on
+# trailing FFO/AFFO multiple, not a pre-cash-flow growth story" -- the REIT-appropriate
+# reading of the same underlying test, not literal trailing P/E.
+IRM,data_center_reit,true,true,true,true
+AMT,data_center_reit,true,true,false,true
+```
+
+(`IRM`: profitable, institutional data-center/records-management tenants, mature FFO-multiple
+valuation, no clean-energy-subsidy dependence — passes all three judgment tests. `AMT`:
+profitable and not subsidy-dependent, but historically priced on an international-tower-growth
+narrative more than a trailing FFO multiple — marked `false` on `earnings_valued`; still passes
+the screen's "≥2 of 3" bar via the other two plus the mandatory `customer_institutional` gate.)
+
+In `electrification_strategy/config.py`, extend the set:
+
+```python
+SUB_INDUSTRIES: set[str] = {
+    "electrical_equipment", "heavy_electrical", "electrical_e&c",
+    "dc_thermal", "grid_scale_storage", "data_center_reit",
+}
+```
+
+- [ ] **Step 2: Write the failing tests**
+
+```python
+# add to tests/electrification_strategy/test_universe.py
+import pandas as pd
+from electrification_strategy import universe
+
+
+def test_screen_excludes_reit_rows_even_though_they_are_in_the_seed(synthetic_prices):
+    asof = synthetic_prices.index[-1]
+    screen = set(universe.members("screen", asof, synthetic_prices))
+    assert "IRM" not in screen and "AMT" not in screen
+
+
+def test_screen_reit_is_a_superset_of_screen(synthetic_prices):
+    asof = synthetic_prices.index[-1]
+    screen = set(universe.members("screen", asof, synthetic_prices))
+    screen_reit = set(universe.members("screen_reit", asof, synthetic_prices))
+    assert screen.issubset(screen_reit)
+    assert "IRM" in screen_reit  # passes all 3 judgment columns
+```
+
+Note: `IRM`/`AMT` aren't in `tests/electrification_strategy/conftest.py`'s `synthetic_prices`
+fixture ticker list — add them there first (same pattern as the other tickers) so these tests
+have price data to check listing eligibility against.
+
+- [ ] **Step 3: Run tests to verify they fail**
+
+Run: `poetry run pytest tests/electrification_strategy/test_universe.py -v`
+Expected: FAIL (`screen_reit` not a valid construction / `IRM` not found)
+
+- [ ] **Step 4: Implement `screen_reit` in `universe.py`**
+
+```python
+CONSTRUCTIONS = ("marquee", "frozen", "thematic", "screen", "screen_reit")
+REIT_SUB_INDUSTRY = "data_center_reit"
+
+# inside members(), replace the existing `if construction == "screen":` branch with:
+    if construction in ("screen", "screen_reit"):
+        cust = set(seed.index[seed["customer_institutional"]])
+        two_of_three = set(seed.index[seed[_SCREEN_2OF3].sum(axis=1) >= 2])
+        base_pool = in_map & cust & two_of_three
+        reit_tickers = set(seed.index[seed["sub_industry"] == REIT_SUB_INDUSTRY])
+        if construction == "screen":
+            return sorted((base_pool - reit_tickers) & listed)
+        return sorted(base_pool & listed)   # screen_reit: screen ∪ qualifying REITs
+```
+
+`"screen"` explicitly excludes `REIT_SUB_INDUSTRY` rows, so its membership is provably
+unchanged by adding `IRM`/`AMT` to the seed CSV — critical, since `"screen"` is what all of
+proposal v5's published numbers are built on.
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+Run: `poetry run pytest tests/electrification_strategy/test_universe.py -v`
+Expected: PASS (all tests, old and new)
+
+- [ ] **Step 6: Commit the code**
+
+```bash
+git add electrification_strategy/data/universe_seed.csv electrification_strategy/config.py \
+        electrification_strategy/universe.py tests/electrification_strategy/test_universe.py \
+        tests/electrification_strategy/conftest.py
+git commit -m "feat(electrification): add screen_reit construction (IRM, AMT breadth probe)
+
+screen itself is provably unchanged (REIT sub-industry explicitly
+excluded from its pool). DLR/EQIX excluded from consideration -- already
+the hedge short leg, can't be long and conditionally short the same
+names. Spike per ssrn-5736562.pdf + user request."
+```
+
+- [ ] **Step 7: Run the real comparison and record the pre-registered verdict**
+
+Pre-registered gate (fixed before running): for each of the four overlay-stack cells (`plain`,
+`+val`, `+val+sleeve`, `+val+sleeve+short`), `screen_reit`'s Sharpe must not be more than 0.05
+below the matching `screen` cell's Sharpe, and its MaxDD must not be worse by more than 3
+percentage points. PASS on all four cells → keep `screen_reit` as an available, documented
+construction option (not necessarily the new pre-registered winner — `pick_winner` decides that
+objectively either way). FAIL on any cell → `screen_reit` stays in the code (harmless, tested)
+but the results doc records it as NOT ADOPTED.
+
+Run: `poetry run python -m electrification_strategy --universe all --no-plot --output /tmp/reit_probe`
+
+Compare the `screen ...` and `screen_reit ...` rows in `/tmp/reit_probe/metrics.csv` against the
+gate above.
+
+- [ ] **Step 8: Write the results doc**
+
+Fill in the actual Sharpe/MaxDD deltas from Step 7's `metrics.csv`, then run as a `Bash` heredoc:
+
+```bash
+cat > docs/electrification-reit-breadth-probe-results.md << 'EOF'
+# REIT-breadth probe — Screened Electrification
+
+**Date:** 2026-09-15 (or the actual run date)
+**Source:** ssrn-5736562.pdf (Mamkhezri, Sun & Yang, 2026, "The Hidden Cost of the Cloud") +
+user request. The paper gives a causal PJM congestion-price estimate (data-center entry -> ~70%
+/ $2.49/MWh increase in the transmission-induced price component); it says nothing about REITs
+directly. This probe tests the user's hypothesis that data-center-exposed REITs could add
+breadth to the 27-name supplier universe.
+
+## Candidates and scoping
+
+DLR/EQIX excluded -- already `config.HEDGE_SHORT_TICKERS` (the conditional short leg); can't
+sensibly be long and short the same names. Tested: IRM (Iron Mountain), AMT (American Tower) --
+both have data-center segments and institutional tenants. Both pass the existing `screen`
+criteria's "customer_institutional + >=2 of 3" bar (see universe_seed.csv comments for the
+REIT-specific FFO-based reading of `earnings_valued`).
+
+## Method
+
+New `screen_reit` construction = the existing `screen` pool (provably unchanged -- REIT rows
+are explicitly excluded from it) union IRM/AMT. Ran the full backtest comparison grid
+(marquee/frozen/thematic/screen/screen_reit x plain/+val/+val+sleeve/+val+sleeve+short).
+
+## Pre-registered gate
+
+For each of the four overlay-stack cells, `screen_reit`'s Sharpe must not be >0.05 below the
+matching `screen` cell, and MaxDD must not be >3pp worse.
+
+| stack | screen Sharpe | screen_reit Sharpe | delta | screen MaxDD | screen_reit MaxDD | delta |
+|---|--:|--:|--:|--:|--:|--:|
+| plain | [x] | [x] | [x] | [x] | [x] | [x] |
+| +val | [x] | [x] | [x] | [x] | [x] | [x] |
+| +val+sleeve | [x] | [x] | [x] | [x] | [x] | [x] |
+| +val+sleeve+short | [x] | [x] | [x] | [x] | [x] | [x] |
+
+**Verdict: [ADOPTED / NOT ADOPTED]**
+
+[If ADOPTED: screen_reit clears the gate on all four cells; kept as a documented, available
+construction. Does it also clear `pick_winner`'s criteria well enough to become the new
+recommended construction, or does `screen` still win on other grounds? State which.]
+[If NOT ADOPTED: name which cell(s) failed and by how much. The breadth gain (27->29 names,
++7%) doesn't clear the bar / isn't worth the REIT rate-sensitivity this strategy was explicitly
+designed to screen out (docs/electrification-strategy-proposal-v5.md's own critique of VOLT's
+utility/REIT-heavy weighting). screen_reit stays in the code as a tested, available option, not
+the shipped default.]
+EOF
+```
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add docs/electrification-reit-breadth-probe-results.md
+git commit -m "research(electrification): REIT-breadth probe — [ADOPTED/NOT ADOPTED]
+
+IRM/AMT tested against the pre-registered per-cell Sharpe/MaxDD gate;
+DLR/EQIX excluded (already the hedge short leg). ssrn-5736562.pdf gives
+real congestion-cost grounding for the theme but no REIT-specific
+evidence either way."
+```
+
+- [ ] **Step 10: Update RESEARCH-LOG.md**
+
+Use the `Edit` tool to add a row to `docs/RESEARCH-LOG.md` §3 with the verdict and a link to
+`docs/electrification-reit-breadth-probe-results.md`. Commit with a `docs(research-log): ...`
+message.
+
+---
+
+## Task 8: Wire risk-exposure and short-interest diagnostics into the backtest output
 
 **Files:**
 - Modify: `electrification_strategy/backtest.py` (`write_outputs`)
@@ -1055,7 +1277,7 @@ metrics/episode/returns outputs."
 
 ---
 
-## Task 8: Re-run the rolling backtest end-to-end, confirm reproducibility
+## Task 9: Re-run the rolling backtest end-to-end, confirm reproducibility
 
 **Files:** none created/modified — this is a verification task.
 
@@ -1068,7 +1290,7 @@ poetry run python -m electrification_strategy --output output_electrification_v2
 ```
 
 Expected: completes without error, `output_electrification_v2/` contains `metrics.csv`,
-`episode_drawdowns.csv`, `plateau.json`, `returns.csv`, `performance.png`, and (if Task 7's
+`episode_drawdowns.csv`, `plateau.json`, `returns.csv`, `performance.png`, and (if Task 8's
 CLI wiring found any data) `risk_exposure_report.csv` / `short_interest_diagnostic.csv`.
 
 - [ ] **Step 2: Restore the caches (this was a reproducibility check, not a cache replacement)**
@@ -1084,18 +1306,18 @@ mv grid_resilience/data/cache.bak grid_resilience/data/cache
 Run: `poetry run pytest tests/ -v`
 Expected: PASS (no regressions from Tasks 1–7)
 
-- [ ] **Step 4: Record the winner cell for Task 9**
+- [ ] **Step 4: Record the winner cell for Task 10**
 
 Open `output_electrification_v2/metrics.csv` and `plateau.json`; note the `winner` construction
-name and its `cagr`, `sharpe`, `max_dd`, `beta` — needed verbatim in Task 9.
+name and its `cagr`, `sharpe`, `max_dd`, `beta` — needed verbatim in Task 10.
 
 No commit needed (verification-only task; `output_electrification_v2/` is already `??` in git
-status from before this plan — leave it for Task 9 to reference, don't commit generated output
+status from before this plan — leave it for Task 10 to reference, don't commit generated output
 directories per this repo's existing convention of `output_*/` being untracked scratch).
 
 ---
 
-## Task 9: Write the Phase 2 findings report
+## Task 10: Write the Phase 2 findings report
 
 **Files:**
 - Create: `docs/electrification-strategy-proposal-v6.md`
@@ -1107,7 +1329,7 @@ tone/format — this repo's client-facing writing style is plain-language, table
 Using `Bash` heredoc (`cat > docs/electrification-strategy-proposal-v6.md << 'EOF' ... EOF`),
 reproduce v5's sections and fold in:
 
-1. All of v5's content, updated with Task 8's actual output numbers if they differ from v5's
+1. All of v5's content, updated with Task 9's actual output numbers if they differ from v5's
    (they shouldn't, absent Task 6a — Task 6a/6b don't change the `screen +val+sleeve` cell
    unless Task 6a's new `screen_stress_tilt` construction outranks it under `pick_winner`).
 2. A new "Stress-Beta Signal Test" section: the gate methodology, result, and verdict from
@@ -1115,14 +1337,18 @@ reproduce v5's sections and fold in:
    or "tested, not adopted — see the built-in protections instead," linking
    `docs/electrification-stress-sensitivity-response.md`).
 3. A new "Cost & Liquidity Diagnostics" section: the short-interest crowding numbers from
-   `short_interest_diagnostic.csv` (Task 7/8) for DLR/EQIX, explicitly closing v5's own flagged
+   `short_interest_diagnostic.csv` (Task 8/9) for DLR/EQIX, explicitly closing v5's own flagged
    "trading costs at scale still to be estimated" limitation — with the honest caveat that this
    is a live-snapshot-only history (Task 1), not a backtested cost estimate.
 4. A new "Client Risk-Factor Alignment" section: state that the adapter (Task 2) is built and
    tested against a placeholder schema, pending the real Addenda file.
 5. A "Market Context" callout citing the Reuters PJM-congestion figures ($777.8M June 2026,
-   ~$1B May 2026) as current evidence for the physical-need thesis already in v5's Summary.
-6. An updated "Method notes" section noting this is v6, listing what changed from v5.
+   ~$1B May 2026) and the Mamkhezri/Sun/Yang (2026) causal estimate (data-center entry raises
+   PJM's transmission-induced price component ~70%, $2.49/MWh) as current evidence for the
+   physical-need thesis already in v5's Summary.
+6. A new "REIT-Breadth Probe" section: the result and verdict from Task 7
+   (`docs/electrification-reit-breadth-probe-results.md`) — whether `screen_reit` was adopted.
+7. An updated "Method notes" section noting this is v6, listing what changed from v5.
 
 - [ ] **Step 2: Generate the HTML/PDF (matching this repo's convention)**
 
@@ -1142,7 +1368,7 @@ into v5's structure. SOW Phase 2 item 3 deliverable."
 
 ---
 
-## Task 10: Write the updated SOW (client-facing)
+## Task 11: Write the updated SOW (client-facing)
 
 **Files:**
 - Create: `docs/scope-of-work-v2-screened-electrification.md`
@@ -1163,10 +1389,10 @@ Compensation, Data Cost Reimbursement, IP, Scope Limitations, Term, Signatures s
    descope decision, and the stress-beta gate with **conditional language** — state plainly that
    the gate was pre-registered and run once, and link the results doc, rather than promising a
    specific outcome.
-4. Rewrites **Phase 2** items to reference the actual backtest re-run (Task 8) and the v6
-   findings report (Task 9).
-5. Rewrites **Phase 3** items to reference the technical reference (Task 11), runbook (Task 12),
-   manifest (Task 13), and tagged release (Task 14) as this plan defines them.
+4. Rewrites **Phase 2** items to reference the actual backtest re-run (Task 9) and the v6
+   findings report (Task 10).
+5. Rewrites **Phase 3** items to reference the technical reference (Task 12), runbook (Task 13),
+   manifest (Task 14), and tagged release (Task 15) as this plan defines them.
 
 - [ ] **Step 2: Generate the HTML/PDF**
 
@@ -1186,7 +1412,7 @@ honest conditional language for the stress-beta gate."
 
 ---
 
-## Task 11: Docstring pass + technical reference
+## Task 12: Docstring pass + technical reference
 
 **Files:**
 - Modify: any new module from Tasks 1, 2, 4, 6a lacking a module-level docstring (they already
@@ -1217,7 +1443,7 @@ One row per module: what it does, its key inputs/outputs, and its role in the pi
 | Module | Role | Key inputs | Key outputs |
 |---|---|---|---|
 | `config.py` | Frozen parameters (spec 6) | — | constants consumed by every other module |
-| `universe.py` | Universe constructions (marquee/frozen/thematic/screen[_stress_tilt]) | `data/universe_seed.csv`, `data/etf_membership_2026.csv`, prices | `target_fn(construction, prices)` |
+| `universe.py` | Universe constructions (marquee/frozen/thematic/screen[_reit][_stress_tilt]) | `data/universe_seed.csv`, `data/etf_membership_2026.csv`, prices | `target_fn(construction, prices)` |
 | `fred.py` | DFII10 (10yr real yield) fetch + cache | FRED API | `fetch_series` |
 | `short_interest.py` | Short-interest crowding/cost diagnostic (Task 1) | yfinance `Ticker.info` | `fetch_short_interest`, `crowding_diagnostic` |
 | `risk_exposures.py` | Client risk-factor adapter (Task 2) | `data/risk_exposures.csv` (placeholder schema — see below) | `load_risk_exposures`, `align_to_universe`, `portfolio_exposure_report` |
@@ -1264,7 +1490,7 @@ SOW Phase 3 item 1 deliverable."
 
 ---
 
-## Task 12: Operational runbook
+## Task 13: Operational runbook
 
 **Files:**
 - Create: `docs/runbook.md`
@@ -1291,7 +1517,7 @@ short interest via yfinance).
 
 All fetches are cached to parquet under `electrification_strategy/data/cache/` (prices, FRED)
 and `grid_resilience/data/cache/` (LMP/load, only touched if re-running the gate). To force a
-full refresh, delete the relevant cache directory before running — see Task 8 of the
+full refresh, delete the relevant cache directory before running — see Task 9 of the
 implementation plan for the exact clear/rebuild/restore sequence used to verify reproducibility.
 
 ## Running the pipeline
@@ -1331,7 +1557,7 @@ exposure are recalculated daily; the underlying holdings list changes roughly mo
 | `yfinance` returns all-NaN columns for some tickers | Rate limiting / partial batch download | Re-run; `fetch_prices` retries with backoff, see `grid_equipment_basket/data/prices.py` |
 | `RuntimeWarning: FRED fetch ... failed` | FRED API unreachable | Falls back automatically to the committed `electrification_strategy/data/fred_DFII10.csv` — update that file periodically if running live for extended periods |
 | `PJM_API_KEY` errors when re-running the stress-beta gate | Missing/expired key | Get a free key at pjm.com/api; only needed for `electrification_stress_beta` re-runs, not the core strategy |
-| Stale cache producing outdated results | Cache never expires automatically | Delete the specific ticker's cache chunk under `data/cache/`, or the whole directory for a full refresh (see Task 8) |
+| Stale cache producing outdated results | Cache never expires automatically | Delete the specific ticker's cache chunk under `data/cache/`, or the whole directory for a full refresh (see Task 9) |
 | `universe_seed.csv` raises `ValueError: unknown sub_industry values` | A typo or a new sub-industry added without updating `config.SUB_INDUSTRIES` | Fix the CSV or extend `config.SUB_INDUSTRIES` |
 EOF
 ```
@@ -1347,7 +1573,7 @@ SOW Phase 3 item 2 deliverable."
 
 ---
 
-## Task 13: Deliverable manifest
+## Task 14: Deliverable manifest
 
 **Files:**
 - Create: `docs/deliverable-manifest.md`
@@ -1370,6 +1596,7 @@ What ships to the Client vs. what stays internal research history, per SOW Phase
 - `docs/electrification-strategy-proposal-v6.md` (+ .html/.pdf) — the findings report
 - `docs/electrification-stress-beta-gate-results.md`
 - `docs/electrification-stress-sensitivity-response.md` (if the gate failed)
+- `docs/electrification-reit-breadth-probe-results.md`
 - `docs/technical-reference.md`
 - `docs/runbook.md`
 - `docs/scope-of-work-v2-screened-electrification.md` (+ .html/.pdf)
@@ -1390,7 +1617,7 @@ What ships to the Client vs. what stays internal research history, per SOW Phase
 
 ## Release step
 
-Once the Client confirms this manifest, proceed to Task 14 (`git tag`).
+Once the Client confirms this manifest, proceed to Task 15 (`git tag`).
 EOF
 ```
 
@@ -1405,7 +1632,7 @@ SOW Phase 3 item 4 deliverable, precedes the tagged release."
 
 ---
 
-## Task 14: Tagged release
+## Task 15: Tagged release
 
 **This step is a release action visible to the Client — do not run it without explicit
 confirmation from the user at execution time, even though it's written here as a plan step.**
@@ -1434,9 +1661,11 @@ Do not push the tag to any remote without a separate, explicit instruction to do
 
 - **Spec coverage:** §3.1 short interest → Task 1; §3.2 forward-power descope → Task 3; §3.3
   risk adapter → Task 2; §3.4 stress-beta gate (both branches) → Tasks 4/5/6a/6b; Phase 2 items
-  1–3 → Tasks 7/8/9; Phase 3 items 1–4 → Tasks 11/12/13/14 (handoff sessions themselves are
-  scheduling-dependent, noted in Task 12/13's framing rather than a standalone task); the SOW v2
-  document → Task 10; the data-inclusion discipline and Reuters grounding → Tasks 5/9.
+  1–3 → Tasks 8/9/10; Phase 3 items 1–4 → Tasks 12/13/14/15 (handoff sessions themselves are
+  scheduling-dependent, noted in Task 13/14's framing rather than a standalone task); the SOW v2
+  document → Task 11; the data-inclusion discipline and Reuters grounding → Tasks 5/10; the
+  REIT-breadth probe (added mid-plan, not in the original spec — ssrn-5736562.pdf +
+  user request, same "only ship if it improves the signal" discipline) → Task 7.
 - **Placeholder scan:** the only bracketed values in the plan (`[t_primary_2021on]`, `[PASS/FAIL]`,
   etc.) are explicitly live-data insertion points filled from a prior step's real output, not
   unresolved TODOs — each is annotated with exactly which file/key it comes from.
