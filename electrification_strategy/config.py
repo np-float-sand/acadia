@@ -53,6 +53,9 @@ HEDGE_SHORT_SIGNAL: str = "DFII10"
 HEDGE_SHORT_LOOKBACK_DAYS: int = 126
 HEDGE_SHORT_LAG_DAYS: int = 5
 
+# -- short interest diagnostic (spec 3.1) --------------------------------
+SHORT_INTEREST_CACHE_FILE: str = "short_interest_history.parquet"
+
 # -- evaluation ------------------------------------------------------
 BENCHMARKS: list[str] = ["VOLT", "PAVE", "GRID", "SPY", "XLI"]
 FEARED_PROXY: str = "TAN"
