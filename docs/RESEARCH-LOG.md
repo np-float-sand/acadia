@@ -7,7 +7,7 @@ docs; this is the index + verdicts + open items.
 **Update convention:** add new threads to the ledger (§3) with a one-line verdict + a link to the
 detail doc; keep §1 (current strategy) and §4 (open items) current; date every change.
 
-Last updated: **2026-09-07**.
+Last updated: **2026-09-09**.
 
 ---
 
@@ -61,7 +61,7 @@ clean-energy complex rallies and the theme de-rates. Not hedged.
 
 ## 2. Accumulated conclusion
 
-Across **~27 signal attempts** (this project + predecessors), **no tradable timing or
+Across **~28 signal attempts** (this project + predecessors), **no tradable timing or
 cross-sectional edge has survived an honest out-of-sample / regime split.** Three independent
 demand-data classes — forecast (PJM load forecasts), physical-flow (congestion, FTR), and
 commitment (utility capex guidance) — have each failed. A fourth framing — **electricity as a
@@ -74,6 +74,23 @@ fingerprint on gross margin and no factor-neutralised forward-return predictabil
 **rules-based long-only book + risk overlays**, pitched as disciplined thematic beta, plus the
 **`capex-cycle-pair-classifier` construction rule** (the one constructive output: it mechanically
 reproduces the hand-picked book, removing the "you hand-picked winners" objection).
+
+**One partial exception, watch-list only (2026-09-08):** the narrative-mispricing thread's
+follow-on — a GBM over the *combination* of merchant stress-beta + ICR + EDGAR disclosure counts
++ momentum — is the first attempt in the ~28 to clear a shuffled-label null cleanly and survive a
+merchant-confound exclusion (Fold B, train 2024-25 / test 2026, OOS AUC 0.758). It still does
+**not** survive a regime split (flat pre-2023) and rests on 6 months / ~50 observations, so it is
+**not tradable** — logged as §4 item 18 to re-check quarterly, not a change to the conclusion above.
+`docs/handoff-narrative-mispricing-portal.md`. The **returns** expression of that model was then
+built and tested to a verdict (2026-09-08 → 09-09, "**Dispatch**", `docs/handoff-2026-09-08-dispatch-ls.md`):
+as a dollar-neutral cross-sectional L/S it **FAILED the regime split** — even after pruning the
+dead features (`gdelt_z`, stale `icr_z`) and widening the universe 13 → 19 names, ~100% of the
+Sharpe is the 2024 merchant-vs-regulated melt-up (ex-2024 Sharpe −0.05), and a sector-neutral /
+regulated-only cut leaves only a trivial non-fundable signal. So the watch-list exception is
+**narrower than it looked**: it survives only as a tercile-*classification*-AUC curiosity on
+2026 (§4 item 18, re-check quarterly), not as a tradable book. The one durable output is the
+**point-in-time trailing-net-margin screen**, kept as a quality overlay (it lifted the worst
+year of every Dispatch variant and of the shipped long-only book).
 
 ---
 
@@ -103,8 +120,13 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Category-demand → maker rotation (Census M3 / PPI panel) | 2026-09-03 | FAILED — fwd-1m IC t=0.8; fwd-3m IC 100% pre-AI; dead 2023–26 | `docs/category-demand-rotation-results.md` |
 | Henry Hub / forward-gas signal (5 rounds incl. GBM/RF, IS-OOS split) | 2026-09-05 | FAILED — no regime-robust relationship; overfits the 43-mo window | `docs/hhub-forward-gas-signal-results.md` |
 | STEO `ELWHU_*` forward power price (~16-mo forecast tail, free) | 2026-09-05 | SCOPED, NOT RUN — needs STEO archive for point-in-time spark-spread test | `docs/hhub-forward-gas-signal-results.md` §Round 3 |
+| STEO archive feasibility, reframed as merchant-beta stabilizer | 2026-09-08 | **SCOPED, NOT RUN (corrected)** — PUDL does NOT shortcut this: its actual processed database (421 tables, live-checked) has zero STEO/ELWHU tables; the promising-looking Zenodo record is just a raw-file mirror of the same PDFs. Back to the original ~half-day PDF-extraction estimate. | `docs/steo-archive-feasibility-results.md` |
 | Backlog-surprise factor (1,778 events) | 2026-08-31 | FAILED — event-study gate FAILED | `docs/backlog-surprise-factor-results.md` |
 | PJM capacity-auction (BRA) clearing prices | 2026-09-03 | FAILED — lags equity 18–24 mo, inverted (best at the $29 low), no exit signal | RESEARCH-LOG §6 (2026-09-02→09-06) |
+| ERCOT CRR true clearing prices — feasibility check | 2026-09-08 | **FAILED (feasibility)** — live API exposes only a rolling ~12-month window (confirmed, params don't unlock more), no public bulk archive; needs a special ERCOT data request. | `docs/ercot-crr-feasibility-results.md` |
+| Real-time ancillary/scarcity pricing — first honest timing-IC check | 2026-09-08 | **IN PROGRESS** — feasibility PASS (PJM) unchanged; a naive daily-overlapping-window IC looked strong (t up to 4.61) but was an autocorrelation artifact — properly corrected (monthly, HAC), no signal on 2018-2021 (t<1.1). n=44 months thin; 2022-2025 not yet pulled (rate-limited). | `docs/ancillary-scarcity-pricing-feasibility-results.md` |
+| Narrative-extremity short (Approach A: EDGAR filing mentions + GDELT news volume composite) | 2026-09-08 | **NOT ADOPTED** — refined both data sources (broader EDGAR keywords incl. "large load"; GDELT self-baseline z-score) which cleanly fixed VST's under-narration measurement gap (0.996-corr-style artifact analog) but rank-IC stayed insignificant at every horizon (best |t|=1.40, 1mo, wrong sign for the thesis). Better data ruled out "just bad measurement." Handoff written for Approach B. | `docs/narrative-mispricing-approach-a-results.md`, `docs/handoff-narrative-mispricing-approach-b.md` |
+| Narrative-mispricing Approach C (broadened: narrative + every alignable RESEARCH-LOG feature, walk-forward GBM/RF) | 2026-09-08 | **FAILED** (narrative-as-signal) — pre-registered both-windows bar (\|t\|≥2 + perm p<0.05 in FULL 2018-25 *and* RECENT 2023-25) fails outright: RECENT window clears the bar in several cells (t up to 3.73) but FULL window is flat-to-negative everywhere (\|t\|<1, perm p 0.20-0.92) — the exact Henry Hub GBM overfit shape recurring. Narrative composite never ranks top-3 in feature importance. **Follow-on (two-fold walk-forward, Fold B: train 2024-25 / test 2026): PROMISING, NOT ACTIONABLE** — the *combination* of merchant stress-beta + ICR + EDGAR disclosure counts + momentum gets OOS AUC 0.758 (0.719 regulated-only), sits at the 100th pct of a shuffled-label null, is seed-stable and not one-month-driven, and survives dropping the VST/CEG/TLN/NRG merchant confound — the first result in this line (~28 attempts) to clear a permutation-null bar this cleanly. Still n=48-54 / 6 months / one split, flat pre-2023, GDELT stale in-window → a lead to re-check quarterly, not a signal to wire. Driver is stress-beta (item 3), **not** the narrative/attention data. | `docs/narrative-mispricing-approach-c-results.md`, `docs/ml-two-fold-walkforward-results.md`, `docs/handoff-narrative-mispricing-portal.md` |
 | Book-to-bill scaler (sleeve-aggregate order book) | 2026-09-06 | INFEASIBLE from XBRL — only PWR/MYRG/PRIM have usable RPO; makers report it in MD&A prose only | RESEARCH-LOG §6 (2026-09-02→09-06) |
 | **Regulatory-calendar DER short trigger** (open item #15 — short resi-solar in windows around scheduled adverse net-metering decisions) | 2026-09-06 | **FAILED** — first test of a regulatory-calendar signal *class*. Event study over 6 adverse milestones: mean DER return **+0.0% vs the book** (major-only −10.9%, but that is the one CA NEM 3.0 cluster; the Dec-2021 *proposal* milestone is +8.7% — short into a rip). Overlay on `screen +val+sleeve`: +0.04 Sharpe but MaxDD deepens 4–7pp, feared-scenario P&L −7% to −18%, timed-short sleeve −1.9%/yr standalone. n≈1 event; telegraphed policy already in the price. `nem_calendar.csv` kept as a reference for the discretionary risk monitor (open item #5), not wired. | `docs/nem-calendar-der-short-results.md` |
 
@@ -122,6 +144,7 @@ reproduces the hand-picked book, removing the "you hand-picked winners" objectio
 | Within-17-name 6-mo momentum + DC-power sub-sector overweight (backward analysis) | 2026-09-06 | FAILED — momentum tilt loses to equal-weight (Sharpe 1.07 vs 1.41); DC-power 2.5× buys +0.09 Sharpe 2023–26 (in noise), −0.12 pre-2023; EW already holds them | RESEARCH-LOG §6 (2026-09-02→09-06) |
 | **Merchant-generation margin nowcast → 4-name L/S** (Probe A; VST/NRG/CEG/TLN) | 2026-09-07 | **FAILED at the retrodiction gate** — fleet×realised-ISO-price model tracks Δrevenue (pooled Spearman +0.45) but Δoperating-income is +−0 (−0.05, sign-agree 48%; CEG −0.46). Hedge MtM + retail/non-gen segments sever the realised-price→earnings link. A2 returns test not run. | `docs/electricity-earnings-exposure-probe-results.md` |
 | **Electricity-cost exposure cross-section** (Probe B; ~18 power-intensive industrials — Al / EAF steel / chlor-alkali / industrial gas / BTC miners) | 2026-09-07 | **FAILED the pre-registered 6-gate tree** — hand-mapped `−intensity·%Δ(state or hub power price)` signal: G1 Δgross-margin IC≈0 (t −0.6 / −0.2), G1 Δop-margin predictive t −1.9 (wrong sign; only *contemporaneous* t +2.2, an accounting identity), G2 fwd 1m/3m IC≈0, G3 FF5+MOM+sector-neutralised coef t +1.7 → +1.0. Only breadth (G4) passes. 2022–26 fwd-3m blip (t 1.96) collapses to t 0.7 on the wholesale-price proxy → proxy noise. | `docs/electricity-earnings-exposure-probe-results.md` |
+| **"Dispatch"** — Fold-B walk-forward turned into a dollar-neutral cross-sectional L/S (GBM-ranked, monthly, long-top/short-bottom tercile) + 2026-drag diagnosis + point-in-time profitability screen | 2026-09-08 → 09-09 | **TESTED, FAILED the regime split.** (1) *Drag diagnosis:* the walk-forward L/S bleeds in 2026 (−5.1% partial-yr) entirely on the **long leg, mostly TLN** (−4.3%/mo realised in 2026, held long 9 of 12 months); the model is momentum-dominated in practice (`mom_z` imp ≈0.27 > the stress-beta/ICR/EDGAR trio Fold B is credited to), and two inputs are broken — `icr_z` for TLN is frozen at a **2016** value + ffilled, `gdelt_z` frozen at ~2025-09. (2) *Fix that works (illustrative, thin n):* adding a point-in-time EDGAR **bottom-tercile trailing-net-margin screen to the long leg** (TLN is loss-making by Q4-25: TTM NI −$219M, margin −8.5%, worst 1/13) flips the walk-forward L/S from **+2.1%/yr Sharpe 0.22 MaxDD −16%** to **+9.5%/yr Sharpe 0.74 MaxDD −13%** (2026 −5%→+7%); "no negative TTM NI" is weaker (+3.5%/yr), a crude min-operating-history cut *backfires* (−5%/yr). (3) NOT ADOPTED — long-only XLI/PAVE/VOLT still beat it on raw return (+21/+23/+30 %/yr), universe collapses to 10–13 effective names / 3–4 per side / 42 months. Named, build plan + pre-registered gates written. (4) *"Combine with the narrative-mispricing thread for breadth?" — NO:* Dispatch *is* that thread's Fold-B model as a book (same panel/universe/features). Ran `spike_c_2026_holdout.py` (the thread's widest framing — 25 names, 9 features, 2018-start, continuous rank-IC, train≤2025-12/test-2026 holdout): 2023-25 "strong" cells decay to \|t\|≈1.4 on +2026, **2026 holdout flat-to-negative every cell** (RF 3-month t −3.77 / −2.12, inverted OOS), `narrative_z` importance rank 7–8/9, `own_mom6m` dominates. Same momentum-loading failure on a wider universe + different framing → no breadth of edge from merging; breadth must come from *pruning* dead features (`gdelt_z`, stale `icr_z`) to widen the universe + extend to 2018, plus the profitability screen. (5) *Pruned v2 + sector-neutral v3 (2026-09-09):* pruned `gdelt_z`/`xlu_xng_spread`/`anc_composite`, rebuilt `icr_z` point-in-time from EDGAR (100% cov, frozen-2016-TLN bug fixed), widened `stress_beta_z` via union of the two rolling-beta panels → **breadth 10–13 → 16–19 names/mo**. Headline Sharpe jumps (GBM clf 0.22→0.77) **but it is ~100% the 2024 merchant-vs-regulated melt-up**: ex-2024 (2023+2025+2026) Sharpe **−0.05** (classifier) / +0.07 (regressor); merchant−regulated spread was +68/+127/+35/−27% across 2023–26. Regulated-only leaves a trivial signal (GBM clf ex-2024 Sharpe +0.19, +0.36 with the margin screen, but 2023 still negative). **FAILED the regime split — not a standalone cross-sectional strategy** (~29th tracked attempt, same outcome). Kept: the point-in-time net-margin screen as a quality overlay (lifted the worst year of every variant incl. the shipped long-only book) + the pruned/widened point-in-time panel as reusable infra. | `docs/handoff-2026-09-08-dispatch-ls.md`, `docs/ml-two-fold-walkforward-results.md` |
 
 ### Short-leg / hedge search — CLOSED
 | candidate | outcome |
@@ -156,7 +179,14 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
 | Differentiation-idea triages (rounds 1 & 2, ~13 ideas) | 2026-08-31 / 09-04 | round 1: sell-the-overlay-as-insurance FAILED (premium 16–28 pp/yr vs ~10%/yr for puts), un-crowd FAILED, queue-velocity NOT TESTABLE. round 2: 8 of 10 dead — already mainstream / re-rated; survivors #7 labor-bottleneck QCEW data, #10 cat-bond pricing (spike-before-build) | `docs/triage_2026-08-31-differentiation-ideas.md`, `docs/triage_2026-09-04-differentiation-ideas-round2.md` |
 | Grid-buildout L/S proposal — long US+foreign buildout / short GRID (or DER sleeve), β-hedged + vol-tgt | 2026-09-01 | DOCUMENTED, not shipped as an edge — DC-era Sharpe ~1.1 vs GRID / ~2.2 vs DER sleeve, **negative pre-2023**; legs are +0.5 correlated (not a hedge); it's a crowded, regime-dependent style trade. Home-bias / sub-sector / sector-neutral decompositions: congestion signal has ~0 return correlation; the spread "lives in the short leg"; US-vs-ex-US premium is grid-specific but a minor contributor | `docs/handoff_2026-09-01-grid-buildout-long-short.md` §1–§3 |
 | RT/DA LMP spread cross-sectional split | 2026-09-01 | pivoted to FTR (failed); the RT/DA idea itself still literally untried | `docs/handoff_2026-08-15-rt-da-spread-signal.md` |
+| RT/DA LMP spread — live feasibility check | 2026-09-08 | **ERCOT PASS** (RT already the production fetch, DA is one cheap `get_dam_spp` call away) — **PJM FAIL pre-2024** (full nodal download, 429s within 6 pages even for 1 day; fine for recent dates). VST/NRG (the actual problem names) are both ERCOT. | `docs/rt-da-spread-feasibility-results.md` |
 | Earnings-estimate-revision / analyst-breadth momentum | — | NOT ATTEMPTED — needs ≥3yr point-in-time consensus EPS feed | `docs/handoff_2026-09-01-grid-buildout-long-short.md` §8.2 |
+| Congestion-spread Phase 1 validation + Phase 2 go/no-go | 2026-09-08 | **NOT RECOMMENDED (Phase 2)** — offline check vs production caches: the "NaN for all ISOs" diagnosis was only ever true for ERCOT (100%→0% NaN after the fix, real signal); PJM's `congestion` column was never broken (0% NaN pre-fix, spread-fill changes 0/2,922 days). No live bug left to fix; GSI's problem is signal strength, not construction. | `docs/untried-tasks-log.md` §1 |
+| Interconnection-queue-velocity capture — process check | 2026-09-08 | **NOT RUNNING** — open item #10's "keep running" has no automation behind it (no cron/workflow, one static cached snapshot). Flagged for a build-or-abandon decision, not silently fixed. | `docs/untried-tasks-log.md` §8 |
+| ICR retest via EDGAR XBRL (full 25-name universe, 63 median quarters) | 2026-09-08 | **FEASIBILITY PASS, HYPOTHESIS FAIL** — full-sample rank-IC t=-0.95 (wrong sign); the two big-looking 3-yr-window correlations trace to PCG/EIX wildfire-liability and VST/CEG AI-re-rating confounds, not leverage. `USE_ICR` stays off. | `docs/icr-edgar-retest-results.md` |
+| Merchant stress-beta orthogonalization, fix #2 (trailing power-price-trend regressor) | 2026-09-08 | **FAILED** — ran the real pipeline via monkeypatch; VST's orthogonalized beta correlates 0.996 with baseline (barely moves), IC@21d/63d both get slightly worse. Trailing realized price is the wrong proxy for the forward-looking narrative repricing; redirects to item 6 (STEO). | `docs/merchant-beta-orthogonalization-results.md` |
+| Merchant stress-beta orthogonalization, fix #1 (XLU/XNG correlation exclusion filter) | 2026-09-08 | **NOT ADOPTED** — works exactly as diagnosed (100% precision isolating NRG/VST/CEG/TLN, zero false positives), stress-period Sharpe -0.145→-0.085, but too small to beat XLU. Best of the constructions tried. | `docs/merchant-beta-orthogonalization-results.md` |
+| Merchant stress-beta orthogonalization, fix #4 (exponentially-weighted/structural-break-adaptive window) | 2026-09-08 | **FAILED, decisively** — full Sharpe -0.007→-0.448, IC worse at every horizon. Recency-weighting an already-thin stress-day sample trades bias for ruinous variance. | `docs/merchant-beta-orthogonalization-results.md` |
 
 ---
 
@@ -220,11 +250,82 @@ Detail: `docs/electrification-ls-strategy-note.md` §§6–8, `docs/electrificat
     −24→−27%, +7% in the feared solar-squeeze months, and it *rescues* the 2019–22 sub-window
     (Sharpe +0.51→+0.78). **Candidate, NOT wired** — trigger fires 42% of days (too loose), adds
     disclosed tail risk. Opposite sign of the rejected DER *short* (§3). (session 2026-09-06, §6)
+18. **Narrative-mispricing Fold B re-check (PROMISING, NOT ACTIONABLE)** — the stress-beta + ICR +
+    EDGAR-disclosure-count + momentum *combination* is the first thing in this line (~28 attempts) to
+    clear a shuffled-label null cleanly (Fold B, train 2024-25 / test 2026: OOS AUC 0.758, 0.719
+    regulated-only; seed-stable; survives the VST/CEG/TLN/NRG merchant-confound exclusion). Blocked
+    on sample size (n≈48-54, 6 months, one split; flat pre-2023). Cheap follow-ups: (a) re-run the
+    exact Fold B quarterly as 2026 realized 3-mo-forward outcomes accrue — not done; (b) isolate the
+    3-feature stress-beta×ICR×EDGAR interaction (drop the other 4) — **done 2026-09-08, mixed**: on
+    the full 23-name universe the isolated 3-feature model is much weaker than the 7-feature one
+    (AUC 0.567, only 78th-pct vs. its null — the drop-one ablation understated how much the other 4
+    features, individually "noise," matter in combination); on the 19 regulated-only names the
+    3-feature model holds up close to the full model (AUC 0.645 vs 0.670, both ~96-98th pct, though
+    one test month — 2026-06, AUC 1.00 — is doing a lot of the work). **Revises the story**: this is
+    not cleanly "3 features are the whole signal, 4 are noise" — the fuller feature set is doing real
+    work, at least on the full universe. (c) fix the stale 2026 GDELT leg — not done. Do **not** wire
+    live. `docs/handoff-narrative-mispricing-portal.md`, `docs/ml-two-fold-walkforward-results.md`;
+    `research/narrative_mispricing/foldb_3feat_isolation.py`; `untried-tasks-log.md` item 9/10.
+19. ~~**"Dispatch" — build the Fold-B model into a real cross-sectional L/S book**~~ **— TESTED → FAILED the regime split, 2026-09-09 (v3 below). Closed as a standalone strategy; margin-screen overlay + pruned point-in-time panel kept.**
+    2026-09-08 diagnosis + counterfactual: the walk-forward L/S (GBM classifier, monthly, dollar-
+    neutral, long-top/short-bottom tercile) loses in 2026 on the long leg (mostly TLN), the model
+    is momentum-dominated, and `icr_z` (TLN frozen at a 2016 value) + `gdelt_z` (frozen ~2025-09)
+    are broken inputs. Adding a **point-in-time EDGAR bottom-tercile trailing-net-margin screen to
+    the long leg** takes the walk-forward from +2.1%/yr Sharpe 0.22 MaxDD −16% → +9.5%/yr Sharpe
+    0.74 MaxDD −13% (illustrative only — 42 months, 10–13 effective names, 3–4/side). Build plan
+    (`docs/handoff-2026-09-08-dispatch-ls.md`): (a) restore the universe to ~23 by fixing feature
+    coverage; (b) formalise the profitability screen point-in-time (net / operating / FCF margin;
+    continuous weight vs binary gate); (c) de-bias away from `mom_z` (ablation says dropping it
+    *helps*), cap single-name / ISO concentration, add a turnover penalty; (d) test a 3-month hold;
+    (e) risk overlays — vol-target ~8–10%, T-bill + GLD/IEF sleeve to a portfolio-vol target,
+    reuse the REGIME gate; (f) costs (borrow/turnover/spread); (g) marginal Sharpe vs the shipped
+    long-only book. **Pre-registered gates:** ≥20 names with complete features every month
+    2019→now; net-of-cost Sharpe ≥0.6 full-sample AND ≥0.4 in each of ≥3 non-overlapping
+    sub-windows; beats a 60/40 XLI/T-bill blend on Sharpe with corr-to-XLI ≤0.3; vol-targeted
+    variant realised vol within ±20% of target and MaxDD > −15%; every fundamental input
+    point-in-time. Reproduce from `research/narrative_mispricing/ml_panel_2022_2026.parquet` +
+    `research/electricity_earnings_exposure/edgar.py`.
+    *Breadth-by-merging with the narrative-mispricing thread — checked 2026-09-08, NO:* ran
+    `spike_c_2026_holdout.py` (25 names / 9 features / 2018-start / continuous rank-IC / proper
+    2026 holdout — the thread's widest framing). 2023-25 "strong" cells decay to \|t\|≈1.4 on
+    +2026; **2026 holdout flat-to-negative in every cell** (RF 3-month t −3.77 / −2.12, inverted
+    OOS); `narrative_z` importance 7–8/9; `own_mom6m` dominates. Same momentum-loading failure on
+    a wider universe → breadth comes from *pruning* `gdelt_z` + stale `icr_z` (widens universe,
+    extends panel to 2018) + the profitability screen, not from an ensemble of narrative framings.
+    *Pruned v2 built + run 2026-09-08:* dropped `gdelt_z` / `xlu_xng_spread` / `anc_composite`
+    (dead as cross-sectional rankers), rebuilt `icr_z` point-in-time from EDGAR (100% coverage,
+    frozen-2016-TLN bug fixed), widened `stress_beta_z` via the union of the two rolling-beta
+    panels → **usable names/month 10–13 → 16–19 from 2024 on**. Headline Sharpe jumps (GBM clf
+    0.22→0.77, GBM reg 1.08) **but it is a 2024-only artifact** — every variant returns +24 % to
+    +86 % in 2024 and negative-to-flat in 2023 / 2025 / (classifier) 2026; the merchant-minus-
+    regulated spread was +68 / +127 / +35 / −27 % across 2023–26, i.e. Dispatch is a
+    momentum-timed merchant-vs-regulated sector bet. **No cross-sectional edge survives the
+    regime split.** Scratchpad `dispatch_pruned.py`; `docs/handoff-2026-09-08-dispatch-ls.md` §"v2".
+    *Sector-neutral v3, run 2026-09-09 — FAILED, Dispatch closed:* stripping the merchant-vs-
+    regulated axis kills it — full GBM classifier ex-2024 (2023+2025+2026) Sharpe **−0.05** (from
+    +0.77), regressor +0.07 (from +0.87); i.e. ~100% of the Sharpe was the 2024 merchant-IPP
+    melt-up. Regulated-only leaves a trivial, non-fundable signal (GBM clf ex-2024 Sharpe +0.19
+    raw, +0.36 with the margin screen, but 2023 negative). Sector-neutral-combined and all
+    regressor variants are noise outside 2024. **Kept:** the point-in-time trailing-net-margin
+    screen as a *quality overlay* (improved the worst year of every variant incl. the shipped
+    long-only book — candidate for §4 item 13 / the electrification book); the pruned/widened
+    point-in-time panel (`[edgar_z, icr_z(EDGAR XBRL), stress_beta_z(union), mom_z]`, 16–19
+    names/mo) as reusable infra. Fold B's AUC watch-item (item 18) is untouched — that is
+    tercile-classification AUC, not this returns expression. Scratchpad
+    `dispatch_sector_neutral.py`; `docs/handoff-2026-09-08-dispatch-ls.md` §"v3".
+20. **Forward power price data (SOW Phase 1 item 2) — DESCOPED for Screened Electrification
+    (2026-09-15).** STEO `ELWHU_*` (scoped-not-run) and ERCOT RT/DA spread (feasible) remain
+    available future work, but the shipped strategy doesn't need a forward-power input, and the
+    stress-beta gate reuse (item below) is realized/spot GSI data, not forward-looking. Revisit
+    only if a future signal specifically needs a forward-looking stress proxy. See
+    `docs/steo-archive-feasibility-results.md`, `docs/rt-da-spread-feasibility-results.md`,
+    `docs/superpowers/specs/2026-09-15-screened-electrification-sow-plan-design.md` §3.2.
 
 ---
 
 ## 5. Code & doc map
 
+- **Untried-tasks log:** `docs/untried-tasks-log.md` — working checklist of electricity-market-data angles from the 2026-09-08 review, worked one at a time; closed items get a row here in §3 too.
 - **Built package:** `electrification_strategy/` (+ `tests/electrification_strategy/`, 38 tests).
   Predecessors still in tree: `grid_equipment_basket/`, `grid_resilience/`, `transmission_rate_base/`,
   `backlog_factor/`, `grid_demand_factor/`.
@@ -607,3 +708,633 @@ One long electrification-strategy conversation. Chronological:
     *proposal* is +8.7%). Overlay on `screen +val+sleeve`: +0.04 Sharpe but MaxDD −24→−28→−31,
     feared-scenario P&L −7% to −18%, timed-short sleeve −1.9%/yr standalone. n≈1 event; policy is
     already priced. Nothing wired; calendar kept as a reference. `docs/nem-calendar-der-short-results.md`.
+
+### 2026-09-08 — full research-log + grid-resilience review; untried-tasks log opened; 2 items closed
+
+Reviewed this entire log plus `docs/grid-stress-signal-evidence.md` and the open handoffs
+end to end, at the user's request, to find electricity-market-data angles either genuinely
+untried or built-but-never-closed-out. Opened `docs/untried-tasks-log.md` as a working
+checklist (8 items, priority-ordered) and worked the first one immediately rather than only
+listing it.
+
+- **Congestion-spread Phase 1/2 (item 1) — closed with a verdict.** Offline check against
+  production LMP caches (no new fetches) found the original "`congestion_frac` is NaN for
+  all ISOs" diagnosis was only ever true for ERCOT — PJM's raw feed already carries a real
+  `congestion` component (0% NaN, spread-fill changes 0/2,922 days there). ERCOT's fix works
+  exactly as designed (100%→0% NaN, a real non-trivial series). Since the fix predates the
+  2026-06-17 grid search, every reported GSI number since already reflects it — there's no
+  "before" state left to A/B, and 3+ months of subsequent probes soak-tested it without
+  incident. **Phase 2 (component decomposition + 5th sub-signal) marked NOT RECOMMENDED** —
+  no live bug left, and the documented constraint is signal strength / sample size, not
+  construction. Corrected `CLAUDE.md`'s overbroad claim accordingly.
+- **Interconnection-queue-velocity capture (item 8) — process check, negative.** Open item
+  #10 says to "keep running" a quarterly capture for a ~2028 retest; verified there is no
+  cron, workflow, or versioned snapshot series anywhere in the repo, only one static cached
+  file. Flagged as a build-or-abandon decision rather than silently fixing it.
+- **Items 2–7 logged, not yet started:** ICR retest via the EDGAR helper built 2026-09-07
+  (the yfinance-depth blocker that shelved `USE_ICR` no longer applies); the 5 documented-
+  but-unbuilt merchant stress-beta fixes for the VST/NRG whipsaw; the RT/DA LMP spread
+  feasibility check (recommended 3 times over a month, never run); ERCOT CRR true clearing
+  prices (a stronger instrument than the PJM bid data that already failed); the STEO
+  forward-power series reframed as a beta-stabilizer rather than a basket-timing signal
+  (its original, more specific purpose); and real-time ancillary/scarcity pricing (ERCOT
+  ORDC, PJM sync reserve) — never scoped at all. Detail and next steps for each:
+  `docs/untried-tasks-log.md`.
+
+### 2026-09-08 (cont.) — item 2 (ICR-via-EDGAR retest): feasibility PASS, hypothesis FAIL
+
+Picked up untried-tasks-log item 2. Resolved CIKs for all 25 `grid_resilience` universe
+tickers via SEC's `company_tickers.json`, then reused `research/electricity_earnings_exposure/edgar.py`'s
+`quarterly_flow()` to pull `OperatingIncomeLoss` / `InterestExpense` back to 2008 for most
+names — a same-session build (`research/icr_edgar_retest/icr_probe.py`), not a new project.
+
+- **Feasibility: PASS.** Median 63 quarters/ticker vs yfinance's documented ~4–12; 22/25
+  tickers covered back to 2019+. The specific limitation CLAUDE.md flagged for `USE_ICR` is
+  resolved.
+- **Hypothesis: FAIL, on genuinely good data this time.** Full-sample monthly rank-IC
+  (regulated-only — ICR's actual production domain in `--arch hard-switch`, excluding
+  NRG/VST/CEG/TLN — 102 months, 2019–2026): mean IC −0.025, t = −0.95, 48% of months
+  positive — a null result with the wrong sign. The targeted 2022-23 rate-hiking-cycle test
+  is equally flat (t = −0.24, regulated-only; t = +0.07, full universe). Two windows show a
+  large correlation (t > 4) but both dissolve into single-name confounds already documented
+  elsewhere in this line: PCG/EIX (2024–26 wildfire-liability litigation, unrelated to
+  interest coverage) anchor the low-ICR end, VST/CEG/D/ETR (AI-power-demand re-rating)
+  anchor the high end — the same merchant/idiosyncratic-narrative contamination that has
+  broken every other cross-sectional signal tried on this universe
+  (`docs/grid-stress-signal-evidence.md` §5).
+- **Disposition:** `USE_ICR` stays `False` — now confirmed correct rather than a
+  data-availability placeholder. Kept: `CIK_BY_TICKER` (25 names) and the probe script for
+  any future fundamentals work on this universe. Not done: wiring EDGAR into production
+  `fetch_icr()` — no point, the hypothesis failed on the good data.
+  Detail: `docs/icr-edgar-retest-results.md`. Updated `CLAUDE.md`'s ICR and RT/DA-spread
+  Future Work notes accordingly (RT/DA spread is now the top open signal candidate).
+
+### 2026-09-08 (cont.) — item 3 (merchant stress-beta orthogonalization): fix #2 tested, FAILED
+
+Continued down the untried-tasks-log priority order. Built
+`research/merchant_beta_orthogonalization/probe.py` to test fix #2 of the 5 documented
+candidates for the VST/NRG stress-beta whipsaw: add each ISO's power-price trend as a
+second OLS regressor so the GSI coefficient is orthogonalized to the market's structural
+narrative. Ran it against the **real, unmodified `grid_resilience.main.run()` pipeline**
+(monkeypatched only `conditional_beta.compute_stress_betas`) so every other stage — GSI
+construction, factor scoring, portfolio backtest, IC test — is identical to the documented
+baseline, which was re-confirmed bit-for-bit in the same session (full Sharpe −0.007,
+IC@21d t=1.352, matching `grid-stress-signal-evidence.md` §2.2's "with PJM" row).
+
+- **Result: FAILED.** VST's orthogonalized beta correlates 0.996 with the unmodified
+  baseline (mean move 7.2%; NRG 11.7%) — the fix barely engages despite the second
+  regressor being live for 75-80% of rebalance dates. Every documented flip-window date
+  (2023-09 through 2025-06) shows the same beta to within estimation noise in both
+  versions. The one metric that matters — IC — moved the wrong way: IC@21d t 1.352→1.027,
+  IC@63d t 1.889→1.782. Full Sharpe ticked up (−0.007→+0.046) but that's noise on one
+  parameter change over 93 months, not the effect this fix targeted.
+- **Diagnosis:** a trailing 252-day *realized* LMP trend is the wrong proxy for what's
+  actually diagnosed — a forward-looking, event-driven valuation re-rating (a specific
+  restart announcement, a hyperscaler contract), not a slow-moving spot-price statistic.
+  Same gap the June-2026 forward-power handoff and the Henry-Hub-proxy failure both hit:
+  the informative part of this story lives in the forward segment of the curve.
+- **Redirect, not a dead end:** this makes item 6 (EIA STEO `ELWHU_*`, a genuine ~16-month
+  forward series) the more theoretically motivated version of the same idea — worth trying
+  there instead of re-running this exact regressor choice. Fix #3 (power-price momentum /
+  forward-curve regime flag) should likely be folded into that same STEO work rather than
+  tested standalone.
+- **Not tested this session:** fixes #1 (XLU/XNG correlation filter), #4
+  (structural-break-adaptive window), #5 (fundamentally-anchored beta) — item 3 stays
+  IN PROGRESS. Detail: `docs/merchant-beta-orthogonalization-results.md`.
+
+### 2026-09-08 (cont.) — item 3 closed out: fixes #1 and #4 tested (3/5 total)
+
+Per user instruction ("finish the spikes you have started"), continued item 3 rather than
+moving to the newly-added item 9 (narrative/mispricing, queued behind this).
+
+- **Fix #1 (XLU/XNG correlation filter) — real effect, NOT ADOPTED.** Monkeypatched
+  `main.build_rolling_weights` to exclude a ticker from that month's long/short eligibility
+  when `corr(stock, ^XNG) > corr(stock, XLU)` for 2 consecutive months. Validity check is
+  clean: all 63 flagged ticker-months (of 1,171) are NRG/VST/CEG/TLN, zero false positives
+  on the 21 regulated names — the proxy correctly isolates exactly the diagnosed problem.
+  Stress-period Sharpe improves −0.145→−0.085, full Sharpe −0.007→+0.050. Note: IC is
+  unaffected by construction (`compute_ic()` runs on the pre-filter `rolling_factors`), so
+  fix #2's "IC must improve" bar doesn't apply here — judged on realized backtest
+  performance instead, which is the correct test for an eligibility filter. Still nowhere
+  near beating XLU (0.261) — logged as validated-but-insufficient, not wired.
+- **Fix #4 (exponentially-weighted / structural-break-adaptive beta window) — FAILED
+  decisively.** WLS with a 63-day-halflife recency weight over the same stress-day window:
+  full Sharpe −0.007→−0.448, stress Sharpe −0.145→−0.597, IC@21d t 1.352→0.809. Recency
+  weighting an already-thin stress-day-filtered sample amplifies noise faster than it
+  captures genuine regime change.
+- **Item 3 verdict, 3/5 fixes tested:** one real-but-insufficient (#1), two failed (#2, #4),
+  one redirected into item 6 (#3, folded into the STEO forward-power work since it's the
+  forward-looking version of what #2 already tested and failed in trailing form), one left
+  open pending real data collection (#5, fundamentally-anchored beta — needs hand-collected
+  fuel-mix/region/hedge-book data, not a price-data spike). Consistent with the 2026-08-26
+  closeout audit: construction fixes on this signal top out at a few points of Sharpe.
+  Full detail: `docs/merchant-beta-orthogonalization-results.md`.
+- **Also this turn:** added open item 9 to `docs/untried-tasks-log.md` at user request —
+  electricity narrative/mispricing (short side), a genuinely new thesis distinct from the
+  already-FAILED Probes A/B earnings-exposure channel. Explicitly queued behind finishing
+  item 3 and the items-4-7 spikes.
+
+### 2026-09-08 (cont.) — item 4: RT/DA LMP spread feasibility check, run for the first time
+
+Continuing down the priority order after closing item 3. This exact check was recommended
+as "the next step" in three handoffs since 2026-08-15 and never executed until now.
+
+- **ERCOT: PASS, and a genuine surprise.** Every prior document assumed "real-time LMP"
+  was the missing fetcher (`CLAUDE.md`: "needs a new `ISO_RT_LOCATION_TYPE` config dict and
+  a `fetch_lmp_rt()` variant"). Live-checked `gridstatus.Ercot.get_lmp()`'s own docstring
+  and behavior: it's already gridstatus's **real-time** (SCED 5-min) product — the exact
+  same call already feeding the production GSI's `lmp_z` component. The actually-missing
+  leg is **day-ahead** (`get_dam_spp(year)`) — pulled 2018 live in 7.9s, 122,640 rows,
+  identical location naming (`HB_NORTH`/`LZ_NORTH`/etc.) to the cached RT data, full history
+  2011->present. This is a much smaller build than every prior estimate assumed.
+- **PJM: confirmed blocked, precisely.** `market="REAL_TIME_HOURLY"` for a pre-2024 date
+  forces a full ~10,000+-pnode download before location filtering regardless of date-range
+  width — reproduced live twice (a 1-week and a 1-day range from 2019 both 429'd on page 6
+  of 50k-row pagination, `ValueError: No objects to concatenate`). The identical call for a
+  recent week (2025-06) succeeded in 4.7s with server-side pnode filtering confirmed in the
+  request log. So the blocker is real but only for the ~2018-2024 stretch of the backtest.
+- **Why this doesn't matter as much as it sounds:** VST and NRG — the two names the whole
+  stress-beta whipsaw traces to (item 3, `grid-stress-signal-evidence.md` §5) — are both
+  ERCOT. PJM's pre-2024 blocker mostly affects CEG/TLN, which have short listed histories
+  anyway (13 and 9 quarters per the item-2 ICR retest).
+- **Disposition:** feasibility-only, as every prior handoff itself recommended. The actual
+  signal design/build (does RT-minus-DA predict returns, pre-registered gate) is not started.
+  Corrected `CLAUDE.md`'s RT/DA note. Detail: `docs/rt-da-spread-feasibility-results.md`.
+
+### 2026-09-08 (cont.) — item 5: ERCOT CRR feasibility check, FAILED
+
+Continued down the priority order after item 4. Found ERCOT's actual CRR report IDs via
+web search (`gridstatus` has no CRR wrapper at all) — Monthly Auction Results (report type
+11201) and Long-Term Auction Results (11203). Queried the live document-list API: exactly
+12 documents returned, a rolling 2025-09→2026-08 window, unchanged across three different
+parameter guesses (`startDate`/`endDate`, `mimicKey`, `size`) meant to unlock older files.
+Checked ERCOT's public CRR landing page directly — no historical-archive or bulk-download
+section exists. **Verdict: FAILED at feasibility.** Closes the open question left by
+`docs/ftr-bid-signal-results.md` ("untested") with a real negative: full 2018-2026 CRR
+history needs a special ERCOT client-services data request, not a free API pull — same
+shape as every other genuinely-forward-looking instrument in this research line (CME/ICE
+power forwards, NERC GADS, PJM's SSO-walled FTR clearing prices). Not pursued further.
+Detail: `docs/ercot-crr-feasibility-results.md`.
+
+### 2026-09-08 (cont.) — item 7: ancillary/scarcity pricing feasibility, PJM PASS / ERCOT FAIL
+
+A genuinely new idea, never mentioned anywhere in this research line before this session
+(surfaced during the initial review, not carried over from any prior handoff). Checked live:
+
+- **ERCOT candidates both blocked**, same shape as item 5's CRR finding:
+  `get_real_time_adders()` (the actual ORDC price adder — the purpose-built real-time
+  scarcity signal) and `get_as_reports_dam()` (day-ahead ancillary clearing prices) are
+  both served from rolling "2-Day Disclosure"-style reports — a 2019 test for either
+  returned nothing, only the most recent (2026-09) document exists via the live API.
+- **PJM: PASS, cleanly.** `get_real_time_as_market_results()` — Regulation / Synchronized
+  Reserve / Primary Reserve clearing prices — returned full data back to January 2018 in
+  1-1.5 seconds per test. This dodges item 4's PJM pnode-count blocker entirely because
+  it's a market-level aggregate report, not per-node LMP. Sanity check: the Jan 2018 East
+  Coast cold snap shows a real $230/MWh Regulation clearing-price spike vs. a typical
+  $5-90 — genuine scarcity-event sensitivity, not noise.
+- **Disposition:** mechanistically distinct from every LMP-based signal in this log (a
+  system-operator scarcity computation, not a settled energy price) and immediately
+  buildable for PJM's regulated names — most of the universe. ERCOT would need the same
+  special-request workaround flagged in item 5, or a first pass skips ERCOT entirely.
+  Feasibility-only; signal design/gate not started. Detail:
+  `docs/ancillary-scarcity-pricing-feasibility-results.md`.
+
+**Items 4, 5, 7 (the three data-feasibility spikes) all now closed.** Item 6 (STEO
+forward-power, reframed) remains — the last queued item before the user's item 9
+(narrative/mispricing).
+
+### 2026-09-08 (cont.) — item 6: STEO archive feasibility, better path found (not fully closed)
+
+Last of the four queued spikes (items 4/5/6/7). The original scoping assumed scraping ~90
+STEO PDF releases directly (~half a day). Checked: `eia.gov/outlooks/steo/archives/`
+blocks directory listing (403 with both a default and browser-style User-Agent), but
+individual files ARE fetchable once the naming pattern is known
+(`archives/{mon}{yy}.pdf`, confirmed live) — and every vintage is PDF-only, no CSV/Excel
+companion, meaning real table-parsing across ~90 files. That's harder than the original
+estimate, not easier. **Found a better path instead:** Catalyst Cooperative's PUDL project
+— already used in this repo for FERC Form 1 (`transmission_rate_base/`) — publishes the
+full STEO archive, 1983-2026, as structured Frictionless Data Packages on Zenodo, already
+parsed rather than raw PDFs. **Not yet confirmed:** whether PUDL's package actually
+includes `ELWHU_PJ`/`ELWHU_TX` and preserves per-vintage (as-of-publication) values rather
+than only the latest revision — the point-in-time premise depends on this and wasn't
+checked this session. Item 6 stays IN PROGRESS, not closed. Detail:
+`docs/steo-archive-feasibility-results.md`.
+
+**All four queued feasibility spikes (items 4, 5, 6, 7) now have a session's worth of real
+live-data evidence behind them** — three fully closed (4: mixed pass/fail, 5: fail, 7:
+mixed pass/fail), one (6) upgraded to a clearer next step but not finished. Per user
+instruction, item 9 (electricity narrative/mispricing) is next.
+
+### 2026-09-08 (cont.) — item 6 correction: PUDL does not shortcut the STEO extraction
+
+User asked to keep working items 6 and 7 while starting item 9. Followed up on item 6's
+"PUDL might have this structured" lead from the same session and found it doesn't hold:
+live-checked PUDL's actual processed database (the public S3 nightly mirror at
+`s3://pudl.catalyst.coop/nightly/`, the same source `transmission_rate_base/` already
+reads for FERC Form 1) — 421 tables total, zero matching STEO/ELWHU/wholesale/outlook.
+The Zenodo record that looked promising turned out to be PUDL's *raw-input preservation
+archive* — a mirror of EIA's original files, confirmed by direct inspection to be
+year-zipped raw material ("not a cleaned/processed dataset" per its own description), not
+a shortcut past parsing them. **Corrected disposition: back to the original ~half-day
+PDF-table-extraction estimate** from `docs/hhub-forward-gas-signal-results.md` — Zenodo is
+useful only as a more stable place to fetch the same files (EIA's own archive blocks
+directory listing), not as a time-saver on the actual work. Updated
+`docs/steo-archive-feasibility-results.md`, `docs/untried-tasks-log.md` item 6 to remove
+the overstated "better path found" framing from the prior session block.
+
+### 2026-09-08 (cont.) — item 7 follow-up: a real timing-IC check, and a caught methodology trap
+
+User asked to keep pushing items 6 and 7 while starting item 9. Pulled the full
+`PJM_RTO`-wide ancillary clearing-price history for 2018-2021 (175,320 rows; 2022-2025 hit
+sustained 429s on a much larger post-market-redesign schema and needs monthly chunking,
+not attempted) and built a rolling-756-day z-scored composite to test as a basket-timing
+signal (it's ISO-wide, identical across every PJM name on a given day, so it can only work
+as an overlay, not a cross-sectional ranker, same shape as the GSI's congestion regime).
+
+**Caught and corrected an inflated first-pass result.** A naive daily-sampled,
+overlapping-window Spearman IC looked genuinely strong (21d t=-3.85, 63d-vs-relative
+t=+4.61) — but recomputing properly (monthly-resampled, non-overlapping, HAC standard
+errors, the same discipline this whole log uses everywhere else) collapsed it to nothing:
+1-month t=+1.04, 3-month t=+0.18. The daily-overlap version was inflated by
+autocorrelation, not signal — logging this explicitly since it's exactly the kind of trap
+this research line has been careful to avoid, and the corrected write-up
+(`docs/ancillary-scarcity-pricing-feasibility-results.md`) replaces the overstated framing
+from earlier the same day with the honest one.
+
+**Disposition: feasible, not yet promising, not yet killed.** n=44 months is thin and the
+2022-2025 DeepSeek-regime window (the one that mattered most for VST/NRG elsewhere) is
+still unpulled. Item 7 stays IN PROGRESS.
+
+### 2026-09-08 (cont.) — item 9 opened properly via brainstorming; Approach A run to a verdict
+
+User asked to move to item 9 (electricity narrative/mispricing) while continuing items 6
+and 7. Given item 9 has no existing flow in this repo to extend, invoked
+`superpowers:brainstorming` rather than jumping straight to a probe. Classified the first
+step as a spike ("can 'narrative' even be operationalized in a testable way") before any
+design commitment. Checked three candidate data sources live: EDGAR full-text search
+(works, free, point-in-time, per-company keyword-mention counts), GDELT news-volume API
+(works, free, daily resolution back to at least 2019, but a stricter-than-documented rate
+limit needed two rounds of exponential-backoff retries to get usable coverage), and Google
+Trends via `pytrends` (dead — returns nothing, matches this repo's recurring experience
+with unofficial reverse-engineered APIs). User picked EDGAR + GDELT combined, sequenced
+Approach A (narrative-extremity short) then B (event study) then C (narrative-fundamentals
+divergence).
+
+- **Approach A run to completion.** Built a monthly composite (z-scored trailing-4Q EDGAR
+  "data center" mentions + z-scored trailing-63d GDELT volume) and ranked it cross-sectionally
+  across the 25-name universe (22 with usable GDELT coverage). Cross-sectional rank-IC vs
+  forward return is right-signed for a short thesis (negative) at every horizon but not
+  significant: 1mo t=-0.39, 3mo t=-1.15, 6mo t=-0.55, n≈85-87 months.
+- **A real, useful measurement finding, not just a null result:** VST's composite score is
+  *consistently negative* (under-narrated relative to peers) all through 2023-2025 — the
+  exact window everyone agrees its AI-power narrative dominated its stock — because VST is
+  a generation company, not a data-center operator, so it almost never says "data center"
+  in its own filings (1 total EDGAR mention across the whole window, vs. Southern's 25,
+  Talen's 19, Exelon's 16). GDELT's raw cross-sectional volume for a mid-cap merchant
+  generator is also swamped by mega-caps' routine coverage baseline. NRG's composite does
+  show a real escalation timed to its 2024-25 re-rating, so the mechanism isn't blind, just
+  keyword-narrow and not baseline-normalized.
+- **Disposition: not killed, not adopted.** Two concrete, untried fixes logged (broader
+  EDGAR keyword set for merchant generators specifically; normalize GDELT by each
+  company's own trailing baseline instead of raw cross-sectional volume). Per the user's
+  own sequencing, proceeding to Approach B next rather than immediately re-running A with
+  fixes. Detail: `docs/narrative-mispricing-approach-a-results.md`.
+
+### 2026-09-08 (cont.) — item 9 Approach A refined and closed out; handoff written for B
+
+User asked for a short handoff for Approach B (to continue in a fresh session) before
+refining Approach A with the two fixes flagged in the first pass.
+
+- **Handoff written:** `docs/handoff-narrative-mispricing-approach-b.md` — reuses the
+  already-cached EDGAR/GDELT data, names the biggest risk up front (repeating open item
+  #15's n≈1/telegraphed-news failure mode), and orders the work: count candidate events
+  and gate on n before building any event-study machinery.
+- **Approach A refined:** added "large load" as an EDGAR keyword (PJM/ISO planning
+  terminology — VST's count went from 1 to 13 combined with "data center"; "hyperscaler"
+  was also tried and dropped, near-zero everywhere) and switched GDELT from a
+  cross-sectional z-score to each ticker's own trailing-756-day self-baseline z-score.
+  **This cleanly fixed the measurement problem** — VST's composite now genuinely tracks
+  known events (1.83 at the Sep-2023 narrative build, 1.31 at the Feb-2025 peak) instead of
+  sitting permanently negative. **It did not move statistical significance** — rank-IC is
+  still |t|<1.4 at every horizon, and the 1-month sign flipped positive (narrative
+  intensity behaving like short-term momentum, not overhype), while 3/6-month stayed
+  weak-negative. Honest conclusion: the null result survives better data, so it isn't a
+  measurement artifact — the relationship (if one exists) is genuinely weak on this
+  operationalization.
+- **Disposition: Approach A NOT ADOPTED**, closed with a clean writeup. Two reusable
+  outputs kept regardless: the EDGAR "large load" + GDELT self-baseline measurement recipe
+  (validated, usable for future narrative work on this universe), and the momentum-not-
+  overhype sign structure as a note for anyone revisiting narrative intensity later.
+  Approach B is queued next via the handoff, not started this session.
+
+### 2026-09-08 (cont.) — handoff written for item 9 Approach C
+
+Wrote `docs/handoff-narrative-mispricing-approach-c.md` (narrative-fundamentals
+divergence short) at user request, for continuation alongside the existing Approach B
+handoff. Explicitly instructed per the user: don't judge the narrative data on a
+standalone linear rank-IC test alone — if that comes back flat, try the narrative
+composite and a fundamentals measure (ICR, valuation, margin) as features in a
+multivariate RF/GBM alongside this project's other existing signals, since a conjunction
+effect can be invisible to a linear test on either variable alone. Paired with an explicit
+guardrail against the exact overfit trap this project already hit once (the Henry Hub
+"kitchen-sink GBM on 25 pooled signals" result that vanished out-of-sample,
+`docs/hhub-forward-gas-signal-results.md`) — pre-register the OOS window and use a
+purged/embargoed split given ~90 autocorrelated monthly cross-sections, not random k-fold.
+Nothing built yet; both B and C now have handoffs ready for a fresh session.
+
+### 2026-09-08 (cont.) — item 9 Approach C run to a verdict: FAILED (broadened per user request)
+
+Picked up the Approach C handoff. User asked to go beyond the handoff's minimum (narrative +
+ICR) and fold in **any feature already built in this research log that might help in tandem,
+even a t-stat-~1 one**, using GBM/RF rather than a plain linear divergence sort. Classified as
+a spike, named the precedent risk up front (Henry Hub's kitchen-sink GBM overfit), got a nod,
+then built a 10-feature monthly panel on the 25-name universe: the narrative composite, ICR,
+merchant stress-beta, a **freshly re-run** production GSI factor score (current config, not a
+stale cached file), each ticker's own price momentum, and four market-wide conditioning series
+(utility capex-guidance revisions, category-demand momentum, PJM ancillary pricing, real-yield
+change, gas momentum) — one feature per distinct data class this project has built to date that
+could be aligned onto this universe/window without a fresh multi-day fetch.
+
+Pre-registered before looking at results: walk-forward `TimeSeriesSplit(5)` GBM + RF, full vs.
+lean feature sets, 1mo/3mo forward return, HAC rank-IC, 60-draw within-month permutation null,
+PASS bar = \|t\|≥2 **and** perm p<0.05 in **both** a FULL (2018-25, n=88mo) and RECENT (2023-25,
+n≈24mo) window.
+
+**Result: FAILED**, reproducing the Henry Hub overfit shape exactly. RECENT-window cells look
+like a real edge (t up to 3.73, perm p as low as 0.000, 6 of 8 full/lean × 1mo/3mo × GBM/RF
+cells clear \|t\|≥2); every one of the 8 FULL-window cells is flat-to-negative (\|t\|<1, perm p
+0.20-0.92) — the identical "2023-26 flicker that vanishes on 2018-26" pattern already logged in
+`docs/hhub-forward-gas-signal-results.md` Round 4. Fails the pre-registered both-windows bar
+outright. Feature importances add a second, independent finding: `narrative_z` never ranks in
+the top 3 of any full-model cell (share 0.02-0.10) — even the inflated recent-window fits are
+driven by price momentum, the production GSI factor, and stress-beta, not narrative content.
+So the answer to "does narrative interact with other data" is no, on this test: it earns no
+material importance in a model that does find *something* (if only in the window that doesn't
+generalize).
+
+**Disposition:** Approach C closed, FAILED. Reusable: `research/narrative_mispricing/approach_c/`
+(panel-build + walk-forward GBM/RF + permutation-null harness, kept for reuse on any future
+feature combination on this universe). Approach B (event study) is now the only unstarted
+thread in item 9. Detail: `docs/narrative-mispricing-approach-c-results.md`. Updated
+`docs/untried-tasks-log.md` item 9 accordingly.
+
+### 2026-09-08 (cont.) — ML combined retest (RF/GBM/classifier/quantile), 2022-2025 only
+
+User asked to retest the session's weak/failed signals in combination — RF, GBM,
+classifiers, quantile fits — specifically restricted to 2022-2025 (electrification wasn't
+a live narrative before ChatGPT) rather than the full 2018-2025 window used everywhere
+else this session, and to watch for low-t-stat signals gaining power in a group.
+
+- **Built a combined panel:** ICR (item 2), EDGAR narrative + GDELT self-baseline (item 9),
+  merchant stress-beta + the continuous XLU/XNG correlation spread (item 3), 6-month
+  momentum, PJM ancillary-scarcity (item 7, 2022-2025 leg still fetching when this pass
+  ran — rate limits on the post-market-redesign schema are worse than 2018-2021, confirmed
+  again this session; contributes zero importance as a placeholder, not a tested null).
+  45 months, ~23 tickers.
+- **Pre-registered a single time-based OOS split** (train 2022-2023, test 2024-2025) and a
+  shuffled-target sanity check *before* looking at results, specifically because this
+  project already hit this exact trap once (Henry Hub kitchen-sink GBM,
+  `docs/hhub-forward-gas-signal-results.md`, flagged again in the Approach C handoff two
+  turns before this test ran).
+- **Result: the trap recurred, caught cleanly this time.** In-sample fit is dramatic (GBM
+  rank-IC up to 0.97, GBM classifier AUC = 1.000 on ~107 training rows / 7 features) and
+  collapses out-of-sample (rank-IC 0.05-0.19, classifier AUC 0.61-0.66). The shuffled-target
+  check confirms it isn't real: refit on random noise, the "important" features
+  (`xlu_xng_spread`, `mom_z`) look similarly important — a chunk of the apparent structure
+  is an artifact of feature variance/split frequency, not predictive content. **No credible
+  evidence of a combined-signal effect** on the six signals tested so far.
+- **Ancillary leg completed and folded in** (45 months, 1.96M rows, monthly-chunked
+  pull worked around the post-2022 rate limits). Verdict unchanged, now confirmed on all
+  7 signals: in-sample fit stays dramatic (GBM classifier AUC 1.000), OOS stays weak
+  (-0.07 to +0.22 rank-IC / 0.53 to 0.62 AUC), shuffled-target importances still resemble
+  the real ones. Adding ancillary pricing made the 1-month case *worse*, not better
+  (GBM OOS rank-IC flips negative, classifier AUC drops to chance) — consistent with more
+  overfitting surface, not new information, on a still-tiny training set.
+  Detail: `docs/ml-combined-retest-results.md`.
+
+### 2026-09-08 (cont.) — two-fold walk-forward retest (2022-23→2024, 2024-25→2026)
+
+User requested a proper two-fold walk-forward instead of one split, and corrected the
+framing: don't label an early fold's weak generalization "overfitting" when the trade
+itself wasn't fully relevant yet (pre-2022/early-2022). Extended all seven signals through
+2026 to make this possible: EDGAR narrative keywords (now through 2026Q3), PJM ancillary
+pricing (2026 YTD pulled fresh, 431,918 rows), stress-beta (full `grid_resilience`
+pipeline rerun through 2026-08). **GDELT could not be extended** — the 2026 pull hung on
+repeated rate-limit backoffs for 25+ minutes and never completed; proceeded per explicit
+user instruction using the stale (frozen ~2025-09) `gdelt_z` value for the 2026 test
+window, flagged throughout rather than hidden.
+
+- **Fold A (train 2022-23, test 2024): weak, OOS mostly negative** (regressor rank-IC
+  -0.08 to -0.23, classifier AUC 0.42-0.57) — framed as early-regime per the corrected
+  instruction, not as overfitting, though the in-sample/OOS gap is still large regardless
+  of label.
+- **Fold B (train 2024-25, test 2026): the most credible finding of the entire session.**
+  GBM classifier (top/bottom-tercile 3-month forward return) gets OOS AUC=0.758 — stable
+  across 10 random seeds (std=0.003), at the 100th percentile of a 50-draw shuffled-label
+  null distribution (null mean 0.491), and positive in every one of the 6 test months
+  (monthly AUC 0.55-1.00, not one-month-driven).
+- **Drop-one-feature ablation reveals the real driver isn't narrative data.** Removing
+  `stress_beta_z` costs the most (0.758→0.694); removing `mom_z` or `xlu_xng_spread`
+  *improves* the AUC; removing the known-stale `gdelt_z` costs only 0.023 (a small but
+  nonzero drop from a frozen feature — a data-integrity flag, not a validation).
+  **The load-bearing combination is merchant stress-beta (item 3's already-studied,
+  individually-weak GSI factor) + ICR + EDGAR disclosure counts** — confirming the user's
+  original hypothesis (weak signals gaining power combined) on a different signal than
+  the narrative/attention data this whole thread started with.
+- **Disposition: real lead, not yet actionable.** n=54 test observations across 6 months
+  is too small to trust on its own despite clearing the noise-floor test. Next steps
+  logged, none done this session: fix GDELT properly, let the 2026 test window grow,
+  isolate the 3-feature (stress-beta/ICR/EDGAR) interaction directly, do not wire
+  anything live. Detail: `docs/ml-two-fold-walkforward-results.md`.
+
+### 2026-09-08 (cont.) — item 9/10 cross-session reconciliation: my approach_c ablation + a merchant-exclusion check on the other session's Fold B
+
+A third concurrent session (on the same machine) had independently picked up this same
+item 9/10 thread and already produced the two-fold walk-forward finding above
+(`docs/ml-two-fold-walkforward-results.md`) plus a fourth session's peer proposal to hand
+this session the "2026 holdout" ownership. Reconciled rather than duplicating:
+
+- **This session's own contribution (before the cross-session discovery):** ran the
+  Approach C broadened GBM/RF panel to a verdict (FAILED — see the block above), then,
+  per user pushback that the full 2018-25 window mismatches when an AI-power narrative
+  could plausibly exist, ran a with/without-`narrative_z` ablation confined to
+  2022-on/2023-on windows. Result: narrative_z's marginal contribution is **mixed but
+  often positive** in the 4-feature "lean" model within those windows (e.g. RF/lean/3mo,
+  2023-on: t=1.61 without narrative_z, not significant → t=2.56 with it, significant) —
+  not simply inert, contrary to what the original full-model feature-importance ranking
+  alone suggested. But the same lean model gets ~0 signal on the full 2018-25 window, and
+  n=22-34 months is thin — exactly the regime where the Henry Hub work's own Round 5
+  ("split the AI regime, re-test in/out-of-sample") found a similarly fragile positive
+  tilt that didn't survive scrutiny. Kept as supporting texture, not a standalone verdict.
+- **Discovering the third session's Fold B result** (`docs/ml-two-fold-walkforward-results.md`,
+  OOS AUC=0.758, stress-tested, driven by stress-beta+ICR+EDGAR not GDELT) changed the plan:
+  rather than re-run a near-duplicate 2026 holdout, ran the one check neither prior analysis
+  performed — **does Fold B's signal survive excluding VST/CEG/TLN/NRG**, the four names
+  already documented (`docs/grid-stress-signal-evidence.md` §5) as the recurring confound
+  behind several other broken cross-sectional signals on this universe (most recently the
+  ICR retest). **Result: it survives** — OOS AUC 0.755→0.719 on the remaining 19 regulated
+  names, still 100th-percentile vs. its own shuffled-label null, not one-month-driven.
+  This raises, not lowers, Fold B's credibility: the standard "it's just those four names"
+  explanation that has killed prior signals on this universe does not apply here. Addendum
+  written into `docs/ml-two-fold-walkforward-results.md` rather than a new doc. Script:
+  `research/narrative_mispricing/foldb_merchant_exclusion.py`.
+- **Coordination note:** a peer session ("acadia-9d") had independently built
+  `research/narrative_mispricing/spike_c_2026_holdout.py` (a sound, reviewed single-fold
+  train≤2025-12/test-2026 design) and offered to hand off "2026 holdout" ownership; once
+  the third session's already-completed, more rigorous two-fold+stress-test result surfaced,
+  running that single-fold script would have been redundant, so it was not run — kept in
+  the repo as a reviewed, reusable alternative framing (continuous rank-IC across all 25
+  names, vs. Fold B's tercile-classifier framing on 23) if anyone wants a second cut later.
+- **Net read across all three threads today:** the narrative/attention data on its own
+  (Approach A, Approach C) still FAILS every pre-registered bar tried. But a real, now
+  twice-stress-tested (shuffled-label null + merchant-exclusion), small (n=48-54, 6 months)
+  pattern exists in a *combination* of stress-beta, ICR, EDGAR disclosure counts, and price
+  momentum for 2024-26 — this is the first result across this whole research
+  line's ~28+ tracked attempts to clear a shuffled/permutation-null bar this cleanly. Still explicitly **not
+  actionable** on 6 months of data per the original writeup's own conclusion, and GDELT's
+  2026 extension remains unresolved (still running, rate-limited, 30+ minutes in).
+
+### 2026-09-08 (cont.) — portal handoff written for the narrative-mispricing thread (session acadia-9d)
+
+User asked for the thread's status to be reflected as "still promising" in the ledger and
+distilled into one doc to carry to the main strategy portal. Done, no new analysis:
+
+- **`docs/handoff-narrative-mispricing-portal.md`** — one self-contained page: the full arc
+  (Approach A / Approach C-broadened / two-fold walk-forward / merchant-exclusion), the Fold B
+  result stated precisely, why it is not actionable, and the four concrete next steps to promote
+  it. Pre-registered verdicts: narrative-as-signal **FAILED**; weak-signals-in-combination (Fold B)
+  **PROMISING / NOT ACTIONABLE**; merchant-confound explanation **RULED OUT**.
+- **§3 ledger row** (Approach C) extended with the Fold B follow-on pointer + verdict; the
+  "FAILED (narrative-as-signal)" verdict and prior session blocks left intact.
+- **§2** gained a "one partial exception, watch-list only" note; **§4 item 18** added (re-check
+  Fold B quarterly; isolate the 3-feature interaction; fix stale GDELT; do not wire live).
+- Coordination: this session had launched a duplicate `grid_resilience.run(end=2026-08-31)` +
+  narrative extension before discovering acadia-32 / acadia-6c were already on it — killed both,
+  verified no shared-file corruption, stood down on data/holdout per the user's instruction that
+  acadia-32 owns the holdout. Throwaway scripts left in `research/narrative_mispricing/`
+  (`extend_2026.py`, `spike_c_2026_holdout.py`, `_holdout_prices.parquet`).
+
+### 2026-09-08 (cont.) — "Dispatch": Fold-B walk-forward → L/S, 2026-drag diagnosis, profitability-screen counterfactual, build-plan handoff
+
+User asked (a) how the Fold-B model would perform as a tradable L/S (Sharpe / return /
+drawdown per year 2023-26 vs XLI, PAVE, VOLT), (b) what causes its 2026 drag, (c) whether
+a profitability screen with a reasonable lookback would have filtered the worst name, then
+(d) to name it and write a handoff. All from `research/narrative_mispricing/ml_panel_2022_2026.parquet`
++ `research/electricity_earnings_exposure/edgar.py`; throwaway scripts in the session
+scratchpad (`bt_twofold.py`, `diag_2026.py`, `tln_profitability.py`, `bt_screen.py`).
+
+- **As a L/S (GBM classifier, expanding walk-forward, monthly rebalance, dollar-neutral,
+  long-top / short-bottom tercile, ~3–4 names/side), 2023-03 → 2026-08:** raw = **+2.1%/yr,
+  Sharpe 0.22, MaxDD −16.2%**; per year 2023 +14.1% (thin, 10 mo) / 2024 +1.0% / 2025 −1.8%
+  / 2026† −5.1%. Benchmarks same window: XLI +21.3%/yr S1.33, PAVE +23.2%/yr S1.17, VOLT
+  (Dec-24 inception) +29.5%/yr S1.19. The L/S loses to all three on return and Sharpe.
+- **2026 drag = the long leg, mostly TLN.** Short leg ~neutral. TLN realised −4.3%/mo in
+  2026 (worst of the 13-name universe) and the model held it long 9 of 12 months
+  (−9.6 Mar, −7.4 Jul, −14.7 Aug). Model is momentum-dominated in practice (`mom_z` imp
+  ≈0.25–0.29, `xlu_xng_spread` ≈0.20–0.26 > the stress-beta/ICR/EDGAR trio Fold B was
+  credited to); from mid-2026 it even rotates *into* high-stress-beta names as they de-rate.
+- **Two broken inputs:** `icr_z` for TLN is frozen at a **2016** interest-coverage value and
+  forward-filled for the whole 2022-26 panel (pre-bankruptcy company); `gdelt_z` is frozen
+  at ~2025-09 (2026 pull never completed). The model had no real leverage/coverage read on
+  TLN and a stale news feature contributing 0.11–0.17 importance in-window.
+- **Profitability screen counterfactual (point-in-time EDGAR, ~50-day filing lag):** TLN has
+  no comparable P&L until 2023-Q3 (emerged from Ch. 11 May 2023); by the Q4-25 filing its
+  TTM net income is **−$219M, net margin −8.5%, worst 1/13** on both margin and growth.
+  Adding a **bottom-tercile trailing-net-margin exclusion to the long leg** flips the
+  walk-forward L/S to **+9.5%/yr, Sharpe 0.74, MaxDD −13.2%** (2026 −5%→+7%, Sharpe
+  −0.82→+1.53); "exclude negative TTM NI" is weaker (+3.5%/yr, only catches H2-2026); a
+  crude "≥8 quarters of revenue history" cut **backfires** (−5.0%/yr — benches good longs).
+  Illustrative only: 42 months, 10–13 effective names, 3–4/side.
+- **Named "Dispatch"**, build-plan handoff written: **`docs/handoff-2026-09-08-dispatch-ls.md`**
+  (restore universe depth, formalise the point-in-time profitability screen, de-momentum,
+  3-month horizon, vol-target + T-bill/gold sleeve + REGIME gate, costs, portfolio fit) with
+  pre-registered gates. **Verdict: LEAD — SCOPED, NOT BUILT.** Parent doc's "do not wire
+  live" stands. §3 "Cross-sectional / weighting" row + §4 item 19 added; §2 exception
+  paragraph extended.
+
+### 2026-09-08 (cont.) — "combine Dispatch + narrative-mispricing for breadth?" → ran spike_c, answer is NO
+
+User asked whether merging Dispatch with the narrative-mispricing thread buys breadth
+(more names / observations / signal). Added a note to `docs/handoff-2026-09-08-dispatch-ls.md`
+and ran the one outstanding mispricing artifact to settle it.
+
+- **Framing:** Dispatch *is* the mispricing Fold-B model as a book — same panel
+  (`ml_panel_2022_2026.parquet`), 23 names, 7 features (`edgar_z`/`gdelt_z` included), GBM.
+  Merging does not stack two edges; the narrative features are already inside and are the
+  weak/broken part (ablation: dropping `gdelt_z` *raises* AUC; it is stale in-window).
+- **Ran `research/narrative_mispricing/spike_c_2026_holdout.py`** (previously "not run,
+  redundant") — the thread's widest independent framing: 25 names, 9 features, 2018-start
+  panel, continuous rank-IC (regressor, not tercile classifier), GBM & RF × {full,lean} ×
+  {1m,3m}, walk-forward + a proper train≤2025-12 / test-2026 holdout with HAC t. Fixed one
+  Py3.12-only f-string so it runs on 3.11. Result written to `spike_c_2026_holdout_results.csv`.
+  - 2023-25 re-derivation: only lean models clear \|t\|>1 (best lean fwd-3m GBM IC +0.124,
+    t +2.25); full models \|t\|<1.
+  - +2026 (window B): every cell decays to \|t\|≤1.4.
+  - **2026 holdout (window C): flat-to-negative in every cell** — RF 3-month IC −0.167
+    (t −3.77) and −0.186 (t −2.12), i.e. *inverted* OOS; GBM cells ≈0.
+  - `narrative_z` feature-importance rank **7–8 of 9** (≈0.01–0.04); `own_mom6m` dominates
+    (0.28–0.34) — the same momentum-loading failure mode as the 7-feature panel, on a wider
+    universe and a different framing.
+- **Verdict: no breadth of edge from merging.** The wider net reproduces "worked 2023-25,
+  inverts 2026." `spike_c` is not worth folding in as an ensemble member as-is. Breadth work
+  for Dispatch stays: prune the dead features (`gdelt_z`, stale/ffilled `icr_z`) to widen the
+  feature-complete universe + push the panel back to 2018, add the point-in-time profitability
+  screen, de-momentum. Docs updated: §3 Dispatch row (4), §4 item 19, portal doc pointer +
+  addendum, `docs/handoff-2026-09-08-dispatch-ls.md`.
+
+### 2026-09-08 (cont.) — "Dispatch v2": prune dead features + widen universe from full-history feature build
+
+User: prune the dead features; use 2018+ data to *build* features but keep the *test* window
+at 2023+ (the strat is known not to work in the earlier regime); don't gate on univariate
+t-stat — use it only as a loose inclusion check, then let the RF/GBM combine. Script:
+scratchpad `dispatch_pruned.py`.
+
+- **Pruned:** `gdelt_z` (stale ~2025-09), `xlu_xng_spread` (single value per month → zero
+  cross-sectional info + stale), `anc_composite` (2 levels → near-degenerate). **Rebuilt**
+  `icr_z` point-in-time from EDGAR XBRL (TTM EBIT / |interest|, full history, 50-day lag) —
+  fixes the frozen-2016-for-TLN bug, 100% coverage. **Widened** `stress_beta_z` = union of the
+  two rolling-beta panels (adds NRG/VST/CNP/EIX/PCG, 2018 starts). Final set
+  `[edgar_z, icr_z, stress_beta_z, mom_z]`.
+- **Breadth achieved:** usable names/month 10–13 → **16–19 from 2024 on** (5–6 per side).
+- **Loose feature check (informational):** `stress_beta_z` IC +0.14 (t +3.1), `mom_z` +0.15
+  (t +2.7) carry it; `edgar_z` (t −1.4) and `icr_z` (t −0.2) weak, kept for the model.
+- **Result — the widening confirms the earlier read, does not overturn it.** Headline Sharpe
+  jumps (GBM clf 0.22→0.77; GBM reg 1.08) but it is a **single-regime artifact**: every model
+  variant returns **+24 % to +86 % in 2024** and is negative-to-flat in 2023 / 2025 / (classifier)
+  2026. The merchant-minus-regulated spread was +68 / +127 / +35 / −27 % across 2023–26 → Dispatch
+  is a momentum-timed **merchant-vs-regulated sector bet**, fully loaded (via `stress_beta_z` +
+  `mom_z`) just in time for 2024, then rode the 2026 reversal down. Only 4 merchant names, so
+  more universe = more regulated shorts, not a diversified bet. The margin screen still helps
+  2026 specifically (GBM clf −6.5 %→+2.2 %; RF reg −1.7 %→+7.5 %) but cannot rescue 2023/2025.
+- **Verdict: pruning did its job (breadth 13→19); no cross-sectional edge survives the regime
+  split — consistent with §2's accumulated conclusion.** One pre-registrable next test before
+  abandoning: rank *within* merchant/regulated buckets (or residualize on the merchant-spread
+  factor) and check whether anything survives 2023 + 2025 + 2026. If it is all 2024, there is
+  no strategy. Docs: `docs/handoff-2026-09-08-dispatch-ls.md` §"v2", §4 item 19.
+
+### 2026-09-09 — "Dispatch v3": sector-neutral test → FAILED the regime split, Dispatch closed as a standalone strategy
+
+Last pre-registered test from the v2 block: strip the merchant-vs-regulated axis and check
+whether any cross-sectional edge survives 2023 + 2025 + 2026 (not just the 2024 merchant-IPP
+melt-up). Script: scratchpad `dispatch_sector_neutral.py`.
+
+- **~100% of Dispatch's Sharpe is 2024.** Full GBM classifier: 2024 +61.7% (S 2.55), **ex-2024
+  (2023+2025+2026) −1.3%/y, Sharpe −0.05** (full-period was +0.77). Full regressor: ex-2024
+  Sharpe +0.07 (full-period +0.87).
+- **Regulated-only (drop VST/NRG/CEG/TLN):** 2024 collapses to +1.0% — a real but trivial
+  cross-sectional signal remains: GBM classifier ex-2024 Sharpe +0.19 raw, **+0.36 with the
+  margin screen**, full-period ~0.40. Directionally consistent but **2023 still negative**, so
+  it fails a "positive in each non-2024 year" bar and is not fundable standalone. GBM regressor
+  regulated-only is negative everywhere (ex-2024 S −0.75).
+- **Sector-neutral combined** (rank within each bucket, book bucket-balanced): ex-2024 Sharpe
+  +0.12 (classifier) / noise (regressor, 2025 −27% then 2026 +45%).
+- **Verdict: FAILED.** Dispatch is a momentum-timed merchant-vs-regulated sector bet
+  (`stress_beta_z` + `mom_z` on 4 merchant names) whose one good regime (2024) has passed and
+  which rode the 2026 reversal down −27%. No standalone cross-sectional alpha. Consistent with
+  §2's accumulated conclusion — this is now the ~29th tracked attempt with the same outcome.
+- **Kept:** (a) the point-in-time trailing-net-margin screen as a *quality overlay* — it lifted
+  the worst year of every variant, incl. the shipped long-only book; (b) the pruned/widened
+  point-in-time panel (`[edgar_z, icr_z(EDGAR XBRL), stress_beta_z(union of both beta panels),
+  mom_z]`, 16–19 names/mo) as reusable infra. Fold B's AUC watch-item (§4 item 18) is
+  untouched — that is tercile-classification AUC, not this returns expression.
+- Docs: `docs/handoff-2026-09-08-dispatch-ls.md` §"v3"; §3 Dispatch row + §4 item 19 updated.
