@@ -49,3 +49,94 @@ def test_crowding_diagnostic_sorts_by_short_pct_float(monkeypatch, tmp_path):
     history = pd.read_parquet(tmp_path / config.SHORT_INTEREST_CACHE_FILE)
     diag = si.crowding_diagnostic(history, tickers=("DLR", "EQIX"))
     assert list(diag.index) == ["DLR", "EQIX"]  # DLR has the higher short_pct_float
+
+
+def test_crowding_diagnostic_returns_complete_latest_row_not_chimera(monkeypatch, tmp_path):
+    """Regression: groupby().last() returns per-column last non-null, creating
+    chimera records. Test that we get a coherent single-row snapshot, not
+    backfilled columns from older snapshots.
+    """
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+
+    # Manually construct history with two DLR snapshots:
+    # - Older: complete data
+    # - Newer: missing short_pct_float (NaN)
+    # Test should preserve the NaN, not backfill from older snapshot.
+    older_ts = pd.Timestamp("2025-01-01", tz="UTC")
+    newer_ts = pd.Timestamp("2025-01-02", tz="UTC")
+
+    history_rows = [
+        {
+            "ticker": "DLR",
+            "shares_short": 12_000_000,
+            "short_ratio": 2.1,
+            "short_pct_float": 0.031,
+            "date_short_interest": pd.Timestamp("2025-01-01", tz="UTC"),
+            "fetched_at": older_ts,
+        },
+        {
+            "ticker": "DLR",
+            "shares_short": 12_500_000,
+            "short_ratio": 2.2,
+            "short_pct_float": None,  # NaN in newer snapshot
+            "date_short_interest": pd.Timestamp("2025-01-02", tz="UTC"),
+            "fetched_at": newer_ts,
+        },
+    ]
+    history = pd.DataFrame(history_rows)
+
+    diag = si.crowding_diagnostic(history, tickers=("DLR",))
+
+    # Should return the newer snapshot as a complete row.
+    assert diag.loc["DLR", "shares_short"] == 12_500_000  # newer value
+    assert diag.loc["DLR", "short_ratio"] == 2.2  # newer value
+    assert pd.isna(diag.loc["DLR", "short_pct_float"])  # NaN from newer, not backfilled
+
+
+def test_cache_preserves_snapshots_with_different_date_short_interest(monkeypatch, tmp_path):
+    """Regression: Cache should preserve multiple snapshots for the same ticker
+    if they have different date_short_interest values (different reporting dates).
+    Deduplication should only remove rows with identical date_short_interest.
+    """
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+
+    def fake_info_variant(ticker):
+        # First call: date_short_interest = 2025-01-01
+        # Second call: date_short_interest = 2025-01-08 (one week later)
+        state = {"call_count": 0}
+        if not hasattr(fake_info_variant, "_state"):
+            fake_info_variant._state = state
+        fake_info_variant._state["call_count"] += 1
+
+        if fake_info_variant._state["call_count"] == 1:
+            return {
+                "sharesShort": 12_000_000,
+                "shortRatio": 2.1,
+                "shortPercentOfFloat": 0.031,
+                "dateShortInterest": 1735689600,  # 2025-01-01
+            }
+        else:
+            return {
+                "sharesShort": 12_100_000,
+                "shortRatio": 2.15,
+                "shortPercentOfFloat": 0.032,
+                "dateShortInterest": 1736294400,  # 2025-01-08
+            }
+
+    monkeypatch.setattr(si, "_fetch_one", fake_info_variant)
+
+    # First fetch
+    si.fetch_short_interest(["DLR"])
+    # Second fetch with updated date_short_interest
+    si.fetch_short_interest(["DLR"])
+
+    history = pd.read_parquet(tmp_path / config.SHORT_INTEREST_CACHE_FILE)
+    dlr_rows = history[history["ticker"] == "DLR"]
+
+    # Should have 2 distinct rows (different date_short_interest)
+    assert len(dlr_rows) == 2
+    dates = dlr_rows["date_short_interest"].unique()
+    assert len(dates) == 2
+    # Verify both snapshots are distinct and ordered by date
+    assert dlr_rows.iloc[0]["shares_short"] == 12_000_000
+    assert dlr_rows.iloc[1]["shares_short"] == 12_100_000

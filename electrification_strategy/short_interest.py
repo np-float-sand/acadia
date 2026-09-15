@@ -52,5 +52,6 @@ def fetch_short_interest(tickers: list[str], use_cache: bool = True) -> pd.DataF
 def crowding_diagnostic(history: pd.DataFrame, tickers: tuple[str, ...] = config.HEDGE_SHORT_TICKERS) -> pd.DataFrame:
     latest = (history[history["ticker"].isin(tickers)]
               .sort_values("fetched_at")
-              .groupby("ticker").last())
+              .drop_duplicates(subset="ticker", keep="last")
+              .set_index("ticker"))
     return latest.sort_values("short_pct_float", ascending=False)
