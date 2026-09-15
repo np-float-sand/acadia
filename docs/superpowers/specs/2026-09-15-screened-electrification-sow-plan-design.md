@@ -18,6 +18,13 @@ delivered, and (b) an execution plan that does the Phase 1–3 work for real, in
 genuinely untried piece of research (stress beta re-tested on the supplier universe) rather than
 either blindly following the old SOW language or silently dropping it.
 
+**Guiding principle for all of Phase 1:** any free or low-cost power/energy-market data source
+(grid congestion costs, LMP volatility, forward power prices, reserve-margin data, etc.) is fair
+game to test against the equity signal — but it only ships if it demonstrably improves the gated
+result, never for narrative flavor alone. This is the same discipline §3.4 applies to stress beta,
+applied project-wide, and it's why §3.2 (forward power) stays descoped rather than added on
+spec — consistent with RESEARCH-LOG's ~29 tested-and-mostly-rejected signal candidates.
+
 ## 2. Deliverables
 
 1. **`docs/scope-of-work-v2-screened-electrification.md`** (+ HTML/PDF via
@@ -87,6 +94,16 @@ worth stating plainly in the results writeup, not hiding: it treats grid stress 
 demand-for-equipment signal rather than a location-specific exposure, which is the economically
 correct framing for manufacturers regardless of gate outcome.
 
+**Real-world grounding for the congestion sub-signal:** Reuters (Maguire, 2026-07-20, "America's
+power grid is choking on costly congestion") reports PJM transmission congestion cost market
+participants $777.8M in June 2026 and a record ~$1B in May 2026 during a regional heat wave —
+concentrated in Pennsylvania, Maryland, Northern Virginia and New Jersey, the data-center
+epicenter — driven by 10+ year transmission permitting timelines. This corroborates CLAUDE.md's
+2026-09-08 finding that PJM's `congestion` GSI component was never broken (0% NaN, real signal):
+the congestion sub-signal Step B tests is measuring a real, currently worsening, economically
+large phenomenon, not a data artifact. It's a citation for the Phase 2 findings report (§4.3),
+not a new data source — PJM congestion is already inside the existing GSI.
+
 **Step B — pre-registered gate**, reusing the existing subwindow convention in
 `electrification_strategy/config.py` (`SUBWINDOWS = {"2019-22", "2023-26"}`):
 1. Compute a blended national/cross-ISO GSI over the electrification backtest window
@@ -134,7 +151,9 @@ One clean run, one verdict, logged either way.
    outcome, the short-interest cost diagnostic, risk-data integration status (adapter built,
    pending real file), and known limitations (trading costs at scale, single-cycle backtest,
    whichever of §3.4's two branches applies) plus the recommended configuration (Option A vs. B
-   and parameters, as already selected in v5).
+   and parameters, as already selected in v5). Grounds the physical-need thesis with current
+   market evidence (e.g. the Reuters PJM-congestion reporting cited in §3.4) rather than resting
+   on the thesis alone.
 
 ## 5. Phase 3 — Handoff & Documentation
 
