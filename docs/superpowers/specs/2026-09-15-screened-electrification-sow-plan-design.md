@@ -104,15 +104,30 @@ the congestion sub-signal Step B tests is measuring a real, currently worsening,
 large phenomenon, not a data artifact. It's a citation for the Phase 2 findings report (§4.3),
 not a new data source — PJM congestion is already inside the existing GSI.
 
-**Step B — pre-registered gate**, reusing the existing subwindow convention in
-`electrification_strategy/config.py` (`SUBWINDOWS = {"2019-22", "2023-26"}`):
+**Regime dating — the grid was slack before ~2021.** Both the Reuters reporting above and this
+project's own prior work point to a regime break around 2021, not a smooth trend: the ancillary/
+scarcity-pricing probe (`docs/ancillary-scarcity-pricing-feasibility-results.md`) already found
+**no** timing signal on 2018-2021 (\|t\| < 1.1) and left 2022-2025 untested as the more-promising
+window; February 2021 (ERCOT Winter Storm Uri) is the commonly-cited inflection point after which
+reserve margins tightened, generator retirements accelerated, and (later) data-center load
+compounded it. Requiring a stress-beta effect to also hold during the pre-2021 slack-grid era
+would be testing the hypothesis in a regime where it isn't expected to apply — a misspecified
+gate, not rigor. So the primary test window is **regime-based, not calendar-AI-boom-based**:
+
+**Step B — pre-registered gate** (this split is fixed now, before any test is run — not chosen
+after looking at results):
 1. Compute a blended national/cross-ISO GSI over the electrification backtest window
    (2017-06 → present).
 2. Each month, rank the 27 suppliers by trailing 12-month rolling `stress_beta`
    (`conditional_beta.py`, unmodified). Form a top-tercile-minus-bottom-tercile spread portfolio.
-3. **Gate 1 (statistical):** pooled spread-return t-stat \|t\| ≥ 2, AND same sign in both the
-   2019-22 and 2023-26 subwindows (no sign flip — the RESEARCH-LOG regime-split honesty
-   standard used throughout this project).
+3. **Gate 1 (statistical), primary window = tight-grid era (2021-01-01 → present):** pooled
+   spread-return t-stat \|t\| ≥ 2 within this window. The pre-2021 slack-grid era is computed and
+   reported for context (does the effect plausibly strengthen post-2021, consistent with the
+   regime story, or is it flat throughout — which would undercut the regime explanation) but is
+   **not required to show the same sign** — it's diagnostic, not part of the pass bar. The
+   existing `SUBWINDOWS` split in `config.py` (2019-22 / 2023-26) is reported alongside for
+   comparability with the rest of the strategy's backtest tables, but the tight-grid split is what
+   the gate is judged on.
 4. **Gate 2 (practical, only if Gate 1 passes):** wiring `stress_beta` in as a scoring tilt must
    not break the strategy's existing pre-registered winner criteria (`WINNER_MAXDD_MAX`,
    `WINNER_SUBWINDOW_SHARPE_MIN`, `WINNER_FEARED_PNL_MIN` in `config.py`).
