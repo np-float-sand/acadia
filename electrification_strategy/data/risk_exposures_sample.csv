@@ -1,0 +1,13 @@
+# SYNTHETIC PLACEHOLDER -- not Addenda data. Schema contract: date,ticker,factor,exposure
+# (long format, one row per date x ticker x factor). Swap this file for the real
+# Addenda risk-model export at electrification_strategy/data/risk_exposures.csv once
+# received -- see docs/technical-reference.md for the schema contract.
+date,ticker,factor,exposure
+2024-12-31,ETN,value,0.42
+2024-12-31,ETN,momentum,-0.15
+2024-12-31,HUBB,value,0.10
+2024-12-31,HUBB,momentum,0.55
+2025-03-31,ETN,value,0.38
+2025-03-31,ETN,momentum,0.05
+2025-03-31,HUBB,value,0.08
+2025-03-31,HUBB,momentum,0.61
