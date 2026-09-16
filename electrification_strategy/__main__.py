@@ -22,7 +22,9 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(prog="electrification_strategy")
     ap.add_argument("--start", default=config.START_DEFAULT)
     ap.add_argument("--end", default=_default_end())
-    ap.add_argument("--universe", choices=["marquee", "frozen", "thematic", "screen", "all"], default="all")
+    ap.add_argument("--universe",
+                    choices=["marquee", "frozen", "thematic", "screen", "screen_reit", "all"],
+                    default="all")
     ap.add_argument("--output", default="./output_electrification")
     ap.add_argument("--no-plot", action="store_true")
     args = ap.parse_args(argv)
@@ -44,7 +46,15 @@ def main(argv=None) -> None:
           f"({win['n_passing']}/{len(result['cells'])} cells pass)")
 
     rx_df = risk_exposures.load_risk_exposures()
-    si_snapshot = fetch_short_interest(list(config.HEDGE_SHORT_TICKERS))
+    # Reporting-only diagnostic, called purely for its cache-append side effect (the returned
+    # snapshot is unused; write_outputs reads the accumulated history off disk below). It sits
+    # after the expensive run_comparison() and before write_outputs(), so a transient yfinance
+    # failure here must never be allowed to discard a completed backtest -- warn and continue.
+    try:
+        fetch_short_interest(list(config.HEDGE_SHORT_TICKERS))
+    except Exception as exc:  # noqa: BLE001 -- any provider failure is non-fatal here
+        print(f"WARNING: short-interest snapshot fetch failed ({type(exc).__name__}: {exc}); "
+              f"continuing without a fresh snapshot")
     si_history_path = config.CACHE_DIR / config.SHORT_INTEREST_CACHE_FILE
     si_history = pd.read_parquet(si_history_path) if si_history_path.exists() else pd.DataFrame()
 

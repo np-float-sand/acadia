@@ -84,3 +84,41 @@ def test_cli_writes_short_interest_diagnostic_when_history_cached(
               "--no-plot", "--output", str(out_dir)])
 
     assert (out_dir / "short_interest_diagnostic.csv").exists()
+
+
+# -- Final-review finding 9: a failed short-interest fetch must not discard a completed run --
+def test_cli_completes_when_short_interest_fetch_raises(
+    monkeypatch, tmp_path, synthetic_prices, synthetic_dfii10, capsys
+):
+    """fetch_short_interest is a reporting-only diagnostic sitting between the expensive
+    run_comparison() and write_outputs(). A transient yfinance failure there must warn and
+    continue, never abort the completed backtest."""
+    monkeypatch.setattr(cli, "fetch_prices", lambda tickers, start, end: synthetic_prices)
+    monkeypatch.setattr(cli, "fetch_series", lambda sid, start, end: synthetic_dfii10)
+
+    def _boom(tickers, **kwargs):
+        raise RuntimeError("yfinance: too many requests")
+
+    monkeypatch.setattr(cli, "fetch_short_interest", _boom)
+    monkeypatch.setattr(cli.config, "CACHE_DIR", tmp_path / "empty_cache")
+
+    out_dir = tmp_path / "out"
+    cli.main(["--start", "2018-01-01", "--end", "2024-12-31",
+              "--no-plot", "--output", str(out_dir)])
+
+    for f in ("metrics.csv", "episode_drawdowns.csv", "plateau.json", "returns.csv"):
+        assert (out_dir / f).exists()
+    assert not (out_dir / "short_interest_diagnostic.csv").exists()
+    assert "short-interest" in capsys.readouterr().out.lower()
+
+
+# -- Final-review finding 16: screen_reit selectable directly from the CLI --
+def test_cli_universe_screen_reit(monkeypatch, tmp_path, synthetic_prices, synthetic_dfii10):
+    monkeypatch.setattr(cli, "fetch_prices", lambda tickers, start, end: synthetic_prices)
+    monkeypatch.setattr(cli, "fetch_series", lambda sid, start, end: synthetic_dfii10)
+    monkeypatch.setattr(cli, "fetch_short_interest", _fake_short_interest_snapshot)
+    cli.main(["--start", "2018-01-01", "--end", "2024-12-31", "--no-plot",
+              "--universe", "screen_reit", "--output", str(tmp_path)])
+    m = pd.read_csv(tmp_path / "metrics.csv")
+    cells = [n for n in m["name"] if not n.startswith("BENCH")]
+    assert cells and all(n.startswith("screen_reit") for n in cells)

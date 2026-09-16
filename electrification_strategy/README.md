@@ -23,7 +23,11 @@ pitch winner by the pre-registered rule. Writes `metrics.csv`, `episode_drawdown
 to the winning cell's portfolio) and `short_interest_diagnostic.csv` (`short_interest.py`
 crowding snapshot on the hedge short names) when the underlying data is present -- both are
 reporting-only diagnostics, not backtest inputs, and are silently skipped (no crash) while
-no real `data/risk_exposures.csv` or cached short-interest history exists yet.
+no real `data/risk_exposures.csv` or cached short-interest history exists yet. A failed
+short-interest fetch is likewise non-fatal: the CLI warns and finishes the run rather than
+discarding a completed backtest. The diagnostic carries a `data_quality_flag` column, set
+when a row shows the stale-field signature (0%/missing short-%-of-float alongside a
+near-zero share count), so an implausible provider reading isn't reported as a clean zero.
 
 ## Universes
 

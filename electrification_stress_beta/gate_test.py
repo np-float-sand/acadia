@@ -84,6 +84,12 @@ def main() -> dict:
     t_pre, n_pre = _gate1_tstat(pre)
 
     result = {
+        # Self-documenting universe stamp: main() builds its universe from the *current*
+        # universe_seed.csv, which grows over time (Task 7 added IRM/AMT the same day Task 5
+        # recorded the committed gate_result.json against a 31-ticker seed). Recording the
+        # exact pool makes any future run comparable to -- and distinguishable from -- the
+        # committed historical result. See docs/electrification-stress-beta-gate-results.md.
+        "universe_tickers": sorted(tickers), "n_tickers": len(tickers),
         "t_primary_2021on": t_primary, "n_primary": n_primary,
         "t_pre_2021": t_pre, "n_pre": n_pre,
         "gate1_pass": bool(abs(t_primary) >= GATE_T_THRESHOLD) if t_primary == t_primary else False,

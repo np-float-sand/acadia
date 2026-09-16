@@ -93,6 +93,88 @@ def test_crowding_diagnostic_returns_complete_latest_row_not_chimera(monkeypatch
     assert pd.isna(diag.loc["DLR", "short_pct_float"])  # NaN from newer, not backfilled
 
 
+# -- Final-review finding 1: implausible-snapshot guard --
+def _fake_info_anomalous(ticker):
+    """DLR as actually returned by yfinance in the v6 run (near-zero shares AND 0% of
+    float -- the signature of a stale/missing field for a ~$50B REIT), alongside a
+    normal-looking EQIX row."""
+    table = {
+        "DLR": {"sharesShort": 8_721, "shortRatio": 0.0, "shortPercentOfFloat": 0.0,
+                "dateShortInterest": 1735689600},
+        "EQIX": {"sharesShort": 1_646_357, "shortRatio": 2.81, "shortPercentOfFloat": 0.0191,
+                 "dateShortInterest": 1735689600},
+    }
+    return table[ticker]
+
+
+def test_data_quality_flag_fires_on_implausible_row_only(monkeypatch, tmp_path):
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(si, "_fetch_one", _fake_info_anomalous)
+    df = si.fetch_short_interest(["DLR", "EQIX"])
+    assert "data_quality_flag" in df.columns
+    assert bool(df.loc["DLR", "data_quality_flag"]) is True
+    assert bool(df.loc["EQIX", "data_quality_flag"]) is False
+
+
+def test_data_quality_flag_absent_for_normal_rows(monkeypatch, tmp_path):
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(si, "_fetch_one", _fake_info)
+    df = si.fetch_short_interest(["DLR", "EQIX"])
+    assert not df["data_quality_flag"].any()
+
+
+def test_data_quality_flag_missing_pct_with_large_shares_is_not_flagged(monkeypatch, tmp_path):
+    """A missing % of float alone isn't the signature -- only the near-zero-shares
+    combination is. Don't over-flag."""
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(si, "_fetch_one", lambda t: {
+        "sharesShort": 5_000_000, "shortRatio": 3.0, "shortPercentOfFloat": None,
+        "dateShortInterest": 1735689600})
+    df = si.fetch_short_interest(["EQIX"])
+    assert bool(df.loc["EQIX", "data_quality_flag"]) is False
+
+
+def test_crowding_diagnostic_threads_data_quality_flag(monkeypatch, tmp_path):
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(si, "_fetch_one", _fake_info_anomalous)
+    si.fetch_short_interest(["DLR", "EQIX"])
+    history = pd.read_parquet(tmp_path / config.SHORT_INTEREST_CACHE_FILE)
+    diag = si.crowding_diagnostic(history, tickers=("DLR", "EQIX"))
+    assert "data_quality_flag" in diag.columns
+    assert bool(diag.loc["DLR", "data_quality_flag"]) is True
+    assert bool(diag.loc["EQIX", "data_quality_flag"]) is False
+
+
+def test_crowding_diagnostic_recomputes_flag_for_legacy_history(monkeypatch, tmp_path):
+    """A cache written before the guard existed has no data_quality_flag column;
+    crowding_diagnostic must still report one rather than KeyError."""
+    history = pd.DataFrame([
+        {"ticker": "DLR", "shares_short": 8_721, "short_ratio": 0.0, "short_pct_float": 0.0,
+         "date_short_interest": pd.Timestamp("2025-01-01", tz="UTC"),
+         "fetched_at": pd.Timestamp("2025-01-01", tz="UTC")},
+        {"ticker": "EQIX", "shares_short": 1_646_357, "short_ratio": 2.81, "short_pct_float": 0.0191,
+         "date_short_interest": pd.Timestamp("2025-01-01", tz="UTC"),
+         "fetched_at": pd.Timestamp("2025-01-01", tz="UTC")},
+    ])
+    diag = si.crowding_diagnostic(history, tickers=("DLR", "EQIX"))
+    assert bool(diag.loc["DLR", "data_quality_flag"]) is True
+    assert bool(diag.loc["EQIX", "data_quality_flag"]) is False
+
+
+# -- Final-review finding 14: empty ticker list --
+def test_fetch_short_interest_empty_tickers_returns_empty_frame(monkeypatch, tmp_path):
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(si, "_fetch_one", _fake_info)
+    df = si.fetch_short_interest([])
+    assert df.empty
+    assert df.index.name == "ticker"
+    for col in ("shares_short", "short_ratio", "short_pct_float",
+                "date_short_interest", "fetched_at", "data_quality_flag"):
+        assert col in df.columns
+    # nothing fetched => nothing written
+    assert not (tmp_path / config.SHORT_INTEREST_CACHE_FILE).exists()
+
+
 def test_cache_preserves_snapshots_with_different_date_short_interest(monkeypatch, tmp_path):
     """Regression: Cache should preserve multiple snapshots for the same ticker
     if they have different date_short_interest values (different reporting dates).
