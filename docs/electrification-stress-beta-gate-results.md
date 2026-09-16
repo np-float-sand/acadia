@@ -15,6 +15,17 @@ stress_beta spread portfolio, pooled t-stat on the forward monthly spread return
 Gate 1 (pre-registered): |t| >= 2.0 on the 2021-01-01-onward window (tight-grid era — see
 below), pre-2021 reported for context only.
 
+**Data coverage note (independently verified on a second run of this script):** of the
+31-ticker seed pool, THR (Thermon Group Holdings) returned 100% NaN from the price fetch.
+Direct yfinance probe confirms this is not a transient fetch error (`Quote not found for
+symbol: THR`, reproducible on repeated queries against both historical and 5-day windows,
+while other tickers fetch normally in the same run) — a web check found THR was acquired by
+CECO Environmental and delisted from the NYSE on 2026-06-01, and Yahoo Finance no longer
+serves any historical quote for it post-delisting. The gate therefore ran on the remaining 30
+of 31 tickers; monthly tercile coverage was otherwise high (67 of a possible 68 primary-window
+months, 41 pre-2021 months), so this does not materially affect statistical power or the
+verdict below.
+
 ## Regime dating
 
 Reuters (Maguire, 2026-07-20, "America's power grid is choking on costly congestion")
