@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope of Work — Screened Electrification Equipment Strategy</title>
+<script>
+try{var t=localStorage.getItem('md2html-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f6f6f3; --surface:#ffffff; --surface-2:#efefe9;
+  --ink:#1c2026; --ink-soft:#5a626d; --ink-faint:#8b929c;
+  --line:#e3e3dc; --line-soft:#ecebe4;
+  --accent:#1f5fa8; --accent-ink:#17497f; --accent-soft:#e7eef7;
+  --code-bg:#f2f1ec; --mark:#fbe7b0;
+  --sel:#cfe0f2;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+    --ink:#e6e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+    --line:#2c313a; --line-soft:#242a32;
+    --accent:#5c9bd6; --accent-ink:#9cc4e8; --accent-soft:#1e2b3a;
+    --code-bg:#1f242b; --mark:#5a4a12; --sel:#26374a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+  --ink:#e6e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+  --line:#2c313a; --line-soft:#242a32;
+  --accent:#5c9bd6; --accent-ink:#9cc4e8; --accent-soft:#1e2b3a;
+  --code-bg:#1f242b; --mark:#5a4a12; --sel:#26374a;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:17px; line-height:1.66; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--sel)}
+.doc{max-width:46rem; margin:0 auto; padding:clamp(2rem,5vw,4rem) clamp(1.1rem,4vw,2rem) 6rem}
+
+h1,h2,h3,h4,h5,h6{font-family:"Newsreader",Georgia,serif; font-weight:500;
+  line-height:1.2; text-wrap:balance; letter-spacing:-.012em; margin:2.4em 0 .5em}
+h1{font-size:clamp(2rem,5vw,2.7rem); margin:.1em 0 .5em}
+h2{font-size:clamp(1.45rem,3.4vw,1.85rem); padding-bottom:.24em; border-bottom:1px solid var(--line)}
+h3{font-size:1.28rem; font-weight:600}
+h4{font-size:1.08rem; font-weight:600; color:var(--ink-soft)}
+h5,h6{font-size:.95rem; font-weight:600; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.04em; font-family:"IBM Plex Mono",monospace}
+h1+p,h2+p,h3+p{margin-top:.2em}
+
+p{margin:1em 0}
+a{color:var(--accent); text-underline-offset:2px; text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+a:hover{text-decoration-color:currentColor}
+strong{font-weight:600}
+small{color:var(--ink-soft)}
+hr{border:none; border-top:1px solid var(--line); margin:2.8em 0}
+mark{background:var(--mark); color:inherit; padding:.05em .2em; border-radius:3px}
+
+ul,ol{margin:1em 0; padding-left:1.5em}
+li{margin:.35em 0}
+li>ul,li>ol{margin:.3em 0}
+dl{margin:1em 0}
+dt{font-weight:600; margin-top:.8em}
+dd{margin:.2em 0 .2em 1.4em; color:var(--ink-soft)}
+
+blockquote{margin:1.4em 0; padding:.4em 0 .4em 1.15em; border-left:3px solid var(--accent);
+  color:var(--ink-soft)}
+blockquote p{margin:.5em 0}
+
+code,kbd,samp{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.88em}
+:not(pre)>code{background:var(--code-bg); padding:.12em .38em; border-radius:4px;
+  border:1px solid var(--line-soft)}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:1em 1.15em; overflow-x:auto; margin:1.3em 0; line-height:1.55}
+pre code{font-size:.85em; background:none; border:none; padding:0}
+
+.table-wrap{overflow-x:auto; margin:1.5em 0; border:1px solid var(--line);
+  border-radius:9px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:.9rem}
+th,td{text-align:left; padding:.55rem .8rem; border-bottom:1px solid var(--line-soft);
+  vertical-align:top}
+thead th{font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:.75rem;
+  text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft);
+  background:var(--surface-2); border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+td:has(+td),th:has(+th){white-space:normal}
+table td[align="right"],table th[align="right"]{text-align:right; font-variant-numeric:tabular-nums}
+table td[align="center"],table th[align="center"]{text-align:center}
+
+img{max-width:100%; height:auto; border-radius:6px}
+.footnote{font-size:.9rem; color:var(--ink-soft)}
+.footnote ol{padding-left:1.2em}
+.headerlink{margin-left:.35em; color:var(--ink-faint); text-decoration:none; opacity:0;
+  transition:opacity .12s}
+h1:hover .headerlink,h2:hover .headerlink,h3:hover .headerlink,
+h4:hover .headerlink{opacity:1}
+.toc{background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+  padding:.8em 1.1em; margin:1.6em 0; font-size:.92rem}
+.toc>ul{margin:.2em 0}
+.toc ul{list-style:none; padding-left:1em}
+.toc>ul{padding-left:0}
+.toc a{color:var(--ink-soft); text-decoration:none}
+.toc a:hover{color:var(--accent)}
+
+.theme-toggle{position:fixed; top:.9rem; right:.9rem; z-index:9;
+  font:500 .72rem/1 "IBM Plex Mono",monospace; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink-soft); background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:.5em .9em; cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.theme-toggle:hover{color:var(--ink); border-color:var(--ink-faint)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+@media print{
+  :root,:root[data-theme="dark"]{
+    --ground:#fff; --surface:#fff; --surface-2:#f3f2ee;
+    --ink:#1c2026; --ink-soft:#4a525c; --ink-faint:#8b929c;
+    --line:#dcdcd4; --line-soft:#e8e7e0; --code-bg:#f4f3ee;
+  }
+  body{font-size:10.5pt}
+  .doc{max-width:none; padding:0}
+  .theme-toggle{display:none}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3,h4{break-after:avoid}
+  pre,blockquote,img,figure{break-inside:avoid}
+  .table-wrap{break-inside:auto}          /* long tables may span pages */
+  tr,li{break-inside:avoid}
+  thead{display:table-header-group}
+  h2{border-bottom-color:#d8d8d0}
+  table{font-size:.82rem}                 /* claw back width for many-column tables */
+  th,td{padding:.42rem .5rem}
+}
+@page{size:A4; margin:14mm 11mm}
+</style>
+</head>
+<body>
+
+<main class="doc">
+<h1 id="scope-of-work-screened-electrification-equipment-strategy">Scope of Work — Screened Electrification Equipment Strategy<a class="headerlink" href="#scope-of-work-screened-electrification-equipment-strategy" title="Permanent link">#</a></h1>
+<p><strong>Draft for Discussion (v2)</strong></p>
+<hr />
+<h2 id="parties">Parties<a class="headerlink" href="#parties" title="Permanent link">#</a></h2>
+<p><strong>Consultant:</strong> Sandhya Persad
+<strong>Client:</strong> Addenda Capital
+<strong>Date:</strong> 2026-09-15</p>
+<hr />
+<h2 id="background">Background<a class="headerlink" href="#background" title="Permanent link">#</a></h2>
+<p>The Consultant has designed and tested a quantitative equity strategy — <strong>Screened
+Electrification Equipment</strong> — that invests in the companies supplying the equipment and
+construction services for the U.S. electricity grid build-out. The thesis rests on physical
+need (AI data-center load growth, electrification of heating and transport, and reshoring of
+domestic manufacturing) rather than investor sentiment. A fixed, rules-based screen selects
+profitable, reasonably-valued equipment and construction suppliers — currently 27 names, with
+an adopted extension to 29 (see Phase 1) — and the resulting book is managed with a set of
+automatic risk overlays: a gold/bond macro reserve, a valuation-extension de-risk ladder, and
+volatility targeting. Two variants are offered: Option A (buy-only) and Option B (Option A plus
+a hedge against a broad U.S. industrials basket). Full construction detail, performance, and
+known limitations are documented in <code>docs/electrification-strategy-proposal-v6.md</code>, the Phase 2
+findings report referenced throughout this Scope of Work.</p>
+<p>This document supersedes the original draft's framing around a grid-resilience "stress beta"
+long/short book (an 18-utility strategy that was explored in earlier research but not carried
+into delivery). The Phase 1–3 scope below describes the work actually performed, and remaining,
+against Screened Electrification Equipment.</p>
+<p>The Client will provide access to risk model data. The Consultant will source all other required
+data from public and commercially available sources as described herein.</p>
+<hr />
+<h2 id="scope-of-work">Scope of Work<a class="headerlink" href="#scope-of-work" title="Permanent link">#</a></h2>
+<h3 id="phase-1-data-integration-signal-development">Phase 1 — Data Integration &amp; Signal Development<a class="headerlink" href="#phase-1-data-integration-signal-development" title="Permanent link">#</a></h3>
+<p><em>Estimated: 50–70 hours</em></p>
+<p>The Consultant will:</p>
+<ol>
+<li>
+<p><strong>Establish and validate the data pipeline; integrate short interest.</strong> Consolidated the
+   existing equity-price, fundamental, and macro (FRED) data pipeline into a reproducible,
+   cached research environment, confirmed to rebuild cleanly from a cold cache. Closed a real
+   gap by adding short-interest tracking (<code>short_interest.py</code>): a live yfinance snapshot of
+   DLR/EQIX short interest captured on every pipeline run. No free historical short-interest
+   endpoint exists, so this accumulates history going forward rather than backfilling; it is
+   used as a cost/liquidity diagnostic for the strategy's hedge short leg, not as a signal
+   input.</p>
+</li>
+<li>
+<p><strong>Forward power price data — descoped.</strong> The shipped strategy does not require a
+   forward-looking power-price input. Feasibility work on two candidate sources (the EIA STEO
+   <code>ELWHU_*</code> forward series and the ERCOT real-time/day-ahead LMP spread) is complete and
+   documented as available future work, not exercised further. See
+   <code>docs/RESEARCH-LOG.md</code> §4 item 20, <code>docs/steo-archive-feasibility-results.md</code>, and
+   <code>docs/rt-da-spread-feasibility-results.md</code>.</p>
+</li>
+<li>
+<p><strong>Integrate Client-provided risk data.</strong> Built <code>risk_exposures.py</code>, an adapter against a
+   placeholder schema (long-format <code>date, ticker, factor, exposure</code>), tested independent of
+   real data, with a documented swap-in point for the Client's risk-model file. No file has
+   been received from the Client as of this writing — this remains genuinely pending on the
+   Client, not a gap in delivery.</p>
+</li>
+<li>
+<p><strong>Develop enhanced signal component — stress beta.</strong> A pre-registered, run-once statistical
+   test — never previously conducted on this supplier universe — examined whether the
+   strategy's sensitivity to grid-stress events (reusing the Grid Stress Index and
+   conditional-beta methodology built for the earlier grid-resilience research) could be
+   turned into a scoring signal. The pre-registered gate required a pooled t-statistic of at
+   least 2.0 on the 2021-present window; the observed result was <strong>t = 0.144</strong>, and the gate
+   did not pass. Per the pre-registered protocol, the signal was <strong>not</strong> wired into the
+   strategy. In its place, this deliverable formalizes the three risk-management rules already
+   built into the strategy — the 15% GLD/IEF macro reserve, the valuation-extension de-risk
+   ladder, and 20%-target volatility targeting — as the practical, evidence-backed answer to
+   grid-stress sensitivity, each mapped to a specific stress category and supported by an
+   episode-drawdown table across five real market shocks (COVID, the 2022 rate shock, the
+   DeepSeek sell-off, the 2025 tariff shock, and the 2026 sell-off). Full methodology and
+   results: <code>docs/electrification-stress-beta-gate-results.md</code> and
+   <code>docs/electrification-stress-sensitivity-response.md</code>.</p>
+</li>
+<li>
+<p><strong>Additional, beyond the original scope: REIT-breadth universe extension.</strong> A probe testing
+   whether adding two data-center-exposed REITs (IRM, AMT) to the supplier universe improves
+   the strategy was run under a pre-registered gate. Result: <strong>adopted.</strong> The resulting
+   29-name <code>screen_reit</code> construction beats the base 27-name screen on both Sharpe and maximum
+   drawdown in every overlay stack tested, and is retained as an available, documented
+   construction. See <code>docs/electrification-reit-breadth-probe-results.md</code>.</p>
+</li>
+</ol>
+<p><em>Deliverable: reproducible data pipeline with short-interest and risk-exposure diagnostics;
+pre-registered stress-beta gate results and the resulting stress-sensitivity response; an
+adopted REIT-breadth universe extension.</em></p>
+<hr />
+<h3 id="phase-2-backtest-validation">Phase 2 — Backtest &amp; Validation<a class="headerlink" href="#phase-2-backtest-validation" title="Permanent link">#</a></h3>
+<p><em>Estimated: 40–60 hours</em></p>
+<p>The Consultant will:</p>
+<ol>
+<li><strong>Create Strategy</strong> — extended <code>backtest.py</code>/<code>__main__.py</code> to wire Phase 1's risk-exposure
+   and short-interest diagnostics into the output bundle as reporting, not as hard portfolio
+   constraints, since no real Client risk data exists yet to optimize against.</li>
+<li><strong>Run rolling backtest</strong> — re-ran the full backtest end to end from a genuinely cold cache
+   and confirmed it is reproducible (515 tests passing; clean output bundle of <code>metrics.csv</code>,
+   <code>episode_drawdowns.csv</code>, <code>plateau.json</code>, <code>returns.csv</code>, and <code>performance.png</code>).</li>
+<li><strong>Produce written findings report</strong> — <code>docs/electrification-strategy-proposal-v6.md</code>
+   (with accompanying HTML/PDF), summarizing performance results, signal construction,
+   the stress-beta gate outcome, the short-interest and risk-data integration status, known
+   limitations, and the recommended configuration.</li>
+</ol>
+<p><em>Deliverable: backtest results (code + output files), written findings report
+(<code>docs/electrification-strategy-proposal-v6.md</code>).</em></p>
+<hr />
+<h3 id="phase-3-handoff-documentation">Phase 3 — Handoff &amp; Documentation<a class="headerlink" href="#phase-3-handoff-documentation" title="Permanent link">#</a></h3>
+<p><em>Estimated: 20–30 hours</em></p>
+<p>The following items remain outstanding as of this document's date and will follow Client
+review of the Phase 2 findings report. The Consultant will:</p>
+<ol>
+<li>
+<p><strong>Document all code</strong> — provide inline documentation and function-level docstrings across
+   <code>electrification_strategy/</code>, including the short-interest and risk-exposure modules added
+   in Phase 1, and a technical reference (<code>docs/technical-reference.md</code>) covering each module's
+   inputs, outputs, and role in the pipeline — including the placeholder risk-data schema
+   contract for the Client's future risk-model file.</p>
+</li>
+<li>
+<p><strong>Write operational runbook</strong> — <code>docs/runbook.md</code>: step-by-step instructions for
+   environment setup, refreshing data caches, running the pipeline, rebalancing, interpreting
+   output, and handling common failure modes.</p>
+</li>
+<li>
+<p><strong>Conduct handoff sessions</strong> — participate in working sessions with the Client's designated
+   technical contact to walk through the codebase, answer questions, and confirm the Client
+   team can operate and extend the system independently. Scheduling depends on Client
+   availability.</p>
+</li>
+<li>
+<p><strong>Deliver final codebase</strong> — provide a deliverable manifest (<code>docs/deliverable-manifest.md</code>)
+   listing exactly what ships versus what remains internal research, followed by a clean,
+   tagged release of the full repository in a format specified by the Client.</p>
+</li>
+</ol>
+<p><em>Deliverable: documented codebase, runbook, handoff session(s), final code delivery.</em></p>
+<hr />
+<h2 id="compensation">Compensation<a class="headerlink" href="#compensation" title="Permanent link">#</a></h2>
+<h3 id="hourly-rate">Hourly Rate<a class="headerlink" href="#hourly-rate" title="Permanent link">#</a></h3>
+<p><strong>$150 per hour</strong>, billed against actual hours worked.</p>
+<h3 id="monthly-hour-cap">Monthly Hour Cap<a class="headerlink" href="#monthly-hour-cap" title="Permanent link">#</a></h3>
+<p>Hours are capped at <strong>30 hours per month</strong>. Work exceeding 30 hours in any calendar month requires
+written pre-approval from the Client before the hours are incurred.</p>
+<h3 id="invoicing-timesheets">Invoicing &amp; Timesheets<a class="headerlink" href="#invoicing-timesheets" title="Permanent link">#</a></h3>
+<p>The Consultant will submit an itemized timesheet by the 5th business day of each month covering the
+prior month's work. Invoices are due net 30 days from submission. The Client may request a brief
+check-in at any frequency to review hours against deliverables progress.</p>
+<h3 id="data-cost-reimbursement">Data Cost Reimbursement<a class="headerlink" href="#data-cost-reimbursement" title="Permanent link">#</a></h3>
+<p>Out-of-pocket data costs (e.g., CME DataMine electricity futures subscription) will be billed as
+pass-through at actual cost, with receipts, and are <strong>capped at $600 total</strong> across the full
+engagement. The Consultant will obtain written approval before incurring any single data expense
+exceeding $100.</p>
+<hr />
+<h2 id="data-responsibilities">Data Responsibilities<a class="headerlink" href="#data-responsibilities" title="Permanent link">#</a></h2>
+<p>The Client will provide data from commercial risk model.
+All data sourced by the Consultant is drawn from public or commercially available sources. The
+Consultant will not use any material non-public information in the course of this work.</p>
+<hr />
+<h2 id="intellectual-property">Intellectual Property<a class="headerlink" href="#intellectual-property" title="Permanent link">#</a></h2>
+<p>Upon receipt of full payment for each phase, the Consultant assigns to the Client all right, title,
+and interest in the work product produced under that phase, including source code, documentation,
+backtest output, and written findings. The Client will own all deliverables outright and may use,
+modify, and extend them without restriction.</p>
+<p>The Consultant retains no rights to the deliverables and will not use Client-provided data for any purpose outside this engagement.</p>
+<hr />
+<h2 id="scope-limitations">Scope Limitations<a class="headerlink" href="#scope-limitations" title="Permanent link">#</a></h2>
+<p>The following are explicitly outside the scope of this engagement:</p>
+<ul>
+<li><strong>Live trading or portfolio management.</strong> The Consultant's role is limited to historical research
+  and backtesting. All trading decisions are made exclusively by the Client.</li>
+<li><strong>Investment advice.</strong> Nothing in this engagement constitutes investment advice or a recommendation
+  to buy or sell any security.</li>
+<li><strong>Access to current or live positions.</strong> The Consultant will work with historical and publicly
+  available data only and will not have access to the Client's current portfolio, positions, or
+  live trading systems.</li>
+<li><strong>Performance guarantees.</strong> Backtest results are historical simulations. Past simulated performance
+  is not indicative of future results. No representation is made regarding live performance.</li>
+</ul>
+<hr />
+<h2 id="term">Term<a class="headerlink" href="#term" title="Permanent link">#</a></h2>
+<p>This engagement begins upon execution and continues until completion of Phase 3 or mutual written
+agreement to terminate, whichever comes first. Either party may terminate with 30 days written notice.
+Upon termination, the Client will owe fees for all hours worked and data costs incurred through the
+notice period, and the Consultant will deliver all work product completed to that point.</p>
+<hr />
+<h2 id="signatures">Signatures<a class="headerlink" href="#signatures" title="Permanent link">#</a></h2>
+<p><strong>Consultant</strong></p>
+<p>Signature:</p>
+<p>Name: Sandhya Persad</p>
+<p>Date: </p>
+<hr />
+<p><strong>Client</strong></p>
+<p>Signature: </p>
+<p>Name: </p>
+<p>Title: </p>
+<p>Date: </p>
+<hr />
+<p><em>This document is a draft scope of work and does not constitute a binding agreement until signed by
+both parties.</em></p>
+</main>
+
+</body>
+</html>
