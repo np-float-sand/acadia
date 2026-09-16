@@ -15,10 +15,10 @@ Research provenance: `../docs/electrification-short-leg-insurance-probe-results.
 python -m electrification_strategy --start 2017-06-01 --end 2026-08-31 --output ./output_electrification
 ```
 
-Prints the 12-cell comparison grid ({marquee, frozen, thematic} universes x {plain,
-+valuation, +valuation+sleeve, +valuation+sleeve+short}) and the pitch winner by the
-pre-registered rule. Writes `metrics.csv`, `episode_drawdowns.csv`, `plateau.json`,
-`returns.csv`, `performance.png`.
+Prints the 20-cell comparison grid ({marquee, frozen, thematic, screen, screen_reit}
+universes x {plain, +valuation, +valuation+sleeve, +valuation+sleeve+short}) and the
+pitch winner by the pre-registered rule. Writes `metrics.csv`, `episode_drawdowns.csv`,
+`plateau.json`, `returns.csv`, `performance.png`.
 
 ## Universes
 
@@ -27,11 +27,13 @@ pre-registered rule. Writes `metrics.csv`, `episode_drawdowns.csv`, `plateau.jso
 | `marquee` | `grid_equipment_basket.config.UNIVERSE` (the 9) | reference |
 | `frozen` | seed pool & sub-industry map & (in >=1 of VOLT/ELFY/ZAP/GRID/PAVE) & `profitable_2026` | quality screen, ETF-gated (~15 names) |
 | `thematic` | in >=2 of {VOLT, ELFY, ZAP, GRID}, filtered to sub-industry + listing gate | thematic-ETF consensus (~7 names); depends on incomplete ETF-holdings data |
-| **`screen`** (recommended) | seed pool & sub-industry map & `customer_institutional` & (>=2 of {`profitable_2026`, `earnings_valued`, `low_policy_dependence`}) | **our supplier rule, NO ETF gate** (~27 names). Picked on stated properties. 0% utilities / pipelines / components -- the thesis distinction from VOLT (which is ~43% those). Beats VOLT on a fair window (2025-01->2026-08): CAGR 33% vs 24%, Sharpe 1.18 vs 0.82. |
+| **`screen`** (recommended) | seed pool & sub-industry map & `customer_institutional` & (>=2 of {`profitable_2026`, `earnings_valued`, `low_policy_dependence`}), **`data_center_reit` rows explicitly excluded** | **our supplier rule, NO ETF gate** (27 names). Picked on stated properties. 0% utilities / pipelines / components -- the thesis distinction from VOLT (which is ~43% those). Beats VOLT on a fair window (2025-01->2026-08): CAGR 33% vs 24%, Sharpe 1.18 vs 0.82. |
+| `screen_reit` | same rule as `screen`, but including `data_center_reit` rows (IRM, AMT) | **REIT-breadth probe (Task 7), ADOPTED as an available construction** -- `screen`'s pool ∪ qualifying data-center REITs (29 names). Beats `screen` on Sharpe and MaxDD in all 4 overlay stacks (e.g. `+val+sleeve`: Sharpe 0.716 vs 0.693, MaxDD -23.2% vs -24.0%); does not change the overall pre-registered winner. Not the shipped default -- `screen` still is. See `../docs/electrification-reit-breadth-probe-results.md`. |
 
-All four: equal-weight, 25% single-name cap, quarterly reconstitution, 42-day reporting
-lag, 252-trading-day listing gate. `screen` is the recommended universe (see
-`../docs/electrification-strategy-v1-results.md`).
+All five: equal-weight, 25% single-name cap, quarterly reconstitution, 42-day reporting
+lag, 252-trading-day listing gate. `screen` is the recommended/shipped universe (see
+`../docs/electrification-strategy-v1-results.md`); `screen_reit` is a tested, available
+alternative, not the default.
 
 ## Overlays (frozen params -- `config.py`)
 
