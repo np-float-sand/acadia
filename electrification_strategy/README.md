@@ -18,7 +18,12 @@ python -m electrification_strategy --start 2017-06-01 --end 2026-08-31 --output 
 Prints the 20-cell comparison grid ({marquee, frozen, thematic, screen, screen_reit}
 universes x {plain, +valuation, +valuation+sleeve, +valuation+sleeve+short}) and the
 pitch winner by the pre-registered rule. Writes `metrics.csv`, `episode_drawdowns.csv`,
-`plateau.json`, `returns.csv`, `performance.png`.
+`plateau.json`, `returns.csv`, `performance.png`. Also writes `risk_exposure_report.csv`
+(the raw long-format table from `risk_exposures.load_risk_exposures()` -- not yet weighted
+to the winning cell's portfolio) and `short_interest_diagnostic.csv` (`short_interest.py`
+crowding snapshot on the hedge short names) when the underlying data is present -- both are
+reporting-only diagnostics, not backtest inputs, and are silently skipped (no crash) while
+no real `data/risk_exposures.csv` or cached short-interest history exists yet.
 
 ## Universes
 
