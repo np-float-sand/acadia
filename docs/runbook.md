@@ -17,7 +17,11 @@ short interest via yfinance).
 Fetches are cached to parquet across three directories, by data type:
 
 - **Equity prices** (used by `fetch_prices()`) cache under `grid_equipment_basket/data/cache/`
-  — one `prices_YYYY-MM.parquet` chunk per ticker-month, plus fundamentals parquet files.
+  — one **wide** `prices_YYYY-MM.parquet` chunk per calendar month, with every ticker as a
+  column in that single file (`save_monthly_chunks_wide` in `grid_resilience/data/cache_utils.py`;
+  e.g. `prices_2020-01.parquet` is one file shaped 23 rows x 249 ticker columns, not a file per
+  ticker). Fundamentals cache separately as one file per ticker (`fundamentals_{TICKER}.parquet`,
+  no month split) in the same directory.
 - **FRED data** (DFII10) caches under `electrification_strategy/data/cache/` — this directory
   holds only `fred_DFII10.parquet`, nothing else.
 - **Grid LMP/load data** caches under `grid_resilience/data/cache/` — only touched when
@@ -77,5 +81,5 @@ exposure are recalculated daily; the underlying holdings list changes roughly mo
 | `THR` returns 100% NaN from yfinance specifically | Permanent, known gap — Thermon Group Holdings was acquired by CECO Environmental and delisted 2026-06-01; Yahoo Finance no longer serves any historical quote for it (confirmed during Tasks 5/9) | Not a bug to chase — expected for this ticker going forward |
 | `RuntimeWarning: FRED fetch ... failed` | FRED API unreachable | Falls back automatically to the committed `electrification_strategy/data/fred_DFII10.csv` — update that file periodically if running live for extended periods |
 | `PJM_API_KEY` errors when re-running the stress-beta gate | Missing/expired key | Get a free key at pjm.com/api; only needed for `electrification_stress_beta` re-runs, not the core strategy |
-| Stale cache producing outdated results | Cache never expires automatically | Delete the specific ticker's cache chunk under the relevant `data/cache/` directory (see "Refreshing data" above for which one), or the whole directory for a full refresh (see Task 9) |
+| Stale cache producing outdated results | Cache never expires automatically | For **prices**, there is no per-ticker file to delete — each `prices_YYYY-MM.parquet` is wide (all tickers as columns), so a targeted refresh means deleting/re-fetching that month's file for every ticker in it, or the whole cache directory for a full refresh (see Task 9). For **fundamentals** (`fundamentals_{TICKER}.parquet`), a single ticker's file can be deleted independently. |
 | `universe_seed.csv` raises `ValueError: unknown sub_industry values` | A typo or a new sub-industry added without updating `config.SUB_INDUSTRIES` | Fix the CSV or extend `config.SUB_INDUSTRIES` |
