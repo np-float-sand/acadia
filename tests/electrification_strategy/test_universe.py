@@ -33,7 +33,7 @@ def test_load_membership_schema():
 
 def test_thematic_etfs_excludes_pave():
     assert universe.THEMATIC_ETFS == ["VOLT", "ELFY", "ZAP", "GRID"]
-    assert universe.CONSTRUCTIONS == ("marquee", "frozen", "thematic", "screen")
+    assert universe.CONSTRUCTIONS == ("marquee", "frozen", "thematic", "screen", "screen_reit")
 
 
 # -- constructions ------------------------------------------------------
@@ -97,3 +97,17 @@ def test_target_fn_empty_when_no_members(synthetic_prices):
     fn = universe.target_fn("thematic", synthetic_prices)
     w = fn(["NOTATICKER"], pd.Timestamp("2026-06-30"))
     assert w.empty
+
+
+def test_screen_excludes_reit_rows_even_though_they_are_in_the_seed(synthetic_prices):
+    asof = synthetic_prices.index[-1]
+    screen = set(universe.members("screen", asof, synthetic_prices))
+    assert "IRM" not in screen and "AMT" not in screen
+
+
+def test_screen_reit_is_a_superset_of_screen(synthetic_prices):
+    asof = synthetic_prices.index[-1]
+    screen = set(universe.members("screen", asof, synthetic_prices))
+    screen_reit = set(universe.members("screen_reit", asof, synthetic_prices))
+    assert screen.issubset(screen_reit)
+    assert "IRM" in screen_reit  # passes all 3 judgment columns

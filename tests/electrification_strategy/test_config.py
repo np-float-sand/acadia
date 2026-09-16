@@ -32,7 +32,7 @@ def test_frozen_collections():
     assert c.VAL_PLATEAU_SCALES == (0.8, 1.0, 1.2)
     assert c.SUB_INDUSTRIES == {
         "electrical_equipment", "heavy_electrical", "electrical_e&c",
-        "dc_thermal", "grid_scale_storage",
+        "dc_thermal", "grid_scale_storage", "data_center_reit",
     }
 
 

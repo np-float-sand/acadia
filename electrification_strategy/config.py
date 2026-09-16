@@ -25,7 +25,7 @@ LISTING_MIN_DAYS: int = 252          # a name enters only after this many tradin
 MARQUEE_UNIVERSE: list[str] = ["ETN", "HUBB", "GEV", "VRT", "PWR", "MYRG", "NVT", "FLNC", "PRIM"]
 SUB_INDUSTRIES: set[str] = {
     "electrical_equipment", "heavy_electrical", "electrical_e&c",
-    "dc_thermal", "grid_scale_storage",
+    "dc_thermal", "grid_scale_storage", "data_center_reit",
 }
 
 # -- vol target (reuses grid_equipment_basket.overlay.vol_target_scalar) --

@@ -34,3 +34,8 @@ SPXC,dc_thermal,true,true,true,true
 MOD,dc_thermal,true,true,true,true
 FLNC,grid_scale_storage,false,true,false,false
 STEM,grid_scale_storage,false,true,false,false
+# data_center_reit rows (Task 7 probe): earnings_valued is interpreted as "trades on
+# trailing FFO/AFFO multiple, not a pre-cash-flow growth story" -- the REIT-appropriate
+# reading of the same underlying test, not literal trailing P/E.
+IRM,data_center_reit,true,true,true,true
+AMT,data_center_reit,true,true,false,true

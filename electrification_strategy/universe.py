@@ -1,26 +1,35 @@
 """Universe constructions for the electrification strategy.
 
-Four constructions, all quarterly-reconstituted with a 42-day reporting lag and
+Five constructions, all quarterly-reconstituted with a 42-day reporting lag and
 a 252-trading-day listing gate, all equal-weight with a 25% single-name cap:
 
-  marquee  -- grid_equipment_basket.config.UNIVERSE verbatim (reference)
-  frozen   -- our quality screen: seed pool & sub-industry map & (in >=1 of 5 ETFs)
-              & profitable_2026
-  thematic -- thematic-ETF consensus: in >=2 of {VOLT,ELFY,ZAP,GRID}, filtered to
-              the sub-industry map + listing gate. No profitability screen.
-  screen   -- OUR fundamental supplier rule, NO ETF gate: seed pool & sub-industry
-              map & customer_institutional & (>=2 of {profitable_2026,
-              earnings_valued, low_policy_dependence}). This is the
-              capex-cycle-pair-classifier "customer + 2 of 3" rule (memory
-              `capex-cycle-pair-classifier`), restricted to the long/supplier
-              side. Names are picked on stated properties, not on what VOLT holds.
+  marquee     -- grid_equipment_basket.config.UNIVERSE verbatim (reference)
+  frozen      -- our quality screen: seed pool & sub-industry map & (in >=1 of 5 ETFs)
+                 & profitable_2026
+  thematic    -- thematic-ETF consensus: in >=2 of {VOLT,ELFY,ZAP,GRID}, filtered to
+                 the sub-industry map + listing gate. No profitability screen.
+  screen      -- OUR fundamental supplier rule, NO ETF gate: seed pool & sub-industry
+                 map & customer_institutional & (>=2 of {profitable_2026,
+                 earnings_valued, low_policy_dependence}). This is the
+                 capex-cycle-pair-classifier "customer + 2 of 3" rule (memory
+                 `capex-cycle-pair-classifier`), restricted to the long/supplier
+                 side. Names are picked on stated properties, not on what VOLT holds.
+                 REIT_SUB_INDUSTRY rows are explicitly excluded from this pool, so
+                 adding IRM/AMT to the seed CSV for `screen_reit` (below) leaves
+                 `screen`'s own membership provably unchanged.
+  screen_reit -- Task 7 REIT-breadth probe: the same rule as `screen`, but WITHOUT
+                 the REIT_SUB_INDUSTRY exclusion, i.e. `screen`'s pool union any
+                 data_center_reit-tagged names that clear the same customer +
+                 2-of-3 bar (IRM, AMT). Tests whether data-center-exposed REITs
+                 add breadth without hurting the strategy's risk profile
+                 (docs/electrification-reit-breadth-probe-results.md).
 
 CAVEAT: seed membership, the ETF snapshot, profitable_2026, and the three
 judgment columns are 2026-vintage, back-cast. Only the listing-date gate is
 genuinely point-in-time. `thematic`/`frozen` additionally depend on the ETF
 snapshot, which is top-holdings-only for GRID/PAVE/ELFY (128/102/116 holdings,
 top ~25 visible) -- a full point-in-time holdings feed is a pre-live gate for
-those two. `screen` has no ETF dependency.
+those two. `screen`/`screen_reit` have no ETF dependency.
 """
 from __future__ import annotations
 
@@ -35,7 +44,8 @@ _MEMBERSHIP_COLS = ["VOLT", "ELFY", "ZAP", "GRID", "PAVE"]
 _BOOL_COLS = ["profitable_2026", "customer_institutional", "earnings_valued", "low_policy_dependence"]
 _SCREEN_2OF3 = ["profitable_2026", "earnings_valued", "low_policy_dependence"]
 
-CONSTRUCTIONS = ("marquee", "frozen", "thematic", "screen")
+CONSTRUCTIONS = ("marquee", "frozen", "thematic", "screen", "screen_reit")
+REIT_SUB_INDUSTRY = "data_center_reit"
 
 
 def _to_bool(s: pd.Series) -> pd.Series:
@@ -75,11 +85,14 @@ def members(construction: str, asof: pd.Timestamp, prices: pd.DataFrame) -> list
     seed = load_seed()
     in_map = set(seed.index)                       # sub_industry validated in load_seed
 
-    if construction == "screen":
+    if construction in ("screen", "screen_reit"):
         cust = set(seed.index[seed["customer_institutional"]])
         two_of_three = set(seed.index[seed[_SCREEN_2OF3].sum(axis=1) >= 2])
-        pool = in_map & cust & two_of_three
-        return sorted(pool & listed)
+        base_pool = in_map & cust & two_of_three
+        reit_tickers = set(seed.index[seed["sub_industry"] == REIT_SUB_INDUSTRY])
+        if construction == "screen":
+            return sorted((base_pool - reit_tickers) & listed)
+        return sorted(base_pool & listed)   # screen_reit: screen ∪ qualifying REITs
 
     memb = load_membership()
     if construction == "frozen":
