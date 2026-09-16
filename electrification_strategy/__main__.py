@@ -8,8 +8,9 @@ import pandas as pd
 
 from grid_equipment_basket.data.prices import fetch_prices
 
-from electrification_strategy import backtest, config, universe
+from electrification_strategy import backtest, config, risk_exposures, universe
 from electrification_strategy.fred import fetch_series
+from electrification_strategy.short_interest import fetch_short_interest
 
 
 def _default_end() -> str:
@@ -42,8 +43,15 @@ def main(argv=None) -> None:
     print(f"\nWINNER (pre-registered rule): {win['winner']}   runner-up: {win['runner_up']}   "
           f"({win['n_passing']}/{len(result['cells'])} cells pass)")
 
+    rx_df = risk_exposures.load_risk_exposures()
+    si_snapshot = fetch_short_interest(list(config.HEDGE_SHORT_TICKERS))
+    si_history_path = config.CACHE_DIR / config.SHORT_INTEREST_CACHE_FILE
+    si_history = pd.read_parquet(si_history_path) if si_history_path.exists() else pd.DataFrame()
+
     out = Path(args.output)
-    backtest.write_outputs(result, win, out, make_plot=not args.no_plot)
+    backtest.write_outputs(result, win, out, make_plot=not args.no_plot,
+                            risk_exposures_df=rx_df if not rx_df.empty else None,
+                            short_interest_history=si_history)
     extra = "" if args.no_plot else ", performance.png"
     print(f"\nwrote {out}/metrics.csv, episode_drawdowns.csv, plateau.json, returns.csv{extra}")
 

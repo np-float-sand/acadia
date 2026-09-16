@@ -107,3 +107,29 @@ def test_write_outputs(tmp_path, synthetic_prices, synthetic_dfii10):
     for f in ("metrics.csv", "episode_drawdowns.csv", "plateau.json", "returns.csv"):
         assert (tmp_path / f).exists()
     assert not (tmp_path / "performance.png").exists()
+
+
+def test_write_outputs_includes_diagnostics_when_provided(tmp_path, synthetic_prices, synthetic_dfii10):
+    from electrification_strategy import backtest, risk_exposures, short_interest
+    result = backtest.run_comparison("2018-01-01", "2024-12-31", synthetic_prices, synthetic_dfii10,
+                                      constructions=("marquee",))
+    winner = backtest.pick_winner(result)
+
+    rx_df = risk_exposures.load_risk_exposures()  # sample fixture path is the default when file absent -> empty; use explicit sample
+    weights = pd.Series({"ETN": 0.5, "HUBB": 0.5})
+    exposures_out = risk_exposures.portfolio_exposure_report(
+        risk_exposures.load_risk_exposures(risk_exposures.config.DATA_DIR / "risk_exposures_sample.csv"),
+        weights, pd.Timestamp("2024-12-31"))
+
+    si_history = pd.DataFrame([
+        {"ticker": "DLR", "shares_short": 1, "short_ratio": 2.0, "short_pct_float": 0.03,
+         "date_short_interest": pd.Timestamp("2024-12-01"), "fetched_at": pd.Timestamp("2024-12-15")},
+        {"ticker": "EQIX", "shares_short": 1, "short_ratio": 1.0, "short_pct_float": 0.01,
+         "date_short_interest": pd.Timestamp("2024-12-01"), "fetched_at": pd.Timestamp("2024-12-15")},
+    ])
+
+    backtest.write_outputs(result, winner, tmp_path, make_plot=False,
+                            risk_exposures_df=exposures_out.to_frame("exposure"),
+                            short_interest_history=si_history)
+    assert (tmp_path / "risk_exposure_report.csv").exists()
+    assert (tmp_path / "short_interest_diagnostic.csv").exists()

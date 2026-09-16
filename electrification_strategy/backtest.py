@@ -212,7 +212,8 @@ def comparison_table(result):
     return "\n".join(lines)
 
 
-def write_outputs(result, winner, out_dir, make_plot=True):
+def write_outputs(result, winner, out_dir, make_plot=True,
+                   risk_exposures_df=None, short_interest_history=None):
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -240,6 +241,13 @@ def write_outputs(result, winner, out_dir, make_plot=True):
                          for (con, label), c in result["cells"].items()
                          if c["returns"] is not None})
     rets.to_csv(out / "returns.csv")
+
+    if risk_exposures_df is not None and not risk_exposures_df.empty:
+        risk_exposures_df.to_csv(out / "risk_exposure_report.csv")
+
+    if short_interest_history is not None and not short_interest_history.empty:
+        from electrification_strategy.short_interest import crowding_diagnostic
+        crowding_diagnostic(short_interest_history).to_csv(out / "short_interest_diagnostic.csv")
 
     if make_plot:
         import matplotlib
