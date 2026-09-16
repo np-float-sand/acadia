@@ -26,15 +26,12 @@ Note: `stress_beta_signal.py` does not exist — Task 6a was skipped because the
 |---|---|---|---|
 | `national_gsi.py` | Blends grid_resilience's per-ISO GSI into one national series | `grid_resilience.data.grid_data` | `build_national_gsi`, `fetch_and_build_national_gsi`, `uniform_ticker_iso_map` |
 | `gate_test.py` | Pre-registered stress-beta gate (run once) | prices, national GSI | `gate_result.json` |
-| `decile_gate_test.py` | Decile (top-3/bottom-3) follow-up to `gate_test.py`'s tercile cut, checking for a tail/threshold effect the tercile test could have averaged away | prices, national GSI | `decile_gate_result.json` |
 
 `gate_test.py`'s pre-registered result was **FAIL** (t=0.144 vs. the |t|>=2.0 bar) — see
-`docs/electrification-stress-beta-gate-results.md`. The `decile_gate_test.py` follow-up also
-**FAILED** (t=0.318 primary window, same order of magnitude short of the gate) — see
-`docs/electrification-stress-beta-decile-gate-results.md`. See
+`docs/electrification-stress-beta-gate-results.md`. See
 `docs/electrification-stress-sensitivity-response.md` for the actual delivered Phase 1 item 4
-output: three built-in protections formalized in place of a stress-beta signal, since neither
-cut of this gate found a live relationship to build on.
+output: three built-in protections formalized in place of a stress-beta signal, since the gate
+found no live relationship to build on.
 
 ## Reused, unmodified from grid_resilience/
 
