@@ -18,7 +18,7 @@ What ships to the Client vs. what stays internal research history, per SOW Phase
 - `grid_equipment_basket/basket.py`, `config.py`, `backtest.py`, `hedges.py`, `value_chain.py`,
   `margin_data.py`, `backlog_data.py`, `data/prices.py` — the traced transitive-import closure
   actually reused by `electrification_strategy/` (`backtest.py`, `universe.py`, `__main__.py`)
-  and `electrification_stress_beta/` (`gate_test.py`, `decile_gate_test.py`). This is NOT the
+  and `electrification_stress_beta/` (`gate_test.py`). This is NOT the
   whole `grid_equipment_basket/` package (see Stays internal) — an earlier draft of this
   manifest incorrectly listed the entire package as internal-only, which would have broken
   `electrification_strategy` for the Client. `data/prices.py` itself imports
@@ -37,8 +37,10 @@ What ships to the Client vs. what stays internal research history, per SOW Phase
 
 - `research/` (all ~29 tracked signal-search attempts — negative-result research history, not
   client deliverables)
-- `docs/RESEARCH-LOG.md` and every other `docs/*-results.md` / `docs/handoff*.md` / `docs/compact*.md`
-  (internal research trail; the v6 report and gate-results doc are the client-facing distillation)
+- `docs/RESEARCH-LOG.md`, plus every `docs/*-results.md` / `docs/handoff*.md` / `docs/compact*.md`
+  file **not explicitly listed above under Ships** (internal research trail; the v6 report and
+  the two results docs named under Ships — the stress-beta gate and the REIT-breadth probe —
+  are the client-facing distillation)
 - `output_*/` directories (scratch backtest output; the Client re-generates these via the runbook)
 - `grid_resilience/` beyond the nine reused modules listed above (the rest of that
   package belongs to the original, unshipped Grid Resilience strategy)

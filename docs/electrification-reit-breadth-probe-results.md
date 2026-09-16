@@ -23,9 +23,12 @@ are explicitly excluded from it) union IRM/AMT. Ran the full backtest comparison
 Effective names: `screen` 27.0, `screen_reit` 29.0 (confirms both new names are unconstrained
 by the 25% single-name cap). Real run: `poetry run python -m electrification_strategy --universe
 all --no-plot --output /tmp/reit_probe`, 2017-06-01 to 2026-08-31, full universe including
-fresh yfinance fetches for IRM/AMT. One unrelated transient warning (`THR` 404'd on this
-particular yfinance fetch, "possibly delisted") did not affect results -- cached price data was
-used and `screen`'s effective-N came out at the expected 27.0, confirming THR was still present.
+fresh yfinance fetches for IRM/AMT. One unrelated warning (`THR` 404'd on this particular
+yfinance fetch, "possibly delisted") did not affect results: THR is a permanent, known gap
+(acquired by CECO Environmental, delisted 2026-06-01, 100% NaN -- see
+docs/electrification-stress-beta-gate-results.md), so the 252-day listing-eligibility gate
+drops it. `screen`'s effective-N of 27.0 is therefore exactly as expected -- it is the 28
+rule-passing seed tickers *minus* THR, not a sign that THR was still in the book.
 
 ## Pre-registered gate
 
@@ -41,6 +44,27 @@ matching `screen` cell, and MaxDD must not be >3pp worse.
 
 All four cells clear both legs of the gate, and not marginally: `screen_reit` beats `screen` on
 *every single* Sharpe and MaxDD figure in the grid, not just clears the "not worse than" bar.
+
+### Run reconciliation (two runs, two number sets)
+
+The table above reports the original Task 7 probe run (`/tmp/reit_probe`). Task 9 later
+re-ran the whole grid independently from a cold cache (`output_electrification_v2/metrics.csv`)
+and produced slightly different *absolute* Sharpe/MaxDD figures for the same cells — normal
+run-to-run variance from cache staleness for individual tickers between the two fetches, not a
+methodology change. Both number sets are disclosed here rather than silently reconciled to one.
+
+| stack | Task 7 Sharpe delta | Task 9 cold-run Sharpe delta | Task 9 `screen` / `screen_reit` Sharpe | Task 9 MaxDD delta |
+|---|--:|--:|--:|--:|
+| plain | +0.015 | +0.013 | 0.713 / 0.726 | +1.03pp |
+| +val | +0.025 | +0.021 | 0.675 / 0.696 | +1.03pp |
+| +val+sleeve | +0.023 | +0.020 | 0.708 / 0.728 | +0.78pp |
+| +val+sleeve+short | +0.030 | +0.026 | 0.662 / 0.688 | +1.91pp |
+
+**The ADOPTED verdict is robust to this.** Every `screen_reit - screen` Sharpe delta stayed
+positive in both runs, and every MaxDD delta stayed favorable in both runs; no cell comes close
+to the gate's "Sharpe not >0.05 below / MaxDD not >3pp worse" bar in either. The deltas — which
+are what the gate actually tests — are stable to within ~0.004 Sharpe across the two runs; only
+the absolute levels moved.
 
 **Verdict: ADOPTED**
 

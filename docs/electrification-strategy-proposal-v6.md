@@ -321,11 +321,20 @@ once. The pipeline now pulls a snapshot of both names' short-interest data on ev
 | EQIX | 1,646,357 | 2.81 | 1.91% | 2026-08-31 |
 | DLR | 8,721 | 0.0 | 0.00% | 2026-08-31 |
 
-Read together, neither name looks crowded on the short side right now: EQIX's short interest
-is a small slice of its float (under 2%) with an unremarkable 2.8-day cover ratio, and DLR's
-short interest is close to zero. That is a favorable, not a neutral, reading for Option B —
-it suggests the borrow for this trade is not currently scarce or expensive, and the short
-side is not at obvious risk of a forced-covering squeeze.
+Read together, neither name looks crowded on the short side right now. EQIX's short interest
+is a small slice of its float (under 2%) with an unremarkable 2.8-day cover ratio — a
+plausible, unremarkable reading that suggests the borrow on that leg is not currently scarce
+or expensive, and that it is not at obvious risk of a forced-covering squeeze.
+
+DLR's reported short interest is negligible, which — *if accurate* — would read favorably for
+Option B's borrow cost. However, this figure looks anomalous for a REIT of DLR's size: a
+near-zero share count combined with a days-to-cover of exactly 0.0 and 0.00% of float is the
+signature of a stale or missing data field at the provider, not of a genuinely un-shorted
+$50-billion listed company. It should be confirmed against a primary source (for example the
+exchange's own official semi-monthly short-interest report) before any weight is placed on it.
+The pipeline now flags rows with this pattern automatically (a `data_quality_flag` column in
+`short_interest_diagnostic.csv`) so the same reading is never silently treated as a clean zero
+in a future run.
 
 **Important caveat.** This closes part, not all, of the Phase 1 gap. It is a live snapshot
 only — the data provider (yfinance) has no free historical short-interest feed, so this
@@ -394,6 +403,19 @@ list on *both* Sharpe and worst-drawdown, in *all four* rule combinations tested
 | + valuation-extension rule | 0.667 | 0.692 | −28.2% | −27.4% |
 | + reserve sleeve | 0.693 | 0.716 | −24.0% | −23.2% |
 | + reserve sleeve + short leg | 0.655 | 0.685 | −23.2% | −21.8% |
+
+**A note on which run these numbers come from.** The table above reports the original
+Phase 2 probe run. The independent cold-start reproduction run described in the next section
+(Task 9) produced slightly different *absolute* figures for the same cells — for example
+0.708 rather than 0.693 for the 27-name list with the reserve sleeve — which is ordinary
+run-to-run variation caused by the data provider's records for individual companies being
+refreshed between the two fetches, not a change of method. Both sets are reported rather than
+quietly reconciled to one. The conclusion does not depend on which run is used: the *gap*
+between the 29-name and 27-name lists — which is what the pass/fail test actually measures —
+stayed positive in every one of the four rule combinations in both runs, and the gaps
+themselves are stable to within about 0.004 of Sharpe (cold run: +0.013, +0.021, +0.020,
++0.026, against +0.015, +0.025, +0.023, +0.030 above), with the worst drawdown better for the
+29-name list in every cell of both runs.
 
 **Verdict: adopted as an available, documented construction.** Adding IRM and AMT is kept in
 the codebase as a tested option (labelled `screen_reit`) that widens the buy list from 27 to

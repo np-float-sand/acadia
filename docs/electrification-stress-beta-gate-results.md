@@ -9,11 +9,23 @@ Reused grid_resilience's GSI (LMP z-score 40% / congestion fraction 25% / reserv
 20% / named-event flag 15%) and conditional_beta.py unmodified (electrification_stress_beta/
 national_gsi.py), blended equal-weighted across ERCOT/PJM/MISO/CAISO/SPP into one national
 series (suppliers have no home ISO, unlike a utility's service territory), and applied
-uniformly to the 27-name `screen` universe. Monthly top-tercile-minus-bottom-tercile
-stress_beta spread portfolio, pooled t-stat on the forward monthly spread return.
+uniformly to the 31-ticker seed pool (`universe.load_seed()`, not the narrower 27-name
+`screen` construction, which applies additional filtering on top of the seed).
+Monthly top-tercile-minus-bottom-tercile stress_beta spread portfolio, pooled t-stat on the
+forward monthly spread return.
 
 Gate 1 (pre-registered): |t| >= 2.0 on the 2021-01-01-onward window (tight-grid era — see
 below), pre-2021 reported for context only.
+
+**Universe-vintage note (reproducibility).** This run tested the 31-ticker seed pool as of
+2026-09-15 (before Task 7 added IRM/AMT to the universe on the same day) — 30 tickers after
+excluding THR (100% NaN, delisted; see the data-coverage note below). A future re-run against
+the current 33-ticker seed would test a superset universe; given the recorded t-stat (0.144)
+has enormous headroom to the |t| >= 2.0 bar, this does not call the FAIL verdict into question,
+but a re-run would not reproduce this exact number and should be expected to differ. The
+committed `electrification_stress_beta/gate_result.json` stays as the historical record of the
+actual run; `gate_test.py` now stamps `universe_tickers`/`n_tickers` into its result so any
+future run self-documents exactly which pool it tested.
 
 **Data coverage note (independently verified on a second run of this script):** of the
 31-ticker seed pool, THR (Thermon Group Holdings) returned 100% NaN from the price fetch.
@@ -46,4 +58,4 @@ tightening inflection.
 
 ## Verdict
 
-Grid stress does not show a statistically significant relationship with supplier returns on this universe/window. The primary-window t-stat of 0.144 is nowhere near the pre-registered |t| >= 2.0 threshold (n=67 months), and falls well short of the minimum bar for correlation significance. This result is consistent with ~29 prior signal-search attempts on this project, which have generally returned null or marginally-significant results. Task 6b now applies: formalize the strategy's existing built-in protections (volatility targeting + forward momentum screen) as the deliverable — see docs/electrification-stress-sensitivity-response.md.
+Grid stress does not show a statistically significant relationship with supplier returns on this universe/window. The primary-window t-stat of 0.144 is nowhere near the pre-registered |t| >= 2.0 threshold (n=67 months), and falls well short of the minimum bar for correlation significance. This result is consistent with ~29 prior signal-search attempts on this project, which have generally returned null or marginally-significant results. Task 6b now applies: formalize the strategy's three existing built-in protections — the 15% GLD/IEF macro reserve sleeve, the graduated valuation-extension de-risk ladder, and 20%-target volatility targeting — as the deliverable in place of a stress-beta signal. See docs/electrification-stress-sensitivity-response.md.

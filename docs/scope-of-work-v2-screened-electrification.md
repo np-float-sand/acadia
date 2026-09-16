@@ -118,8 +118,11 @@ The Consultant will:
 ### Phase 3 — Handoff & Documentation
 *Estimated: 20–30 hours*
 
-The following items remain outstanding as of this document's date and will follow Client
-review of the Phase 2 findings report. The Consultant will:
+Items 1, 2 and the manifest portion of item 4 are **complete** and included in this tagged
+release — `docs/technical-reference.md` (code documentation), `docs/runbook.md` (operational
+runbook), and `docs/deliverable-manifest.md` (ships-vs-internal manifest). Item 3 (handoff
+sessions) and the final tagged code delivery in item 4 follow Client review of the Phase 2
+findings report and depend on Client scheduling. The Consultant will:
 
 1. **Document all code** — provide inline documentation and function-level docstrings across
    `electrification_strategy/`, including the short-interest and risk-exposure modules added
