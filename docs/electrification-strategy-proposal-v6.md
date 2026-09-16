@@ -398,11 +398,15 @@ list on *both* Sharpe and worst-drawdown, in *all four* rule combinations tested
 **Verdict: adopted as an available, documented construction.** Adding IRM and AMT is kept in
 the codebase as a tested option (labelled `screen_reit`) that widens the buy list from 27 to
 29 names with a same-or-better risk profile in every test. It does **not** replace the
-strategy's overall recommended construction, which — across the full, independent comparison
-of every buy-list variant tested to date — remains the "marquee, buy-only" combination
-described at the top of this report (see the Performance section). This probe is a real,
-modest improvement available for the 27-name list specifically, not a change to the headline
-recommendation. Full detail: `docs/electrification-reit-breadth-probe-results.md`.
+strategy's actual shipped construction — the "screen" buy list plus the reserve sleeve
+(`screen +val+sleeve`, the 27-name construction with the full narrative logic described
+throughout this report: the institutional-customer and profitability/valuation screen, the
+subsidy exclusion, the comparison to VOLT). That remains the recommended construction; a
+separate mechanically-selected comparison cell, "marquee plain," is discussed in "Two ways to
+read the numbers" below and is not itself a recommendation. This probe is a real, modest
+improvement available for the 27-name list specifically — same risk profile, uniformly better
+numbers, +2 names of breadth — not a change to the headline recommendation. Full detail:
+`docs/electrification-reit-breadth-probe-results.md`.
 
 ---
 
