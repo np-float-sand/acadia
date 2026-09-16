@@ -21,6 +21,7 @@ def _fetch_one(ticker: str) -> dict:
 
 
 def fetch_short_interest(tickers: list[str], use_cache: bool = True) -> pd.DataFrame:
+    """Fetch a live short-interest snapshot per ticker and append it to the on-disk cache."""
     now = datetime.now(timezone.utc)
     rows = []
     for t in tickers:
@@ -50,6 +51,7 @@ def fetch_short_interest(tickers: list[str], use_cache: bool = True) -> pd.DataF
 
 
 def crowding_diagnostic(history: pd.DataFrame, tickers: tuple[str, ...] = config.HEDGE_SHORT_TICKERS) -> pd.DataFrame:
+    """Return each hedge short leg's latest short-interest-as-%-of-float, ranked most crowded first."""
     latest = (history[history["ticker"].isin(tickers)]
               .sort_values("fetched_at")
               .drop_duplicates(subset="ticker", keep="last")

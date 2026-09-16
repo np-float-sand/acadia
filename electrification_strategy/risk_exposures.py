@@ -18,6 +18,7 @@ DEFAULT_PATH = config.DATA_DIR / "risk_exposures.csv"
 
 
 def load_risk_exposures(path: Path | None = None) -> pd.DataFrame:
+    """Load the long-format Client risk-exposure CSV, or an empty frame if it doesn't exist yet."""
     path = path or DEFAULT_PATH
     if not Path(path).exists():
         return pd.DataFrame(columns=_COLUMNS)
@@ -30,6 +31,7 @@ def align_to_universe(
     exposures: pd.DataFrame, tickers: list[str], asof: pd.Timestamp,
     lag_days: int = config.REBALANCE_LAG_DAYS,
 ) -> pd.DataFrame:
+    """Point-in-time-align the exposure panel to the given tickers/date, wide by factor."""
     effective_date = asof - pd.Timedelta(days=lag_days)
     eligible = exposures[exposures["date"] <= effective_date]
     if eligible.empty:
@@ -44,6 +46,7 @@ def portfolio_exposure_report(
     exposures: pd.DataFrame, weights: pd.Series, asof: pd.Timestamp,
     lag_days: int = config.REBALANCE_LAG_DAYS,
 ) -> pd.Series:
+    """Compute portfolio-level factor exposure as the weight-weighted sum of per-name exposures."""
     aligned = align_to_universe(exposures, list(weights.index), asof, lag_days)
     w = weights.reindex(aligned.index).fillna(0.0)
     return aligned.mul(w, axis=0).sum(axis=0)
