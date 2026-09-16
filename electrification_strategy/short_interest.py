@@ -45,6 +45,21 @@ def _implausible(shares_short, short_pct_float) -> bool:
     return float(shares_short) < MIN_PLAUSIBLE_SHARES_SHORT
 
 
+def _ensure_flag(df: pd.DataFrame) -> pd.DataFrame:
+    """Backfill `data_quality_flag` for rows cached before the guard existed, so a merged
+    history never carries a null flag (which would surface as None in the diagnostic)."""
+    if "data_quality_flag" not in df.columns:
+        df["data_quality_flag"] = pd.NA
+    missing = df["data_quality_flag"].isna()
+    if missing.any():
+        df.loc[missing, "data_quality_flag"] = [
+            _implausible(s, p) for s, p in
+            zip(df.loc[missing, "shares_short"], df.loc[missing, "short_pct_float"])
+        ]
+    df["data_quality_flag"] = df["data_quality_flag"].astype(bool)
+    return df
+
+
 def _empty_snapshot() -> pd.DataFrame:
     """Correctly-shaped empty frame, for the no-tickers case (mirrors
     risk_exposures.load_risk_exposures's empty-file contract)."""
@@ -82,7 +97,7 @@ def fetch_short_interest(tickers: list[str], use_cache: bool = True) -> pd.DataF
             combined = combined.drop_duplicates(subset=["ticker", "date_short_interest"], keep="last")
         else:
             combined = snapshot
-        combined.to_parquet(cache_path, index=False)
+        _ensure_flag(combined).to_parquet(cache_path, index=False)
 
     return snapshot.set_index("ticker")
 
@@ -96,9 +111,6 @@ def crowding_diagnostic(history: pd.DataFrame, tickers: tuple[str, ...] = config
     latest = (history[history["ticker"].isin(tickers)]
               .sort_values("fetched_at")
               .drop_duplicates(subset="ticker", keep="last")
-              .set_index("ticker"))
-    if "data_quality_flag" not in latest.columns:
-        latest["data_quality_flag"] = [
-            _implausible(s, p) for s, p in zip(latest["shares_short"], latest["short_pct_float"])
-        ]
-    return latest.sort_values("short_pct_float", ascending=False)
+              .set_index("ticker")
+              .copy())
+    return _ensure_flag(latest).sort_values("short_pct_float", ascending=False)

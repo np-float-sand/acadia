@@ -145,6 +145,31 @@ def test_crowding_diagnostic_threads_data_quality_flag(monkeypatch, tmp_path):
     assert bool(diag.loc["EQIX", "data_quality_flag"]) is False
 
 
+def test_flag_backfilled_when_appending_to_a_legacy_cache(monkeypatch, tmp_path):
+    """A cache written before the guard existed has no data_quality_flag column; appending a
+    new snapshot must not leave the older rows carrying a null flag (which would surface as
+    None in the diagnostic if that row is the latest for a ticker)."""
+    monkeypatch.setattr(si.config, "CACHE_DIR", tmp_path)
+    legacy = pd.DataFrame([
+        {"ticker": "DLR", "shares_short": 8_721, "short_ratio": 0.0, "short_pct_float": 0.0,
+         "date_short_interest": pd.Timestamp("2024-12-01", tz="UTC"),
+         "fetched_at": pd.Timestamp("2024-12-01", tz="UTC")},
+    ])
+    legacy.to_parquet(tmp_path / config.SHORT_INTEREST_CACHE_FILE, index=False)
+
+    monkeypatch.setattr(si, "_fetch_one", _fake_info_anomalous)
+    si.fetch_short_interest(["DLR", "EQIX"])
+
+    history = pd.read_parquet(tmp_path / config.SHORT_INTEREST_CACHE_FILE)
+    assert history["data_quality_flag"].notna().all()
+    assert history["data_quality_flag"].dtype == bool
+    legacy_row = history[history["date_short_interest"] == pd.Timestamp("2024-12-01", tz="UTC")]
+    assert bool(legacy_row["data_quality_flag"].iloc[0]) is True
+
+    diag = si.crowding_diagnostic(history, tickers=("DLR", "EQIX"))
+    assert diag["data_quality_flag"].notna().all()
+
+
 def test_crowding_diagnostic_recomputes_flag_for_legacy_history(monkeypatch, tmp_path):
     """A cache written before the guard existed has no data_quality_flag column;
     crowding_diagnostic must still report one rather than KeyError."""

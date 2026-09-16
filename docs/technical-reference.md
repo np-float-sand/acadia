@@ -35,9 +35,12 @@ found no live relationship to build on.
 
 ## Reused, unmodified from grid_resilience/
 
-The full transitive-import closure reused by `electrification_stress_beta/`, traced to a fixed
-point past the module-level imports — nine modules, matching `docs/deliverable-manifest.md`
-(an earlier draft of both documents listed only the first four).
+The full transitive-import closure reused by `electrification_stress_beta/` (and, via
+`grid_equipment_basket/data/prices.py`, by `electrification_strategy/` too), traced to a fixed
+point past the module-level imports — nine modules, matching `docs/deliverable-manifest.md`.
+An earlier draft of both documents listed only the first four; `ercot_auth.py`/`ercot_bulk.py`
+are missed by an import-time trace because they are deferred imports inside
+`grid_data.fetch_lmp()`, needed at call time.
 
 | Module | Role |
 |---|---|
