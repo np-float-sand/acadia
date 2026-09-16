@@ -106,6 +106,7 @@ year of every Dispatch variant and of the shipped long-only book).
 | Layer-2 grid-congestion regime | 2026-08-31 | BUILT + merged; no rung passed the pre-registered gate; `REGIME_ENABLED=False` | `docs/grid-regime-layer2-results.md` |
 | **Electrification long-only strategy (`screen +val+sleeve`)** | 2026-09-06 | **BUILT (package, 38 tests) — the current ship** | `docs/electrification-strategy-v1-results.md` |
 | Electrification strategy — ETF-holdings universe framing | 2026-09-05 | superseded by `screen`; IC proposal + charts kept | `docs/electrification-strategy-proposal.html` |
+| REIT-breadth probe (`screen_reit` = `screen` ∪ IRM/AMT, 27→29 names) | 2026-09-15 | **ADOPTED** — new construction kept, tested. Per-cell gate (Sharpe not >0.05 below `screen`, MaxDD not >3pp worse) PASSES on all 4 overlay stacks, and not marginally: `screen_reit` beats `screen` on every Sharpe and MaxDD figure (plain +0.015 Sharpe/+0.84pp MaxDD … +val+sleeve+short +0.030 Sharpe/+1.39pp MaxDD). Does not overtake `pick_winner`'s overall winner (`marquee plain`, Sharpe 0.772, unaffected — doesn't touch the seed CSV); within the shipped `screen` lineage, `screen_reit +val+sleeve` strictly dominates `screen +val+sleeve` (Sharpe 0.716 vs 0.693, MaxDD −23.2% vs −24.0%). DLR/EQIX excluded — already `HEDGE_SHORT_TICKERS`. Spike per ssrn-5736562.pdf (PJM DC-congestion causal estimate; no REIT-specific evidence). | `docs/electrification-reit-breadth-probe-results.md` |
 
 ### Timing signals (all FAILED)
 | thread | when | outcome | detail |
