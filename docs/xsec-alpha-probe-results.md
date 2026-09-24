@@ -154,3 +154,41 @@ carries most of it.
 **New benchmark for later steps:** TOP_HALF of the book by the frozen composite — GRID-hedged
 Sharpe **0.81** (0.22 / 1.34), +6%/yr over the equal-weight book. Reproduce:
 `python -m research.xsec_alpha_probe.tilt`.
+
+### Step 1 add-on — Calmar and alpha-vs-beta label (2026-09-24)
+
+**Label rule fixed before running:** ALPHA if the GRID-hedged return (Jensen alpha vs GRID) has
+NW t ≥ 1.5 pooled and a positive mean in both halves; else BETA (the theme). Calmar = ann / |maxDD|.
+
+| book | SR | Calmar | maxDD | alpha/yr vs GRID | hedged SR | hedged Calmar | alpha t full / 19-22 / 23-26 | label |
+|---|---|---|---|---|---|---|---|---|
+| EW | 1.05 | 0.89 | −32% | 6% | 0.44 | 0.23 | 1.17 / −0.44 / 1.94 | BETA |
+| TILT_0.5 | 1.08 | 0.91 | −33% | 7% | 0.51 | 0.27 | 1.36 / −0.31 / 2.02 | BETA |
+| TILT_1 | 1.11 | 0.92 | −33% | 7% | 0.56 | 0.30 | 1.48 / −0.21 / 2.06 | BETA |
+| **TOP_HALF** | 1.23 | 0.89 | −39% | **12%** | **0.81** | 0.41 | **2.07** / 0.39 / 2.53 | **ALPHA** |
+
+TOP_HALF is the only book that earns the ALPHA label, but its 2019-22 alpha is only ~3%/yr
+(t 0.39): the label rests on 2023-26. Unhedged, concentration raises return but not Calmar (deeper
+drawdown, −39%). The tilts are beta: their alpha is negative in 2019-22.
+
+**Live out-of-sample log started:** `python -m research.xsec_alpha_probe.live_log` appends each
+month's frozen composite z and TOP_HALF flag for the book to `research/xsec_alpha_probe/live/composite_scores.csv`
+(first month 2026-08-31, logged 2026-09-24). Never rewrite past rows.
+
+## Plan step 2 — how to hedge the TOP_HALF book (2026-09-24)
+
+Three hedges on the TOP_HALF book: GRID short at matched beta; short the bottom quintile of the
+eligible universe by composite (the capex-heavy avoid list) at the notional matching GRID beta
+(1.50×), paying 1%/yr borrow + 10bp trading; 50/50 of the two.
+
+| hedge | SR full / 19-22 / 23-26 | ann | maxDD | Calmar full / 19-22 / 23-26 | alpha t | label |
+|---|---|---|---|---|---|---|
+| GRID short (matched beta) | 0.81 / 0.22 / 1.34 | 12% | −29% | 0.41 / 0.10 / 1.17 | 2.07 | ALPHA |
+| 1.50× capex-heavy quintile short | 0.71 / 0.12 / 1.55 | 18% | **−41%** | 0.44 / 0.08 / 2.07 | 1.93 | ALPHA |
+| **50/50** | **0.87** / 0.18 / 1.67 | 15% | −30% | **0.51** / 0.10 / 1.93 | **2.30** | ALPHA |
+
+**Verdict: GRID short stays the recommended hedge; the single-name short is NOT ADOPTED.** The
+capex-heavy short earns more in 2023-26 but deepens the drawdown to −41%, is weaker in 2019-22, needs
+1.5× gross short in names that were un-borrowable in the earlier short-leg work, and the
+50/50 blend's gain (0.81 → 0.87 SR, Calmar 0.41 → 0.51) is within noise and all 2023-26. All three
+are labelled ALPHA, but every one is ~zero in 2019-22.
