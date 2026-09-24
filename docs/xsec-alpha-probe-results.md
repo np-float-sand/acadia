@@ -123,3 +123,34 @@ therefore tests the weakest member of a family whose strongest member is known.
 book. (2) Our names are large and heavily covered, which is where Menzly-Ozbas and Hoberg-Phillips
 find the effect *weakest*; geographic and less-visible text peers are the exceptions. (3) Use peer
 **intraday** returns (Wang 2025). (4) Keep the same bar and GRID hedge.
+
+## Plan step 1 — tilt the `screen_auto` book by the frozen composite (2026-09-24)
+
+Composite frozen as above (mean z of capex_light and rev_accel, z across the eligible universe
+plus the book's members). Monthly `screen_auto` membership, 90 months, 9–30 names/month, 10bp.
+**Bar fixed before running:** active return (TILT_0.5 − EW) Newey-West t ≥ 1.5 pooled, positive
+in both halves, and TILT_0.5's GRID-hedged Sharpe beats EW's in both halves.
+Hedge = r − β·GRID, β = full-sample OLS on monthly returns.
+
+| book | SR full / 19-22 / 23-26 | ann | GRID-hedged SR full / 19-22 / 23-26 | active ann | active t full / 19-22 / 23-26 |
+|---|---|---|---|---|---|
+| EW (baseline) | 1.05 / 0.78 / 1.36 | 29% | 0.44 / −0.23 / 1.01 | — | — |
+| **TILT_0.5** (primary) w ∝ 1+0.5z | 1.08 / 0.81 / 1.39 | 30% | 0.51 / −0.16 / 1.06 | +1% | **1.63** / 1.13 / 1.17 |
+| TILT_1 w ∝ 1+z | 1.11 / 0.84 / 1.40 | 30% | 0.56 / −0.11 / 1.08 | +1% | 1.58 / 1.08 / 1.16 |
+| **TOP_HALF** (EW, top half by composite) | 1.23 / 0.92 / 1.61 | 35% | **0.81 / 0.22 / 1.34** | **+6%** | **2.33** / 1.29 / 2.31 |
+
+**Verdict: PASS (narrow) on the primary tilt** — +1%/yr, t 1.63, positive in both halves, hedged
+Sharpe better in both halves. The gentle tilt barely moves weights; the **concentrated TOP_HALF
+variant is the real finding**: +6%/yr over equal weight, t 2.33, and the only book whose
+GRID-hedged Sharpe is positive in 2019-22. TOP_HALF was a pre-registered secondary variant, not the
+primary, and each half's t is below 1.5 on its own (2019-22 t 1.29).
+
+**Caveats.** (1) This EW baseline is plain monthly equal weight with no vol target or valuation
+layer, hedged at β≈1.05; it is *not* the 0.09 figure in the book write-up (that was hedged at the
+vol-targeted book's matched beta) — compare books within this table only. (2) Book membership uses
+point-in-time `screen_auto` rows, but the screen itself was designed in 2026. (3) 2023-26 still
+carries most of it.
+
+**New benchmark for later steps:** TOP_HALF of the book by the frozen composite — GRID-hedged
+Sharpe **0.81** (0.22 / 1.34), +6%/yr over the equal-weight book. Reproduce:
+`python -m research.xsec_alpha_probe.tilt`.
