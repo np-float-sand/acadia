@@ -516,3 +516,41 @@ winsorized + z-scored; bar |t| > 1.5 in 2023-26 with + sign.
 4. **Ablation — do power signals help the short?** Only a little, and only since 2023: removing them
    leaves 2019-22 unchanged (Sharpe 1.02 vs 1.00) and costs 2023-26 Sharpe 1.75 → 1.68, Calmar
    2.11 → 1.85. The short's edge is mostly the 8 non-power signals.
+
+## Robustness of the selection book, both sleeves, all short options (2026-09-25)
+
+`python -m research.xsec_alpha_probe.robustness`. Published-book path; reuses the proposal's own
+`hedge()` (trailing-252d beta on the 2018 warm-up book, no back-fill) and 14-signal single-name short
+basket. Validation: all-names + 15% GLD/IEF = 1.05 / 1.12 (published); all-names + 25% GLD/BTAL =
+1.13 / 1.22 (the write-up's "What we would change" sleeve). (Top 50% here rounds n×0.5, so odd-sized
+books differ by one name from the proposal's floor: 2023+ 1.70 / 1.96 vs 1.72 / 2.00.)
+
+**Unhedged, Sharpe / Calmar — 2023+ | full:**
+
+| long side | 15% GLD/IEF | 25% GLD/BTAL |
+|---|---|---|
+| top 40% | 1.75 / 2.00 \| 1.10 / 1.08 | 1.87 / 2.32 \| 1.18 / 1.15 |
+| top 50% | 1.70 / 1.96 \| 1.08 / 0.96 | 1.83 / 2.26 \| 1.16 / 1.02 |
+| top 60% | 1.64 / 1.79 \| 1.18 / 1.17 | 1.76 / 2.03 \| 1.27 / 1.24 |
+| **top 50% rank-weighted** | **1.87 / 2.20** \| 1.13 / 0.99 | **2.00 / 2.57** \| 1.21 / 1.08 |
+| all names (published) | 1.55 / 1.69 \| 1.05 / 1.12 | 1.67 / 1.93 \| 1.13 / 1.22 |
+
+**With shorts (top 50% rank-weighted, 25% GLD/BTAL) — Sharpe / Calmar / MaxDD / return, 2023+ | Sharpe / Calmar full:**
+
+| short | 2023+ | full |
+|---|---|---|
+| none | 2.00 / 2.57 / −13% / 33% | 1.21 / 1.08 |
+| PAVE, $0.25 per $1 | **2.09 / 3.68 / −7% / 26%** | 1.09 / 1.10 |
+| 14-signal names, $0.25 per $1 | 2.04 / **4.67** / −6% / 27% | 1.13 / **1.48** |
+| PAVE, beta (~$0.47) | 1.72 / 3.45 / −6% / 19% | 0.88 / 1.09 |
+| 14-signal names, beta (~$0.38) | 1.88 / 4.12 / −6% / 25% | 1.05 / 1.26 |
+| bottom half of the book's own names, beta | 1.54 / 3.28 / −5% / 18% | 0.78 / 0.94 |
+
+**Reading.** (1) **Not a lucky cut:** every top-40/50/60% book beats all-names since 2023 on Sharpe and
+Calmar; more concentrated = higher 2023+ Sharpe, less concentrated = better full period. (2) **Rank
+weighting inside the top half helps** (+0.17 Sharpe 2023+). (3) **The 25% GLD/BTAL sleeve improves
+every variant** (~+0.1 Sharpe, +0.3 Calmar, 3-4 points shallower drawdown). (4) **A fixed $0.25 short
+adds Sharpe and a lot of Calmar**; full beta hedges trade Sharpe for Calmar. (5) **Shorting the bottom
+half of the book fails** — the book's weaker half still rides the theme; the short must come from
+outside the book (ETF or the universe's 14-signal losers). Caveat: each extra choice adds hindsight;
+rank weighting and the sleeve were fixed before this run, but the 2023+ figures remain one regime.
