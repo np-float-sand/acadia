@@ -334,3 +334,37 @@ changes. **EW reproduces the published book exactly: Sharpe 1.050, Calmar 1.118.
    33-name seed + marquee list, so a `screen_auto` run through the CLI silently drops 24 of its 46
    names (AZZ, CW, DY, IEX, KEYS, MIR, PH, TMO, …). The published figures come from
    `build_a1a4_proposal.py`, which prices the full universe, so they are unaffected.
+
+## Package bug fixed + the tight-grid window (2022+ / 2023+) (2026-09-25)
+
+**Fix (working tree only — see below).** `electrification_strategy.backtest.run_comparison` and
+the CLI priced only the 33-name seed + marquee list, so `--universe screen_auto` silently dropped
+24 of its 46 names. New `universe.candidate_tickers(constructions)` adds every `screen_auto`
+member when that construction is requested; test added; 87/87 package tests pass. **Effect:** the
+package's `screen_auto +val+sleeve` goes from Sharpe 1.132 / Calmar 1.188 (truncated) to **1.009 /
+0.977** full, **1.495 / 1.612 from 2023**. The package's default membership (2-yr lookback, 0.5 capex
+quantile) also differs from the published A1+A4 book (4-yr, 0.60) in 293 name-months (the CSV
+lacks BWXT, FIX, NVT at the end) — a product decision, left open. **Not committed:** the fix lives in
+files carrying another session's uncommitted `screen_auto` work (`auto_screen.py` is untracked), so
+committing it alone would break HEAD.
+
+**The signal is expected to work only once the grid got tight (2022-23 on).** Real published-book
+backtest, all variants (`realbook.py`):
+
+| variant | shipped SR / Calmar full | **shipped SR / Calmar 2022+** | **shipped SR / Calmar 2023+** | **L/S vs GRID SR / Calmar 2022+** | **L/S SR / Calmar 2023+** |
+|---|---|---|---|---|---|
+| EW (published book) | 1.05 / 1.12 | 1.04 / 1.16 | 1.55 / 1.69 | 0.95 / 0.75 | 1.10 / 0.89 |
+| tilt 0.5 by composite | 1.06 / 1.14 | 1.06 / 1.19 | 1.57 / 1.72 | 1.02 / 0.84 | 1.16 / 0.98 |
+| tilt 1.0 by composite | 1.06 / 1.14 | 1.08 / 1.22 | 1.58 / 1.75 | 1.05 / 0.90 | 1.19 / 1.05 |
+| **TOP_HALF composite** | 1.08 / 0.96 | **1.20 / 1.43** | **1.72 / 2.00** | **1.35 / 1.16** | **1.47 / 1.62** |
+| + text peers (3a) | 0.94 / 0.93 | 1.21 / 1.21 | 1.79 / 1.72 | 1.29 / 1.17 | 1.47 / 1.38 |
+| + city (3b) | 0.83 / 0.77 | 1.10 / 1.26 | 1.63 / 1.81 | 1.20 / 1.09 | 1.35 / 1.29 |
+| + city ex-oil | 1.09 / 0.99 | 1.16 / 1.34 | 1.68 / 1.89 | 1.26 / 1.19 | 1.37 / 1.34 |
+| + metro (3b retry) | 0.91 / 0.85 | 0.86 / 0.94 | 1.39 / 1.47 | 0.57 / 0.32 | 0.79 / 0.56 |
+
+**Reading.** In the tight-grid window the composite's top half is the clear best on **both** Sharpe
+and Calmar, shipped and long/short (L/S vs GRID 1.47 / 1.62 from 2023, vs 1.10 / 0.89 for the EW
+book). No add-on (3a, 3b) improves it. Its full-sample weakness is entirely 2019-22 (L/S −0.19),
+i.e. before the regime it is designed for. **New benchmark (regime-scoped): TOP_HALF composite,
+real book, 2023+: shipped 1.72 / 2.00, L/S vs GRID 1.47 / 1.62.** Caveat: 2023-26 is 3.7 years —
+one regime, one sample.

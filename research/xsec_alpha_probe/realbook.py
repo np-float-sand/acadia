@@ -30,6 +30,9 @@ from grid_equipment_basket.data.prices import fetch_prices
 from research.xsec_alpha_probe import data, evaluate as ev, geo, peers, tilt
 
 START, END = "2019-01-01", "2026-08-31"
+# The grid got tight from 2022-23: the selection signal is only expected to work there.
+WINDOWS = {"19-22": ("2019-01-01", "2022-12-31"), "2022+": ("2022-01-01", END),
+           "2023+": ("2023-01-01", END)}
 PUBLISHED = data.data_root() / "output_html" / "img" / "a1a4" / "_build_cache.pkl"
 
 
@@ -126,10 +129,11 @@ def main() -> pd.DataFrame:
             row[f"{label} Calmar"] = m["cagr"] / abs(m["max_dd"]) if m["max_dd"] < 0 else float("nan")
             row[f"{label} MaxDD"] = m["max_dd"]
             row[f"{label} CAGR"] = m["cagr"]
-            for w, (a, b) in (("19-22", ("2019-01-01", "2022-12-31")), ("23-26", ("2023-01-01", END))):
-                row[f"{label} SR {w}"] = compute_metrics(r.loc[a:b].dropna(),
-                                                         config.RF if label != "L/S vs GRID" else 0.0,
-                                                         config.ANN)["sharpe"]
+            for w, (a, b) in WINDOWS.items():
+                mw = compute_metrics(r.loc[a:b].dropna(), config.RF if label != "L/S vs GRID" else 0.0,
+                                     config.ANN)
+                row[f"{label} SR {w}"] = mw["sharpe"]
+                row[f"{label} Calmar {w}"] = mw["cagr"] / abs(mw["max_dd"]) if mw["max_dd"] < 0 else float("nan")
         row["beta GRID"] = beta
         rows.append(row)
         print(f"  {name}: shipped SR {row['shipped SR']:.3f}", flush=True)
