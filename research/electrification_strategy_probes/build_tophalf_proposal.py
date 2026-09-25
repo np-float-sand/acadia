@@ -13,6 +13,12 @@ The hedged version shorts an index ETF against the overlaid book at a TRAILING
 2019 has a real trailing year -- nothing back-filled, no look-ahead), paying
 HEDGE_BORROW a year on the short notional and 10bp on every change in it.
 
+Single-name short option: an equal-weight basket of the BOTTOM QUINTILE of the eligible
+universe by the 14-signal equal-weight composite (`research/xsec_alpha_probe/composites.py`),
+re-formed at each month-end from filings/prices known that day, held (weights drifting) through
+the next month-end. Shorted two ways: a fixed 0.25x, and at the same trailing 252-day beta as
+the ETFs. Pays NAME_BORROW a year, 10bp on basket turnover and on every change in hedge size.
+
 Stats and figures reuse `build_a1a4_proposal` so every number is computed the
 same way as the published proposal. Writes output_html/img/tophalf/.
 """
@@ -35,7 +41,7 @@ from electrification_strategy import backtest, config, hedge_overlay  # noqa: E4
 from electrification_strategy.fred import fetch_series  # noqa: E402
 from grid_equipment_basket.basket import simulate_basket  # noqa: E402
 from grid_equipment_basket.data.prices import fetch_prices  # noqa: E402
-from research.xsec_alpha_probe import data, realbook, tilt  # noqa: E402
+from research.xsec_alpha_probe import data, realbook, short_compare, tilt  # noqa: E402
 
 plt, mdates = a1.plt, a1.mdates
 
@@ -60,6 +66,9 @@ HEDGES = {"GRID": {"GRID": 1.0}, "PAVE": {"PAVE": 1.0}, "XLI": {"XLI": 1.0},
           "GRID+PAVE+XLI": {"GRID": 1 / 3, "PAVE": 1 / 3, "XLI": 1 / 3}}   # daily-rebalanced blends
 HEDGE_BORROW = 0.005                           # assumed borrow on a large ETF short, a year
 HEDGE_COST_BP = 10
+NAME_BORROW = 0.01                             # assumed general-collateral-plus borrow on single names
+NAME_Q = 0.2                                   # short the bottom quintile
+FIXED_K = 0.25                                 # fixed-size sleeve: $0.25 short per $1 of book
 BETA_WINDOW = 252
 WARMUP_START = "2017-10-01"                    # history for the first trailing hedge beta
 WINDOWS = {"full": (START, END), "2019-22": ("2019-01-01", "2022-12-31"),
@@ -95,20 +104,66 @@ def build_book(spec, members, px, spy_ret, dfii10, start=START):
             "weights": br.weights, "held": (br.weights > 0).sum(axis=1)}
 
 
-def hedge(book: pd.Series, h: pd.Series, beta_src: pd.Series) -> tuple[pd.Series, pd.Series]:
+def hedge(book: pd.Series, h: pd.Series, beta_src: pd.Series, borrow: float = HEDGE_BORROW,
+          unit_cost: pd.Series | None = None, fixed: float | None = None) -> tuple[pd.Series, pd.Series]:
     """book minus trailing-beta x h, net of borrow and hedge trading. Returns (net, beta).
 
     No look-ahead: the hedge ratio on day t is the beta of `beta_src` (the same book
     run from WARMUP_START, so 2019 already has a full trailing year) on h over the
-    BETA_WINDOW days ending t-1. Nothing is back-filled."""
-    hs = h.reindex(beta_src.index)
-    beta = (beta_src.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).cov(hs)
-            / hs.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).var()).shift(1).clip(0, 2)
-    beta = beta.reindex(book.index)
+    BETA_WINDOW days ending t-1. Nothing is back-filled.
+    `fixed` replaces the beta with a constant size; `unit_cost` is a per-$1-of-hedge daily cost
+    (the single-name basket's own rebalancing) charged at the hedge size."""
+    if fixed is None:
+        hs = h.reindex(beta_src.index)
+        beta = (beta_src.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).cov(hs)
+                / hs.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).var()).shift(1).clip(0, 2)
+        beta = beta.reindex(book.index)
+    else:
+        beta = pd.Series(fixed, index=book.index)
     assert beta.loc[START:END].notna().all(), "hedge beta has no trailing year at the start"
     h = h.reindex(book.index)
-    cost = beta * HEDGE_BORROW / config.ANN + beta.diff().abs().fillna(0) * HEDGE_COST_BP / 1e4
+    cost = beta * borrow / config.ANN + beta.diff().abs().fillna(0) * HEDGE_COST_BP / 1e4
+    if unit_cost is not None:
+        cost = cost + beta * unit_cost.reindex(book.index).fillna(0)
     return (book - beta * h - cost).dropna(), beta
+
+
+def name_short_basket(px: pd.DataFrame, start: str) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Daily return of the bottom-quintile basket (long side, i.e. what is shorted), its daily
+    rebalancing cost per $1, and the number of names held.
+
+    At each month-end the 14-signal composite is ranked across that month's eligible universe
+    (names priced that day); the bottom NAME_Q is bought equal-weight on the next trading day
+    and held with weights drifting until the next month-end. No future information: the score
+    uses filings and prices known at the month-end, and membership never looks at later prices."""
+    _, comp = short_compare.all14_short()
+    univ = data.universe()
+    rets = px.pct_change(fill_method=None)
+    days = rets.loc[start:END].index
+    out, cost, held = pd.Series(0.0, index=days), pd.Series(0.0, index=days), pd.Series(0, index=days)
+    w_prev = pd.Series(dtype=float)
+    ends = [d for d in comp.index if pd.Timestamp(start) - pd.offsets.MonthEnd(1) <= d <= pd.Timestamp(END)]
+    for i, me in enumerate(ends):
+        seg = days[(days > me) & (days <= (ends[i + 1] if i + 1 < len(ends) else pd.Timestamp(END)))]
+        if seg.empty or me not in univ.index:
+            continue
+        priced = px.loc[:me].iloc[-1].notna()
+        sc = comp.loc[me].where(univ.loc[me].reindex(comp.columns, fill_value=False)
+                                & priced.reindex(comp.columns, fill_value=False)).dropna()
+        if len(sc) < 10:
+            continue
+        names = sc[sc <= sc.quantile(NAME_Q)].index
+        w = pd.Series(1.0 / len(names), index=names)
+        cost.loc[seg[0]] = w.sub(w_prev, fill_value=0).abs().sum() * HEDGE_COST_BP / 1e4
+        val = w.copy()
+        for d in seg:
+            r = rets.loc[d, names].fillna(0.0)
+            new = val * (1 + r)
+            out.loc[d] = new.sum() / val.sum() - 1
+            val = new
+            held.loc[d] = len(names)
+        w_prev = val / val.sum()
+    return out, cost, held
 
 
 def alpha(r: pd.Series, h: pd.Series) -> dict:
@@ -205,6 +260,75 @@ def fig_hedged(hedged_top, hedged_ew):
     plt.close(fig)
 
 
+def fig_short_options(series: dict, betas: dict):
+    """Growth, drawdown and hedge size of each hedged version; stats in the legend."""
+    fig, (a1x, a2x, a3x) = plt.subplots(3, 1, figsize=(8.4, 9.2), sharex=True,
+                                        gridspec_kw={"height_ratios": [3, 1.6, 1.4]})
+    cols = {"short PAVE": a1.C_SPY, "short GRID": a1.C_GRID, "short XLI": a1.FAINT,
+            "short single names, beta-sized": a1.C_BOOK, "short single names, 0.25x": "#7b4fd6"}
+    for label, r in series.items():
+        r = r.loc[START:END]
+        full, t23 = a1.stats(r), a1.stats(r.loc["2023-01-01":END])
+        lab = (f"{label}   Sharpe {full['sharpe']:.2f} · Calmar {full['calmar']:.2f} · "
+               f"maxDD {full['maxdd']:.0%}   |   2023+: Sharpe {t23['sharpe']:.2f} · Calmar {t23['calmar']:.2f}")
+        cv = a1.curve(r)
+        lw = 2.3 if "single" in label else 1.5
+        a1x.plot(cv.index, cv.values, color=cols[label], lw=lw, label=lab)
+        a1x.annotate(f"  {cv.iloc[-1]:.2f}x", (cv.index[-1], cv.iloc[-1]), color=a1.INK, fontsize=8.5,
+                     va="center", weight="bold")
+        dd = cv / cv.cummax() - 1
+        a2x.plot(dd.index, dd.values * 100, color=cols[label], lw=lw * 0.7)
+        if label in betas:
+            b = betas[label].loc[START:END]
+            a3x.plot(b.index, b.values, color=cols[label], lw=lw * 0.7)
+    for ax in (a1x, a2x, a3x):
+        ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
+    a1x.axhline(1.0, color=a1.FAINT, lw=1)
+    a1x.set_ylabel(r"growth of \$1, hedged")
+    a1x.legend(loc="upper left", fontsize=7.4, labelcolor=a1.INK, frameon=False)
+    a2x.set_ylabel("drawdown, %")
+    a3x.set_ylabel(r"\$ short per \$1")
+    a3x.xaxis.set_major_locator(mdates.YearLocator())
+    a3x.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    a3x.set_xlim(pd.Timestamp(START), pd.Timestamp(END) + pd.Timedelta(days=330))
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/short_options.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def fig_short_leg(book: pd.Series, basket: pd.Series, pave: pd.Series, held: pd.Series):
+    """What is being shorted: the bottom-quintile basket vs PAVE vs the book, with stats."""
+    fig, (ax, bx) = plt.subplots(2, 1, figsize=(8.4, 5.6), sharex=True,
+                                 gridspec_kw={"height_ratios": [3, 1]})
+    for label, r, c in [("Selection book", book, a1.C_BOOK),
+                        ("PAVE ETF", pave, a1.C_SPY),
+                        ("Bottom-quintile basket (the single-name short)", basket, "#7b4fd6")]:
+        r = r.loc[START:END].dropna()
+        st = a1.stats(r)
+        cv = a1.curve(r)
+        ax.plot(cv.index, cv.values, color=c, lw=2.0,
+                label=f"{label}   {st['cagr']:.1%}/yr · Sharpe {st['sharpe']:.2f} · maxDD {st['maxdd']:.0%}")
+        ax.annotate(f"  {cv.iloc[-1]:.2f}x", (cv.index[-1], cv.iloc[-1]), color=a1.INK, fontsize=8.5,
+                    va="center", weight="bold")
+    ax.set_yscale("log")
+    ax.set_yticks([1, 2, 3, 4])
+    ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}x"))
+    ax.get_yaxis().set_minor_formatter(plt.NullFormatter())
+    ax.set_ylabel("growth of \\$1 (log)")
+    ax.legend(loc="upper left", fontsize=8, labelcolor=a1.INK, frameon=False)
+    h = held.loc[START:END]
+    bx.plot(h.index, h.values, color="#7b4fd6", lw=1.4)
+    bx.set_ylabel("names shorted")
+    bx.xaxis.set_major_locator(mdates.YearLocator())
+    bx.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    bx.set_xlim(pd.Timestamp(START), pd.Timestamp(END) + pd.Timedelta(days=330))
+    for a in (ax, bx):
+        a.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/short_leg.png", bbox_inches="tight")
+    plt.close(fig)
+
+
 # ------------------------------------------------------------------ main ----
 def window_stats(r, spy):
     return {w: a1.stats(r.loc[a:b], spy) for w, (a, b) in WINDOWS.items()}
@@ -262,6 +386,37 @@ def main():
                     fit[fw] = {"corr": round(c, 3), "resid_vol": round(float((dd.iloc[:, 0] - bb * dd.iloc[:, 1]).std()
                                                                             * np.sqrt(config.ANN)), 4)}
                 out["hedged"][f"{lab} - {hname}"]["fit"] = fit
+    # single-name short option (bottom quintile by the 14-signal composite) + 0.25x ETF comparators
+    basket, basket_cost, basket_held = name_short_basket(px, WARMUP_START)
+    variants = {"names - beta": dict(h=basket, borrow=NAME_BORROW, unit_cost=basket_cost),
+                "names - 0.25x": dict(h=basket, borrow=NAME_BORROW, unit_cost=basket_cost, fixed=FIXED_K)}
+    for hname in ("GRID", "PAVE", "XLI"):
+        variants[f"{hname} - 0.25x"] = dict(h=hedge_px[hname], fixed=FIXED_K)
+    betas = {}
+    for vname, kw in variants.items():
+        net, beta = hedge(top["book"], beta_src=top_w, **kw)
+        hedged_series[(vname, "book")] = net
+        betas[vname] = beta
+        out["hedged"][f"book - {vname}"] = {
+            **{w: a1.stats(net.loc[a:b]) for w, (a, b) in WINDOWS.items()},
+            "beta_mean": round(float(beta.loc[START:END].mean()), 2),
+            "beta_last": round(float(beta.iloc[-1]), 2)}
+    dd = pd.concat([top_w, basket], axis=1).dropna()
+    for fw, (fa, fb) in {"2018-22": ("2018-01-01", "2022-12-31"), "2023+": ("2023-01-01", END)}.items():
+        x = dd.loc[fa:fb]
+        bb = x.cov().iloc[0, 1] / x.iloc[:, 1].var()
+        out["hedged"]["book - names - beta"].setdefault("fit", {})[fw] = {
+            "corr": round(float(x.corr().iloc[0, 1]), 3),
+            "resid_vol": round(float((x.iloc[:, 0] - bb * x.iloc[:, 1]).std() * np.sqrt(config.ANN)), 4)}
+    out["short_basket"] = {
+        "stats": {w: a1.stats(basket.loc[a:b]) for w, (a, b) in WINDOWS.items()},
+        "names_mean": round(float(basket_held.loc[START:END].mean()), 1),
+        "names_last": int(basket_held.iloc[-1]),
+        "turnover_yr": round(float(basket_cost.loc[START:END].sum() / (HEDGE_COST_BP / 1e4)
+                                   / ((pd.Timestamp(END) - pd.Timestamp(START)).days / 365.25)), 2)}
+    for hname in ("GRID", "PAVE", "XLI"):
+        betas[f"{hname} - beta"] = hedge(top["book"], hedge_px[hname], top_w)[1]
+
     # alpha: Jensen alpha of each book on GRID; and selection = book minus published book
     out["alpha"] = {}
     for w, (a, b) in WINDOWS.items():
@@ -307,6 +462,11 @@ def main():
     a1.fig_breadth(d); a1.fig_overlay(d); a1.fig_beta(d, out)
     fig_selection(top["book"], ew["book"], bench)
     fig_hedged(hedged_series[("GRID", "book")], hedged_series[("GRID", "published")])
+    lab = {"PAVE": "short PAVE", "GRID": "short GRID", "XLI": "short XLI",
+           "names - beta": "short single names, beta-sized", "names - 0.25x": "short single names, 0.25x"}
+    fig_short_options({v: hedged_series[(k, "book")] for k, v in lab.items()},
+                      {lab[k]: betas[k if k.startswith("names") else f"{k} - beta"] for k in lab})
+    fig_short_leg(top["book"], basket, bench["PAVE"], basket_held)
     print(f"wrote figures + stats.json to {OUT}")
     print(json.dumps({"book": out["book"], "published": out["published"]}, indent=1, default=float))
 

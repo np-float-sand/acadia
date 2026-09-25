@@ -368,3 +368,99 @@ book). No add-on (3a, 3b) improves it. Its full-sample weakness is entirely 2019
 i.e. before the regime it is designed for. **New benchmark (regime-scoped): TOP_HALF composite,
 real book, 2023+: shipped 1.72 / 2.00, L/S vs GRID 1.47 / 1.62.** Caveat: 2023-26 is 3.7 years —
 one regime, one sample.
+
+## All signals together — equal-weight composites (2026-09-25)
+
+`python -m research.xsec_alpha_probe.composites` → `_cache/results_composites.csv`. Pre-set: mean of
+per-month winsorized z-scores, every component in its hypothesised + direction, no fitting. Bar
+(user-set): |NW t| > 1.5 in 2023-26 at 1m or 3m; 8 tests → ~1 false pass expected. **Component ICs
+were already seen, so this is not out-of-sample.**
+
+| composite | 1m t (full / 19-22 / 23-26) | 3m t (full / 19-22 / 23-26) | top-quintile SR (full / 23-26) | GRID-hedged SR | bar |
+|---|---|---|---|---|---|
+| power_all (6 power signals) | −0.24 / −0.65 / 0.39 | −0.28 / −0.96 / 0.95 | 0.05 / 0.20 | −0.19 | FAIL |
+| power_betas (energy, congestion, scarcity β) | 0.81 / −0.39 / 1.56 | 0.56 / −0.57 / 1.63 | 0.41 / 0.69 | 0.08 | PASS (loose) |
+| power_shocks (β × 3m shock) | −1.12 / −1.77 / −0.01 | −0.49 / −0.31 / −0.38 | −0.08 / 0.01 | −0.30 | FAIL |
+| everything (all 14) | 0.84 / 0.11 / 1.12 | 1.11 / −0.20 / 2.24 | 0.45 / 0.51 | 0.16 | PASS (loose) |
+
+**Reading:** combining does not create signal. The two loose passes are 2023-26-only, negative-to-zero
+in 2019-22, and near zero once GRID-hedged — i.e. they are the AI-era theme, not selection.
+`power_betas` is *weaker* than `beta_scarcity` alone (2023-26 t 2.97 / 3.10): averaging diluted the
+one live component. The actual "power-market moves predict stocks" part (`power_shocks`) is dead
+in every window. `everything` is weaker than the post-hoc capex_light + rev_accel composite
+(GRID-hedged 0.16 vs 0.42) — adding the other 12 signals adds noise.
+
+## Selection book vs two candidate short legs (2026-09-25)
+
+`python -m research.xsec_alpha_probe.short_compare`. Long = `tilt.TOP_HALF` (the selection book in
+`output_html/screened-electrification-selection.html`, monthly, **before** the vol-target / valuation /
+sleeve overlay). Shorts = EW bottom quintile of the eligible universe, 10bp + 1%/yr borrow:
+`S_capex` ranked by the capex_light+rev_accel composite; `S_all14` by the 14-signal equal-weight
+composite. The two short lists overlap 43% on average.
+
+| leg | leg return/yr (full) | corr with long | beta in long's down months (full / 19-22 / 23-26) |
+|---|---|---|---|
+| S_capex | +10% | 0.67 | 0.52 / 0.62 / 0.20 |
+| S_all14 | +12% | 0.85 | 0.83 / 0.94 / 0.44 |
+
+| book | Sharpe full / 19-22 / 23-26 | Calmar full / 19-22 / 23-26 | maxDD full |
+|---|---|---|---|
+| TOP_HALF long only | 1.23 / 0.92 / 1.61 | 0.89 / 0.70 / 1.82 | −39% |
+| − 0.25× S_capex | 1.29 / 0.92 / 1.73 | 0.93 / 0.68 / 1.99 | −35% |
+| **− 0.25× S_all14** | **1.34 / 1.00 / 1.75** | **0.99 / 0.76 / 2.11** | **−32%** |
+| − 1.50× S_capex (matched GRID beta) | 0.71 / 0.12 / 1.55 | 0.44 / 0.08 / 2.07 | −41% |
+| − 1.23× S_all14 (matched GRID beta) | 1.19 / 0.75 / 1.66 | 0.97 / 0.60 / 2.81 | −19% |
+
+**Reading:** both short legs lose money outright (the bottom quintile still rises 10-12%/yr), so they
+are hedges, not alpha. `S_all14` is the better hedge — it tracks the long book more closely and falls
+harder when it falls — and at 0.25× it is the only variant that improves Sharpe AND Calmar in BOTH
+windows (`S_capex` is flat/slightly worse in 2019-22). **Not adopted:** monthly and pre-overlay (the
+shipped overlay already cuts drawdowns, so the marginal gain will be smaller); the 14-signal composite
+was formed after seeing its components; down-month beta halves in 2023-26 (0.44); borrow assumed, not
+checked. Next gate before adopting: run it as a 0.25× sleeve on the full daily overlay book, plus
+name-level attribution and a borrow check (the tests that killed B1).
+
+## 14-signal short vs ETF shorts (GRID / PAVE / XLI) on the selection book (2026-09-25)
+
+`python -m research.xsec_alpha_probe.hedge_compare` → `_cache/results_hedge_compare.csv`. Same monthly
+pre-overlay TOP_HALF; each hedge at 0.25× and at "matched" = the book's full-sample OLS beta to that
+hedge (same in-sample convention for all). Borrow: ETFs 0.5%/yr, single names 1%/yr.
+
+| hedge | corr | matched size | hedge return/yr | down-month beta full / 19-22 / 23-26 |
+|---|---|---|---|---|
+| GRID | 0.86 | 1.05× | +22% | 0.69 / 0.70 / 0.54 |
+| PAVE | 0.92 | 1.11× | +20% | 0.74 / 0.77 / 0.57 |
+| XLI | 0.90 | 1.29× | +15% | 0.66 / 0.70 / 0.44 |
+| S_all14 | 0.85 | 1.03× | +12% | 0.83 / 0.94 / 0.44 |
+
+| book (matched hedge) | Sharpe full / 19-22 / 23-26 | Calmar full / 19-22 / 23-26 | maxDD | return/yr |
+|---|---|---|---|---|
+| long only | 1.23 / 0.92 / 1.61 | 0.89 / 0.70 / 1.82 | −39% | 35% |
+| − GRID | 0.77 / 0.18 / 1.31 | 0.38 / 0.08 / 1.13 | −30% | 11% |
+| − PAVE | 1.11 / 0.53 / 1.68 | 1.05 / 0.45 / 2.15 | −12% | 12% |
+| − XLI | 1.23 / 1.12 / 1.33 | 1.05 / 1.42 / 1.32 | −15% | 16% |
+| **− S_all14** | **1.43 / 1.00 / 1.88** | **1.32 / 0.87 / 2.77** | −16% | **22%** |
+
+At 0.25×: S_all14 1.34 / 1.00 / 1.75 Sharpe vs PAVE 1.29 / 0.95 / 1.70, XLI 1.30 / 0.99 / 1.64,
+GRID 1.24 / 0.89 / 1.64.
+
+**Reading:** fully hedged, S_all14 beats PAVE on Sharpe and Calmar in both windows and keeps ~10 pts/yr
+more return, because the stocks it shorts rise ~8 pts/yr less than PAVE (its own selection edge)
+while falling as hard in selloffs (2019-22 down beta 0.94). PAVE has the shallowest drawdown (−12%) and
+the higher 2023-26 down-month beta (0.57 vs 0.44), so it protects more in a 2023-26-style selloff.
+XLI is the most even across windows. Caveats as before: post-hoc composite, monthly pre-overlay,
+single-name borrow/capacity unchecked (PAVE is a $13.5bn fund).
+
+**No-look-ahead sizing (added 2026-09-25).** "Matched" above uses the full-sample beta (look-ahead).
+Re-run with a **trailing** hedge ratio = the book's beta to the hedge over the prior 24 completed months
+(1.0× prior until 12 months exist, since `screen_auto` membership starts 2019-01):
+
+| book (trailing-beta hedge) | Sharpe full / 19-22 / 23-26 | Calmar full / 19-22 / 23-26 | maxDD | return/yr | avg size |
+|---|---|---|---|---|---|
+| − GRID | 0.66 / 0.06 / 1.21 | 0.31 / 0.02 / 1.01 | −32% | 10% | 1.05× |
+| − PAVE | 1.12 / 0.39 / 1.88 | 0.88 / 0.28 / 2.01 | −14% | 12% | 1.07× |
+| − XLI | 1.15 / 0.95 / 1.34 | 0.94 / 0.83 / 1.23 | −16% | 15% | 1.24× |
+| **− S_all14** | **1.40 / 0.87 / 1.97** | **1.27 / 0.76 / 3.30** | −17% | **21%** | 0.98× |
+
+Removing look-ahead barely moves S_all14 (1.43 → 1.40 Sharpe) and it still beats PAVE on Sharpe and
+Calmar in both windows; PAVE's weak spot is 2019-22 (Sharpe 0.39).

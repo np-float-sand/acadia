@@ -65,8 +65,9 @@ def weights(members: list[str], z: pd.Series) -> dict[str, pd.Series]:
     return {k: v / v.sum() for k, v in out.items() if v.sum() > 0}
 
 
-def book_returns(score: pd.DataFrame | None = None) -> pd.DataFrame:
-    """Monthly book returns; `score` replaces the frozen composite (for later steps)."""
+def book_returns(score: pd.DataFrame | None = None, start: str = run.START) -> pd.DataFrame:
+    """Monthly book returns; `score` replaces the frozen composite (for later steps).
+    `start` earlier than run.START gives warm-up history for trailing estimates."""
     px_m = data.monthly_prices(data.prices())
     fwd1 = px_m.pct_change(fill_method=None).shift(-1)
     univ = data.universe()
@@ -90,7 +91,7 @@ def book_returns(score: pd.DataFrame | None = None) -> pd.DataFrame:
     out = pd.DataFrame(rows).T
     grid = px_m["GRID"].pct_change().shift(-1)
     out["GRID"] = grid.reindex(out.index)
-    return out.loc[run.START:run.END].dropna(subset=["EW", "GRID"])
+    return out.loc[start:run.END].dropna(subset=["EW", "GRID"])
 
 
 def calmar(r: pd.Series) -> float:

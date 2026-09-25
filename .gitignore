@@ -26,3 +26,4 @@ research/electricity_earnings_exposure/_cache/
 research/electricity_earnings_exposure/proposal_v3/out/*.b64
 research/electricity_earnings_exposure/proposal_v3/out/pv3_px.parquet
 research/xsec_alpha_probe/_cache/
+research/forward_power_hedge_ic/_cache/
