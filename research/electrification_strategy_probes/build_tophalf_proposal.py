@@ -9,8 +9,9 @@ acceleration, `research/xsec_alpha_probe`), equal weight, then the same shipped
 overlay (20% vol target + valuation de-lever + 15% GLD/IEF sleeve).
 
 The hedged version shorts an index ETF against the overlaid book at a TRAILING
-252-day beta (lagged a day -- no hindsight), paying HEDGE_BORROW a year on the
-short notional and 10bp on every change in it.
+252-day beta (lagged a day; estimated on the same book run from WARMUP_START so
+2019 has a real trailing year -- nothing back-filled, no look-ahead), paying
+HEDGE_BORROW a year on the short notional and 10bp on every change in it.
 
 Stats and figures reuse `build_a1a4_proposal` so every number is computed the
 same way as the published proposal. Writes output_html/img/tophalf/.
@@ -37,6 +38,18 @@ from grid_equipment_basket.data.prices import fetch_prices  # noqa: E402
 from research.xsec_alpha_probe import data, realbook, tilt  # noqa: E402
 
 plt, mdates = a1.plt, a1.mdates
+
+# Light mode: a1 sets a dark style at import; override it and the colours its figure
+# functions read at call time. Series hues = dataviz reference palette, light steps,
+# slots 1-3 (validated: all checks pass; aqua needs relief -> legends + direct labels).
+a1.SURFACE = "#fcfcfb"
+a1.C_BOOK, a1.C_SPY, a1.C_GRID, a1.C_NEG = "#2a78d6", "#eb6834", "#1baf7a", "#e34948"
+a1.INK, a1.SOFT, a1.FAINT, a1.LINE = "#0b0b0b", "#52514e", "#8b8a85", "#e6e5e0"
+plt.rcParams.update({
+    "figure.facecolor": a1.SURFACE, "axes.facecolor": a1.SURFACE, "savefig.facecolor": a1.SURFACE,
+    "axes.edgecolor": a1.LINE, "axes.labelcolor": a1.SOFT, "text.color": a1.INK,
+    "xtick.color": a1.SOFT, "ytick.color": a1.SOFT, "grid.color": a1.LINE,
+})
 OUT = os.path.join(ROOT, "output_html", "img", "tophalf")
 os.makedirs(OUT, exist_ok=True)
 a1.OUT = OUT                                   # reuse a1's figure code, write here
@@ -46,6 +59,7 @@ HEDGES = ["GRID", "PAVE", "XLI"]
 HEDGE_BORROW = 0.005                           # assumed borrow on a large ETF short, a year
 HEDGE_COST_BP = 10
 BETA_WINDOW = 252
+WARMUP_START = "2017-10-01"                    # history for the first trailing hedge beta
 WINDOWS = {"full": (START, END), "2019-22": ("2019-01-01", "2022-12-31"),
            "2022+": ("2022-01-01", END), "2023+": ("2023-01-01", END)}
 
@@ -65,9 +79,9 @@ def load():
     return pub, members, px, comp
 
 
-def build_book(spec, members, px, spy_ret, dfii10):
+def build_book(spec, members, px, spy_ret, dfii10, start=START):
     cand = px[[c for c in members.columns if c in px.columns]]
-    br = simulate_basket(cand, START, END, config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT,
+    br = simulate_basket(cand, start, END, config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT,
                          realbook.target_fn(spec, members, px))
     raw = br.returns
     vol_only = backtest.compose(raw, spy_ret, use_valuation=False)
@@ -79,12 +93,18 @@ def build_book(spec, members, px, spy_ret, dfii10):
             "weights": br.weights, "held": (br.weights > 0).sum(axis=1)}
 
 
-def hedge(book: pd.Series, h: pd.Series) -> tuple[pd.Series, pd.Series]:
-    """book minus trailing-beta x h, net of borrow and hedge trading. Returns (net, beta)."""
+def hedge(book: pd.Series, h: pd.Series, beta_src: pd.Series) -> tuple[pd.Series, pd.Series]:
+    """book minus trailing-beta x h, net of borrow and hedge trading. Returns (net, beta).
+
+    No look-ahead: the hedge ratio on day t is the beta of `beta_src` (the same book
+    run from WARMUP_START, so 2019 already has a full trailing year) on h over the
+    BETA_WINDOW days ending t-1. Nothing is back-filled."""
+    hs = h.reindex(beta_src.index)
+    beta = (beta_src.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).cov(hs)
+            / hs.rolling(BETA_WINDOW, min_periods=BETA_WINDOW).var()).shift(1).clip(0, 2)
+    beta = beta.reindex(book.index)
+    assert beta.loc[START:END].notna().all(), "hedge beta has no trailing year at the start"
     h = h.reindex(book.index)
-    beta = (book.rolling(BETA_WINDOW, min_periods=126).cov(h)
-            / h.rolling(BETA_WINDOW, min_periods=126).var()).shift(1).clip(0, 2)
-    beta = beta.fillna(beta.dropna().iloc[0] if beta.notna().any() else 0.0)
     cost = beta * HEDGE_BORROW / config.ANN + beta.diff().abs().fillna(0) * HEDGE_COST_BP / 1e4
     return (book - beta * h - cost).dropna(), beta
 
@@ -146,7 +166,7 @@ def fig_selection(top, ew, bench):
         if np.log10(ends[i][0]) - np.log10(ends[i - 1][0]) < 0.035:
             ends[i][0] = 10 ** (np.log10(ends[i - 1][0]) + 0.035)
     for ypos, xend, c, val in ends:
-        ax.annotate(f"  {val:.2f}x", (xend, ypos), color=c, fontsize=9.5, va="center", weight="bold")
+        ax.annotate(f"  {val:.2f}x", (xend, ypos), color=a1.INK, fontsize=9.5, va="center", weight="bold")
     ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
     ax.text(pd.Timestamp("2023-02-01"), ax.get_ylim()[1] * 0.97, "grid tight (2023 on)",
             color=a1.SOFT, fontsize=9, va="top")
@@ -169,7 +189,7 @@ def fig_hedged(hedged_top, hedged_ew):
                             ("Published book, short GRID", hedged_ew, a1.FAINT, 1.7)]:
         cv = a1.curve(r.loc[START:END])
         ax.plot(cv.index, cv.values, color=c, lw=lw, label=label)
-        ax.annotate(f"  {cv.iloc[-1]:.2f}x", (cv.index[-1], cv.iloc[-1]), color=c, fontsize=9.5,
+        ax.annotate(f"  {cv.iloc[-1]:.2f}x", (cv.index[-1], cv.iloc[-1]), color=a1.INK, fontsize=9.5,
                     va="center", weight="bold")
     ax.axhline(1.0, color=a1.FAINT, lw=1)
     ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
@@ -195,6 +215,10 @@ def main():
     bench = {b: px[b].loc[START:END].pct_change() for b in BENCH if b in px.columns}
     top = build_book(("top", None, comp), members, px, spy_ret, dfii10)
     ew = build_book(None, members, px, spy_ret, dfii10)
+    spy_full = px["SPY"].loc[WARMUP_START:END].pct_change()
+    top_w = build_book(("top", None, comp), members, px, spy_full, dfii10, start=WARMUP_START)["book"]
+    ew_w = build_book(None, members, px, spy_full, dfii10, start=WARMUP_START)["book"]
+    hedge_px = {hn: px[hn].loc[WARMUP_START:END].pct_change() for hn in HEDGES}
     spy = bench["SPY"]
 
     out = {"window": [START, END], "book": a1.stats(top["book"], spy),
@@ -218,8 +242,8 @@ def main():
     out["hedged"] = {}
     hedged_series = {}
     for hname in HEDGES:
-        for lab, bk in (("book", top["book"]), ("published", ew["book"])):
-            net, beta = hedge(bk, bench[hname])
+        for lab, bk, src in (("book", top["book"], top_w), ("published", ew["book"], ew_w)):
+            net, beta = hedge(bk, hedge_px[hname], src)
             hedged_series[(hname, lab)] = net
             out["hedged"][f"{lab} - {hname}"] = {
                 **{w: a1.stats(net.loc[a:b]) for w, (a, b) in WINDOWS.items()},
