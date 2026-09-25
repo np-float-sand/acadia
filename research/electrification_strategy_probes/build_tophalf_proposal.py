@@ -19,6 +19,11 @@ re-formed at each month-end from filings/prices known that day, held (weights dr
 the next month-end. Shorted two ways: a fixed 0.25x, and at the same trailing 252-day beta as
 the ETFs. Pays NAME_BORROW a year, 10bp on basket turnover and on every change in hedge size.
 
+The trailing year needs a real 2018 book. The published membership starts 2019-01, so the warm-up
+books use `_warmup_members.pkl` (the identical rule run over 2018 by `build_warmup_members.py`)
+for the months before 2019 and the published membership from 2019 on. Without it the 2018 book is
+empty and every hedge ratio ramps up from ~0 through 2019.
+
 Stats and figures reuse `build_a1a4_proposal` so every number is computed the
 same way as the published proposal. Writes output_html/img/tophalf/.
 """
@@ -342,8 +347,10 @@ def main():
     top = build_book(("top", None, comp), members, px, spy_ret, dfii10)
     ew = build_book(None, members, px, spy_ret, dfii10)
     spy_full = px["SPY"].loc[WARMUP_START:END].pct_change()
-    top_w = build_book(("top", None, comp), members, px, spy_full, dfii10, start=WARMUP_START)["book"]
-    ew_w = build_book(None, members, px, spy_full, dfii10, start=WARMUP_START)["book"]
+    warm = pickle.load(open(os.path.join(OUT, "_warmup_members.pkl"), "rb"))
+    members_w = pd.concat([warm.loc[:"2018-12-31"], members.loc["2019-01-01":]]).fillna(False).astype(bool)
+    top_w = build_book(("top", None, comp), members_w, px, spy_full, dfii10, start=WARMUP_START)["book"]
+    ew_w = build_book(None, members_w, px, spy_full, dfii10, start=WARMUP_START)["book"]
     hedge_px = {hn: sum(w * px[t].loc[WARMUP_START:END].pct_change() for t, w in mix.items())
                 for hn, mix in HEDGES.items()}
     spy = bench["SPY"]

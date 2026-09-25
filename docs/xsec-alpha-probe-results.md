@@ -489,3 +489,30 @@ The beta variants lift Calmar slightly (betas/scarcity 0.89 → 1.11-1.13) but o
 the beta×shock variants are actively harmful (t −2 to −4): they buy what power markets just rewarded,
 which then lags. Caveat for the short side: it has not been checked whether the power signals help the
 14-signal SHORT either — the ablation (short ranked on the 8 non-power signals) is still to run.
+
+## Is sensitivity to power prices itself a reason to short? (2026-09-25) — NO
+
+`python -m research.xsec_alpha_probe.power_sensitivity`. Hypothesis: winners are resilient because
+they have insulated themselves from short-term power-price moves, so high |power beta| (either sign)
+marks names to short. Pre-set: insulation = −mean(|β_energy|, |β_congestion|, |β_scarcity|), each |β|
+winsorized + z-scored; bar |t| > 1.5 in 2023-26 with + sign.
+
+1. **Not a return predictor.** Rank-IC 1m t +0.64 / +0.38 / +0.52, 3m t +0.81 / +0.05 / +1.01
+   (full / 19-22 / 23-26) → FAIL. The most power-sensitive quintile actually rose 19%/yr.
+2. **The winners are not the insulated names.** Mean |β| z: TOP_HALF −0.06, rest of the screened book
+   −0.13, 14-signal short basket +0.14, universe 0. The whole capital-light book is a little less
+   power-sensitive than the universe, but the top half is *more* sensitive than the bottom half.
+3. **As a 0.25× short sleeve on TOP_HALF** (10bp + 1%/yr borrow; months with no score = unhedged):
+
+| short sleeve | Sharpe full / 19-22 / 23-26 | Calmar full / 19-22 / 23-26 | maxDD | 2020 | leg return/yr |
+|---|---|---|---|---|---|
+| none | 1.23 / 0.92 / 1.61 | 0.89 / 0.70 / 1.82 | −39% | +20% | — |
+| S_all14 (14 signals) | 1.34 / 1.00 / 1.75 | 0.99 / 0.76 / 2.11 | −32% | +19% | +12% |
+| S_8 (14 minus the 6 power signals) | 1.33 / 1.02 / 1.68 | 0.98 / 0.76 / 1.85 | −33% | +24% | +10% |
+| S_sens (most power-sensitive quintile) | 1.32 / 0.95 / 1.78 | 0.94 / 0.72 / 2.06 | −33% | +10% | +19% |
+
+   S_sens is no better than S_all14 (it has no score for 11 early months). **Method note:** a first pass
+   that *dropped* those months showed Calmar 1.45 — an artifact of skipping months, withdrawn.
+4. **Ablation — do power signals help the short?** Only a little, and only since 2023: removing them
+   leaves 2019-22 unchanged (Sharpe 1.02 vs 1.00) and costs 2023-26 Sharpe 1.75 → 1.68, Calmar
+   2.11 → 1.85. The short's edge is mostly the 8 non-power signals.
