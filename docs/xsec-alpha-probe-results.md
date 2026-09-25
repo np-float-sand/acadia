@@ -299,3 +299,38 @@ metro areas (the paper's unit) more than double coverage (6 → 15 book names) a
 vanish, with better coverage; losing it points to the city result being a small-sample fit on
 ~6 names. **Verdict: metro retry FAILS; composite+city stays only because the user adopted it as
 the benchmark (2026-09-25) — treat it as fragile, and 0.81 (composite alone) as the robust floor.**
+
+## All variants through the real (published) backtest (2026-09-25)
+
+The monthly proxy used above (plain EW, no vol target, month-end rebalance) is **not** the book.
+`realbook.py` reruns every selection variant through the published book's exact path — its saved
+membership (`output_html/img/a1a4/_build_cache.pkl`: 4-yr lookback, 0.60 capex quantile,
+seed-free prices), daily `simulate_basket` (42-day rebalance, 25% cap, listing gate), 20% vol
+target, valuation de-lever, 15% GLD/IEF sleeve, 2019-01 → 2026-08. Only the target function
+changes. **EW reproduces the published book exactly: Sharpe 1.050, Calmar 1.118.**
+`L/S vs GRID` = the raw basket minus GRID at full-sample daily beta (no overlay, rf 0).
+
+| variant | shipped SR | shipped Calmar | MaxDD | CAGR | SR 19-22 / 23-26 | L/S vs GRID SR | L/S Calmar | L/S SR 19-22 / 23-26 |
+|---|---|---|---|---|---|---|---|---|
+| **EW (published book)** | 1.050 | 1.118 | −20.0% | 22.4% | 0.60 / 1.55 | 0.38 | 0.16 | −0.19 / 1.10 |
+| tilt 0.5 by composite | 1.058 | **1.141** | −19.7% | 22.5% | 0.61 / 1.57 | 0.42 | 0.18 | −0.18 / 1.16 |
+| **tilt 1.0 by composite** | 1.064 | 1.137 | −19.9% | 22.6% | 0.61 / 1.58 | 0.44 | 0.19 | −0.17 / 1.19 |
+| TOP_HALF composite | 1.082 | 0.956 | −24.1% | 23.0% | 0.55 / 1.72 | **0.58** | 0.22 | −0.19 / 1.47 |
+| TOP_HALF composite + text peers (3a) | 0.940 | 0.934 | −21.0% | 19.6% | 0.25 / 1.79 | 0.49 | 0.16 | −0.33 / 1.47 |
+| TOP_HALF composite + city (3b) | **0.829** | 0.769 | −23.4% | 18.0% | 0.16 / 1.63 | 0.32 | 0.08 | −0.56 / 1.35 |
+| TOP_HALF composite + city ex-oil | **1.092** | 0.992 | −23.4% | 23.2% | 0.60 / 1.68 | 0.56 | 0.24 | −0.12 / 1.37 |
+| TOP_HALF composite + metro (3b retry) | 0.911 | 0.847 | −23.5% | 19.9% | 0.50 / 1.39 | 0.16 | 0.03 | −0.32 / 0.79 |
+
+**Reading.**
+1. **The monthly proxy overstated everything.** The composite+city "0.87" benchmark is **0.83
+   shipped Sharpe — worst of all variants** in the real book; its gain was a proxy artifact.
+2. **The composite helps the shipped book only a little.** Best Sharpe: TOP_HALF (1.08) and
+   TOP_HALF + city ex-oil (1.09) — but both *lower* Calmar (1.12 → 0.96-0.99, MaxDD −20% → −24%).
+   The gentle **tilt 1.0 is the only variant better on both** (1.064 / 1.137), a small gain.
+3. **Long/short vs GRID tops out at 0.58 (TOP_HALF composite) and every variant loses in
+   2019-22.** By the ALPHA rule (positive in both halves) **none is alpha** in the real book — the
+   selection edge is a 2023-26 phenomenon.
+4. **Package issue found:** `electrification_strategy.backtest.run_comparison` prices only the
+   33-name seed + marquee list, so a `screen_auto` run through the CLI silently drops 24 of its 46
+   names (AZZ, CW, DY, IEX, KEYS, MIR, PH, TMO, …). The published figures come from
+   `build_a1a4_proposal.py`, which prices the full universe, so they are unaffected.
