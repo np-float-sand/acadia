@@ -112,8 +112,10 @@ def main() -> pd.DataFrame:
 
     rows = []
     for name, spec in scores().items():
-        base = simulate_basket(cand_prices, START, END, config.REBALANCE_LAG_DAYS,
-                               config.MAX_SINGLE_NAME_WEIGHT, target_fn(spec, members, px)).returns
+        br = simulate_basket(cand_prices, START, END, config.REBALANCE_LAG_DAYS,
+                             config.MAX_SINGLE_NAME_WEIGHT, target_fn(spec, members, px))
+        base = br.returns
+        held = (br.weights > 0).sum(axis=1)
         plain = backtest.compose(base, spy_ret, use_valuation=False)
         core = backtest.compose(base, spy_ret, use_valuation=True)
         mask = hedge_overlay.real_yield_rising_mask(dfii10, plain.index)
@@ -134,7 +136,13 @@ def main() -> pd.DataFrame:
                                      config.ANN)
                 row[f"{label} SR {w}"] = mw["sharpe"]
                 row[f"{label} Calmar {w}"] = mw["cagr"] / abs(mw["max_dd"]) if mw["max_dd"] < 0 else float("nan")
+                row[f"{label} CAGR {w}"] = mw["cagr"]
+                row[f"{label} MaxDD {w}"] = mw["max_dd"]
         row["beta GRID"] = beta
+        row["long names avg"] = float(held.loc[START:END].mean())
+        for w, (a, b) in WINDOWS.items():
+            row[f"long names avg {w}"] = float(held.loc[a:b].mean())
+        row["long names now"] = int(held.iloc[-1])
         rows.append(row)
         print(f"  {name}: shipped SR {row['shipped SR']:.3f}", flush=True)
     out = pd.DataFrame(rows).set_index("variant")
