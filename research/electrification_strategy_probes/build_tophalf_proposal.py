@@ -55,7 +55,9 @@ os.makedirs(OUT, exist_ok=True)
 a1.OUT = OUT                                   # reuse a1's figure code, write here
 START, END = a1.START, a1.END
 BENCH = ["SPY", "GRID", "PAVE", "XLU", "VOLT", "XLI"]
-HEDGES = ["GRID", "PAVE", "XLI"]
+HEDGES = {"GRID": {"GRID": 1.0}, "PAVE": {"PAVE": 1.0}, "XLI": {"XLI": 1.0},
+          "GRID+PAVE": {"GRID": 0.5, "PAVE": 0.5},
+          "GRID+PAVE+XLI": {"GRID": 1 / 3, "PAVE": 1 / 3, "XLI": 1 / 3}}   # daily-rebalanced blends
 HEDGE_BORROW = 0.005                           # assumed borrow on a large ETF short, a year
 HEDGE_COST_BP = 10
 BETA_WINDOW = 252
@@ -218,7 +220,8 @@ def main():
     spy_full = px["SPY"].loc[WARMUP_START:END].pct_change()
     top_w = build_book(("top", None, comp), members, px, spy_full, dfii10, start=WARMUP_START)["book"]
     ew_w = build_book(None, members, px, spy_full, dfii10, start=WARMUP_START)["book"]
-    hedge_px = {hn: px[hn].loc[WARMUP_START:END].pct_change() for hn in HEDGES}
+    hedge_px = {hn: sum(w * px[t].loc[WARMUP_START:END].pct_change() for t, w in mix.items())
+                for hn, mix in HEDGES.items()}
     spy = bench["SPY"]
 
     out = {"window": [START, END], "book": a1.stats(top["book"], spy),
@@ -249,6 +252,16 @@ def main():
                 **{w: a1.stats(net.loc[a:b]) for w, (a, b) in WINDOWS.items()},
                 "beta_mean": round(float(beta.loc[START:END].mean()), 2),
                 "beta_last": round(float(beta.iloc[-1]), 2)}
+            if lab == "book":        # how well the hedge tracks the book: the ex-ante criterion
+                fit = {}
+                for fw, (fa, fb) in {"2018-22": ("2018-01-01", "2022-12-31"),
+                                     "2023+": ("2023-01-01", END)}.items():
+                    dd = pd.concat([src.loc[fa:fb], hedge_px[hname].loc[fa:fb]], axis=1).dropna()
+                    c = float(dd.corr().iloc[0, 1])
+                    bb = dd.cov().iloc[0, 1] / dd.iloc[:, 1].var()
+                    fit[fw] = {"corr": round(c, 3), "resid_vol": round(float((dd.iloc[:, 0] - bb * dd.iloc[:, 1]).std()
+                                                                            * np.sqrt(config.ANN)), 4)}
+                out["hedged"][f"{lab} - {hname}"]["fit"] = fit
     # alpha: Jensen alpha of each book on GRID; and selection = book minus published book
     out["alpha"] = {}
     for w, (a, b) in WINDOWS.items():
