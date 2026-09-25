@@ -123,16 +123,23 @@ def main() -> pd.DataFrame:
         g = grid_ret.reindex(base.index)
         beta = backtest._beta(base, g)
         ls = (base - beta * g).dropna()
-        row = {"variant": name}
-        for label, r in (("shipped", shipped), ("plain", plain), ("L/S vs GRID", ls)):
-            m = compute_metrics(r.loc[START:END].dropna(), config.RF if label != "L/S vs GRID" else 0.0,
+        # overlay + GRID short: the shipped (overlaid) book, short GRID at ITS beta
+        gs = grid_ret.reindex(shipped.index)
+        beta_shipped = backtest._beta(shipped, gs)
+        shipped_ls = (shipped - beta_shipped * gs).dropna()
+        # or: the raw long/short, then the book's 20% vol target on the spread
+        ls_vt = backtest.compose(ls, spy_ret, use_valuation=False)
+        row = {"variant": name, "beta shipped GRID": beta_shipped}
+        for label, r in (("shipped", shipped), ("plain", plain), ("L/S vs GRID", ls),
+                         ("shipped - GRID", shipped_ls), ("L/S vol-targeted", ls_vt)):
+            m = compute_metrics(r.loc[START:END].dropna(), config.RF if label in ("shipped", "plain") else 0.0,
                                 config.ANN)
             row[f"{label} SR"] = m["sharpe"]
             row[f"{label} Calmar"] = m["cagr"] / abs(m["max_dd"]) if m["max_dd"] < 0 else float("nan")
             row[f"{label} MaxDD"] = m["max_dd"]
             row[f"{label} CAGR"] = m["cagr"]
             for w, (a, b) in WINDOWS.items():
-                mw = compute_metrics(r.loc[a:b].dropna(), config.RF if label != "L/S vs GRID" else 0.0,
+                mw = compute_metrics(r.loc[a:b].dropna(), config.RF if label in ("shipped", "plain") else 0.0,
                                      config.ANN)
                 row[f"{label} SR {w}"] = mw["sharpe"]
                 row[f"{label} Calmar {w}"] = mw["cagr"] / abs(mw["max_dd"]) if mw["max_dd"] < 0 else float("nan")
