@@ -268,3 +268,34 @@ every other lead). The book improvement (0.81 → 0.87 hedged Sharpe, Calmar 0.4
 the placebo at p≈0.04, but rests on ~6 names a month, comes after three signals × three books
 were tried, and fails the universe test it would need to be trusted. Worth one retry only with
 metro-area (CBSA) mapping, which would roughly double coverage.
+
+### Step 3b retry — metro areas, operating-HQ fix, oil check (2026-09-25)
+
+**Why.** Examining the links: EDGAR stores one business address (principal executive office), so
+satellite offices are never counted; today's address is applied to all history (mergers/moves);
+tax inversions put Eaton in Dublin (peers ACN, STE), JCI in Cork, nVent/Pentair in London; exact
+city strings miss suburbs; and the two biggest link clusters are New York (219 links, no book
+names — BEPC/BIPC/ED/NNE following banks and media) and Houston (214 links — PWR, FIX, POWL, IESC
+following COP/CVX/SLB/HAL/BKR/EOG), which could be an oil factor rather than local information.
+
+**Build (fixed before results).** HQ ZIP → county (largest land share, Census 2020 ZCTA-county
+file) → CBSA (2020 delineations; the 2023 file breaks Connecticut). 13 inverted / foreign-domiciled
+firms moved to their US operating-HQ ZIP (ETN Cleveland, JCI Milwaukee, NVT/PNR/MDT Minneapolis,
+TT Charlotte, …). Diagnostic `_ex_energy` drops SIC 13/29 peers. Judged by TOP_HALF of the book
+by composite + signal (`python -m research.xsec_alpha_probe.geo --metro`).
+
+| book (TOP_HALF by …) | book names w/ signal | SR | Calmar | maxDD | hedged SR full / 19-22 / 23-26 | hedged Calmar | label |
+|---|---|---|---|---|---|---|---|
+| composite only | — | 1.23 | 0.89 | −39% | 0.81 / 0.22 / 1.34 | 0.41 | ALPHA |
+| composite + city (first 3b) | 6 | 1.28 | 1.21 | −30% | 0.87 / 0.29 / 1.37 | 0.51 | ALPHA |
+| composite + city, ex-oil peers | 6 | 1.30 | 1.25 | −30% | **0.92** / 0.40 / 1.38 | **0.65** | ALPHA |
+| composite + **metro** | 15 | 1.11 | 0.97 | −31% | **0.58** / 0.24 / 0.87 | 0.37 | ALPHA |
+| composite + metro, ex-oil peers | 15 | 1.12 | 1.04 | −30% | 0.59 / 0.28 / 0.86 | 0.39 | ALPHA |
+
+**Reading.** (1) **Not an oil factor:** dropping oil & gas peers *improves* the city version
+(0.87 → 0.92). (2) **But the effect does not survive a better definition of the same idea:**
+metro areas (the paper's unit) more than double coverage (6 → 15 book names) and the book falls to
+0.58 — *below* composite alone (0.81). A real local-information effect should get stronger, not
+vanish, with better coverage; losing it points to the city result being a small-sample fit on
+~6 names. **Verdict: metro retry FAILS; composite+city stays only because the user adopted it as
+the benchmark (2026-09-25) — treat it as fragile, and 0.81 (composite alone) as the robust floor.**

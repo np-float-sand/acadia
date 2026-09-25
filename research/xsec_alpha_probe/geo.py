@@ -28,6 +28,24 @@ import pandas as pd
 from research.xsec_alpha_probe import data, evaluate as ev, peers, run, tenk, tilt
 
 MIN_PEERS = 2
+ENERGY_SIC2 = frozenset({"13", "29"})      # oil & gas extraction, refining
+# Operating HQ ZIPs for firms whose EDGAR address is a tax-inversion / foreign domicile.
+# Only firms with a well-known US operating HQ; genuinely foreign firms keep their address.
+OPERATING_HQ_ZIP: dict[str, str] = {
+    "ETN": "44122",   # Eaton -- Beachwood OH (Cleveland); domicile Dublin
+    "JCI": "53202",   # Johnson Controls -- Milwaukee; domicile Cork
+    "NVT": "55416",   # nVent -- St. Louis Park MN; domicile London
+    "PNR": "55422",   # Pentair -- Golden Valley MN; domicile London
+    "TT": "28036",    # Trane -- Davidson NC (Charlotte); domicile Dublin
+    "ALLE": "46032",  # Allegion -- Carmel IN (Indianapolis); domicile Dublin
+    "STE": "44060",   # Steris -- Mentor OH (Cleveland); domicile Dublin
+    "MDT": "55432",   # Medtronic -- Fridley MN (Minneapolis); domicile Galway
+    "AON": "60601",   # Aon -- Chicago; domicile Dublin
+    "TEL": "19312",   # TE Connectivity -- Berwyn PA (Philadelphia); domicile Galway
+    "GRMN": "66062",  # Garmin -- Olathe KS (Kansas City); domicile Schaffhausen
+    "ST": "02703",    # Sensata -- Attleboro MA; domicile Swindon
+    "BG": "63141",    # Bunge -- St. Louis; domicile Geneva
+}
 
 
 def addresses(refresh: bool = False) -> pd.DataFrame:
@@ -44,15 +62,30 @@ def addresses(refresh: bool = False) -> pd.DataFrame:
         biz = sub.get("addresses", {}).get("business", {}) or {}
         rows.append({"ticker": t, "city": (biz.get("city") or "").strip().upper(),
                      "state": (biz.get("stateOrCountry") or "").strip().upper(),
+                     "zip": (biz.get("zipCode") or "").strip()[:5],
                      "sic": sub.get("sic") or ""})
     out = pd.DataFrame(rows)
     out.to_csv(path, index=False)
     return out
 
 
-def geo_signal(addr: pd.DataFrame, ret_m: pd.DataFrame, univ: pd.DataFrame, outside: bool) -> pd.DataFrame:
+def metro_locations(addr: pd.DataFrame) -> pd.DataFrame:
+    """addr with `loc` = Census CBSA (metro area) from the HQ ZIP, after moving
+    tax-inverted / foreign-domiciled firms to their operating HQ ZIP. Firms whose
+    ZIP maps to no CBSA keep city+state."""
+    a = addr.copy()
+    a["zip"] = a["ticker"].map(OPERATING_HQ_ZIP).fillna(a["zip"])
+    z = pd.read_csv(data.CACHE / "zip_cbsa.csv", dtype=str).set_index("zip")
+    a["loc"] = a["zip"].map(z["cbsa_title"])
+    a["loc"] = a["loc"].fillna(a["city"] + ", " + a["state"])
+    return a
+
+
+def geo_signal(addr: pd.DataFrame, ret_m: pd.DataFrame, univ: pd.DataFrame, outside: bool,
+               drop_peer_sic2: frozenset[str] = frozenset()) -> pd.DataFrame:
     a = addr[(addr["city"] != "")].copy()
-    a["loc"] = a["city"] + ", " + a["state"]
+    if "loc" not in a:
+        a["loc"] = a["city"] + ", " + a["state"]
     a["sic2"] = a["sic"].astype(str).str[:2]
     by_loc = a.groupby("loc")["ticker"].apply(list).to_dict()
     info = a.set_index("ticker")
@@ -66,6 +99,7 @@ def geo_signal(addr: pd.DataFrame, ret_m: pd.DataFrame, univ: pd.DataFrame, outs
         for f in inside & set(info.index):
             peers_ = [p for p in by_loc[info.at[f, "loc"]]
                       if p != f and info.at[p, "sic2"] != info.at[f, "sic2"]
+                      and info.at[p, "sic2"] not in drop_peer_sic2
                       and pd.notna(r.get(p)) and (not outside or p not in inside)]
             if len(peers_) >= MIN_PEERS:
                 row[f] = float(r[peers_].mean())
@@ -136,9 +170,50 @@ def placebo(n: int = 100, seed: int = 0) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def metro_main() -> pd.DataFrame:
+    """3b retry (fixed 2026-09-25, before results): metro-area (CBSA) peers with the
+    operating-HQ fix; primary `metro` = outside-universe, different-SIC2 peers, daytime
+    returns. Diagnostics: `metro_ex_energy` drops oil & gas peers (SIC 13, 29) to test
+    whether the Houston links are just an oil factor; `city` / `city_ex_energy` repeat
+    the first 3b build for comparison. Judged by Sharpe/Calmar of TOP_HALF by
+    composite + signal vs the composite+city benchmark (hedged SR 0.87)."""
+    pd.set_option("display.width", 250, "display.max_columns", 40)
+    univ = data.universe()
+    day_m, _ = peers.monthly_returns(*peers.ohlc())
+    addr = addresses()
+    metro = metro_locations(addr)
+    sigs = {"city": geo_signal(addr, day_m, univ, True),
+            "city_ex_energy": geo_signal(addr, day_m, univ, True, ENERGY_SIC2),
+            "metro": geo_signal(metro, day_m, univ, True),
+            "metro_ex_energy": geo_signal(metro, day_m, univ, True, ENERGY_SIC2)}
+    book = tilt.book_membership(univ.index)
+    comp = tilt.composite(univ, book)
+    cols = univ.columns.union(book.columns)
+    mask = univ.reindex(columns=cols, fill_value=False) | book.reindex(columns=cols, fill_value=False)
+    rows = [{"book": "composite only", **r} for r in _top_half(comp)]
+    for k, v in sigs.items():
+        z = ev.prep(v.reindex(index=univ.index, columns=cols).where(mask))
+        cov = (z.notna() & book.reindex(columns=cols, fill_value=False)).sum(axis=1).loc[run.START:]
+        for r in _top_half(comp.add(z, fill_value=0) / 2):
+            rows.append({"book": f"composite + {k}", "book names w/ signal": float(cov.median()), **r})
+    out = pd.DataFrame(rows).set_index(["book", "window"])
+    out.to_csv(data.CACHE / "results_geo_metro.csv")
+    print(out[["book names w/ signal", "SR", "ann", "maxDD", "Calmar", "hedged SR", "alpha ann",
+               "hedged Calmar", "label"]].round(2).to_string())
+    return out
+
+
+def _top_half(score: pd.DataFrame) -> list[dict]:
+    br = tilt.book_returns(score)
+    hedged, _ = tilt.grid_hedge(br["TOP_HALF"], br["GRID"])
+    return tilt.stats(br["TOP_HALF"], hedged)
+
+
 if __name__ == "__main__":
     import sys
-    if "--placebo" in sys.argv:
+    if "--metro" in sys.argv:
+        metro_main()
+    elif "--placebo" in sys.argv:
         print(placebo().describe(percentiles=[.5, .9]).round(2).to_string())
     else:
         main()
