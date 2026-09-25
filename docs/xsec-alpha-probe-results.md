@@ -464,3 +464,28 @@ Re-run with a **trailing** hedge ratio = the book's beta to the hedge over the p
 
 Removing look-ahead barely moves S_all14 (1.43 → 1.40 Sharpe) and it still beats PAVE on Sharpe and
 Calmar in both windows; PAVE's weak spot is 2019-22 (Sharpe 0.39).
+
+## Do power-market signals help the LONG side? (2026-09-25) — NO
+
+`python -m research.xsec_alpha_probe.long_power` → `_cache/results_long_power.csv`. Score = 0.5 × frozen
+composite (capex_light + rev_accel) + 0.5 × mean z of the chosen power signals; monthly TOP_HALF of the
+`screen_auto` book, pre-overlay. Bar (pre-set): Sharpe AND Calmar beat the frozen book in both halves.
+
+| long score | Sharpe full / 19-22 / 23-26 | Calmar full / 19-22 / 23-26 | GRID-hedged SR | vs frozen, %/yr (t) |
+|---|---|---|---|---|
+| frozen (capex + rev_accel) | 1.23 / 0.92 / 1.61 | 0.89 / 0.70 / 1.82 | 0.81 | — |
+| + power_all (6) | 1.09 / 0.83 / 1.34 | 0.97 / 0.71 / 1.59 | 0.52 | −4.2 (−1.44) |
+| + power_betas (3) | 1.11 / 0.81 / 1.39 | 1.13 / 0.76 / 1.67 | 0.57 | −2.9 (−0.75) |
+| + power_shocks (3) | 0.94 / 0.72 / 1.16 | 0.84 / 0.63 / 1.41 | 0.22 | −8.5 (−2.53) |
+| + beta_energy | 1.03 / 0.70 / 1.39 | 0.79 / 0.53 / 1.78 | 0.40 | −4.2 (−1.17) |
+| + beta_congestion | 1.09 / 0.83 / 1.38 | 0.83 / 0.63 / 1.59 | 0.54 | −2.6 (−1.00) |
+| + beta_scarcity | 1.08 / 0.87 / 1.28 | 1.11 / 0.85 / 1.62 | 0.51 | −3.6 (−0.96) |
+| + bxs_energy | 1.00 / 0.70 / 1.33 | 0.74 / 0.52 / 1.62 | 0.34 | −6.1 (−2.03) |
+| + bxs_congestion | 0.82 / 0.68 / 0.98 | 0.59 / 0.50 / 1.15 | −0.01 | −12.0 (−4.16) |
+| + bxs_scarcity | 1.00 / 0.80 / 1.20 | 0.86 / 0.68 / 1.63 | 0.36 | −7.8 (−2.47) |
+
+**0 of 9 add.** Every variant lowers Sharpe in both halves and the GRID-hedged Sharpe (0.81 → ≤0.57).
+The beta variants lift Calmar slightly (betas/scarcity 0.89 → 1.11-1.13) but only by taking less return;
+the beta×shock variants are actively harmful (t −2 to −4): they buy what power markets just rewarded,
+which then lags. Caveat for the short side: it has not been checked whether the power signals help the
+14-signal SHORT either — the ablation (short ranked on the 8 non-power signals) is still to run.
