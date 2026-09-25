@@ -231,3 +231,40 @@ in 2019-22. The one thing it does is lower drawdown unhedged (Calmar 1.03, maxDD
 property, not selection. Consistent with the literature: spillovers are weakest in heavily covered
 large caps. Caveats: S&P 500 pool is today's list; ~12% of filings excluded; residual extraction
 noise (~112 filings still read like Risk Factors).
+
+## Plan step 3b — co-headquartered (geographic) peer momentum (2026-09-24)
+
+**Build** (`geo.py`): SEC business address (city + state, EDGAR submissions — today's address, not
+point-in-time) for the same 655-firm pool; peers = same city, **different 2-digit SIC** (so it is
+not industry momentum), ≥ 2 peers required. Pre-registered signal = equal-weight mean of peers'
+month-t returns predicting month t+1. Primary `geo_day_out` (outside-universe peers, daytime
+returns); secondaries `geo_day_all`, `geo_cc_out`. **Coverage is thin:** exact city strings miss
+suburbs (the paper used metro areas); ~47 universe names/month have a score, and a median **6 of
+19** book names.
+
+| signal | 1m t full / 19-22 / 23-26 | 3m t full | verdict | top-quintile − universe SR | GRID-hedged |
+|---|---|---|---|---|---|
+| **geo_day_out** (primary) | 1.24 / 1.30 / 0.42 | 0.39 | FAIL | 0.10 / −0.15 / 0.34 | 0.13 |
+| geo_day_all | 1.60 / 1.97 / 0.35 | 1.00 | CLOSE (1m) | 0.11 | 0.10 |
+| geo_cc_out | 0.88 / 0.76 / 0.49 | 0.24 | FAIL | 0.50 / 0.14 / 0.91 | 0.22 |
+
+**In the book:**
+
+| book | SR | Calmar | maxDD | alpha/yr | hedged SR full / 19-22 / 23-26 | hedged Calmar | alpha t | label |
+|---|---|---|---|---|---|---|---|---|
+| TOP_HALF composite (benchmark) | 1.23 | 0.89 | −39% | 12% | 0.81 / 0.22 / 1.34 | 0.41 | 2.07 | ALPHA |
+| TOP_HALF by geo_day_out alone | 1.23 | 1.41 | −28% | 14% | 0.78 / 0.35 / 1.21 | 0.78 | 2.24 | ALPHA |
+| TOP_HALF by composite + geo | 1.28 | 1.21 | −30% | 13% | **0.87** / 0.29 / 1.37 | **0.51** | 2.39 | ALPHA |
+
+**Placebo** (`python -m research.xsec_alpha_probe.geo --placebo`, 100 shuffles of the geo scores
+among the names that have one, each month): geo-alone hedged SR placebo median 0.57 / p90 0.71 →
+real 0.78 at the **97th percentile**; composite+geo placebo median 0.67 / p90 0.83 → real 0.87 at
+the **96th**. About half of the geo-alone book "result" is coverage (which names have a same-city
+peer), not the signal.
+
+**Verdict: FAIL on the pre-registered bar → NOT ADOPTED; kept as a weak lead.** The primary
+signal does not rank the universe (t 1.24, and 0.42 in 2023-26 — the opposite regime pattern to
+every other lead). The book improvement (0.81 → 0.87 hedged Sharpe, Calmar 0.41 → 0.51) clears
+the placebo at p≈0.04, but rests on ~6 names a month, comes after three signals × three books
+were tried, and fails the universe test it would need to be trusted. Worth one retry only with
+metro-area (CBSA) mapping, which would roughly double coverage.

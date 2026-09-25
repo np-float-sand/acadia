@@ -25,3 +25,16 @@ def test_peer_signal_uses_top_outside_leaders_weighted_by_cosine():
     assert abs(out.loc[dt, "A"] - (.5 * .10 + .3 * -.20) / .8) < 1e-12   # B excluded: inside
     allp = peer_signal({dt: sim}, ret, univ, outside=False)
     assert abs(allp.loc[dt, "A"] - (.5 * .10 + .3 * -.20 + .1 * .9) / .9) < 1e-12
+
+
+def test_geo_signal_excludes_same_industry_and_inside_peers():
+    from research.xsec_alpha_probe.geo import geo_signal
+    dt = pd.Timestamp("2024-01-31")
+    addr = pd.DataFrame({"ticker": list("ABCDE"), "city": ["HOUSTON"] * 5, "state": ["TX"] * 5,
+                         "sic": ["3600", "3600", "4911", "2800", "7370"]})
+    ret = pd.DataFrame({t: [v] for t, v in zip("ABCDE", [0.0, 0.5, 0.1, 0.3, 0.2])}, index=[dt])
+    univ = pd.DataFrame({t: [t in "AC"] for t in "ABCDE"}, index=[dt])
+    out = geo_signal(addr, ret, univ, outside=True)
+    assert abs(out.loc[dt, "A"] - (0.3 + 0.2) / 2) < 1e-12     # B same SIC2, C inside universe
+    allp = geo_signal(addr, ret, univ, outside=False)
+    assert abs(allp.loc[dt, "A"] - (0.1 + 0.3 + 0.2) / 3) < 1e-12
