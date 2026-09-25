@@ -1,0 +1,278 @@
+"""Figures + investor stats for the SELECTION proposal (top half by composite).
+
+    python research/electrification_strategy_probes/build_tophalf_proposal.py
+
+The book: the published `screen_auto` A1+A4 membership (same as
+`build_a1a4_proposal.py`), but each rebalance holds only the half of the eligible
+names with the highest frozen composite score (mean z of capex-light and revenue
+acceleration, `research/xsec_alpha_probe`), equal weight, then the same shipped
+overlay (20% vol target + valuation de-lever + 15% GLD/IEF sleeve).
+
+The hedged version shorts an index ETF against the overlaid book at a TRAILING
+252-day beta (lagged a day -- no hindsight), paying HEDGE_BORROW a year on the
+short notional and 10bp on every change in it.
+
+Stats and figures reuse `build_a1a4_proposal` so every number is computed the
+same way as the published proposal. Writes output_html/img/tophalf/.
+"""
+from __future__ import annotations
+
+import json
+import os
+import pickle
+import sys
+
+import numpy as np
+import pandas as pd
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import build_a1a4_proposal as a1  # noqa: E402  (sets the dark matplotlib style)
+from electrification_strategy import backtest, config, hedge_overlay  # noqa: E402
+from electrification_strategy.fred import fetch_series  # noqa: E402
+from grid_equipment_basket.basket import simulate_basket  # noqa: E402
+from grid_equipment_basket.data.prices import fetch_prices  # noqa: E402
+from research.xsec_alpha_probe import data, realbook, tilt  # noqa: E402
+
+plt, mdates = a1.plt, a1.mdates
+OUT = os.path.join(ROOT, "output_html", "img", "tophalf")
+os.makedirs(OUT, exist_ok=True)
+a1.OUT = OUT                                   # reuse a1's figure code, write here
+START, END = a1.START, a1.END
+BENCH = ["SPY", "GRID", "PAVE", "XLU", "VOLT", "XLI"]
+HEDGES = ["GRID", "PAVE", "XLI"]
+HEDGE_BORROW = 0.005                           # assumed borrow on a large ETF short, a year
+HEDGE_COST_BP = 10
+BETA_WINDOW = 252
+WINDOWS = {"full": (START, END), "2019-22": ("2019-01-01", "2022-12-31"),
+           "2022+": ("2022-01-01", END), "2023+": ("2023-01-01", END)}
+
+
+# ------------------------------------------------------------------ data ----
+def load():
+    pub = pickle.load(open(os.path.join(ROOT, "output_html", "img", "a1a4", "_build_cache.pkl"), "rb"))
+    members = pub["members"]
+    px = data.prices().copy()
+    extra = sorted(set(BENCH) | set(config.HEDGE_SLEEVE_TICKERS) | set(config.HEDGE_SHORT_TICKERS))
+    spx = fetch_prices(extra, "2015-01-01", END)
+    for t in spx.columns:
+        if t not in px.columns:
+            px[t] = spx[t].reindex(px.index)
+    univ = data.universe()
+    comp = tilt.composite(univ, tilt.book_membership(univ.index))
+    return pub, members, px, comp
+
+
+def build_book(spec, members, px, spy_ret, dfii10):
+    cand = px[[c for c in members.columns if c in px.columns]]
+    br = simulate_basket(cand, START, END, config.REBALANCE_LAG_DAYS, config.MAX_SINGLE_NAME_WEIGHT,
+                         realbook.target_fn(spec, members, px))
+    raw = br.returns
+    vol_only = backtest.compose(raw, spy_ret, use_valuation=False)
+    core = backtest.compose(raw, spy_ret, use_valuation=True)
+    rising = hedge_overlay.real_yield_rising_mask(dfii10, core.index)
+    book = hedge_overlay.apply_hedge(core, hedge_overlay.sleeve_returns(px),
+                                     hedge_overlay.short_returns(px), rising, True, False)
+    return {"raw": raw, "vol_only": vol_only, "core": core, "book": book,
+            "weights": br.weights, "held": (br.weights > 0).sum(axis=1)}
+
+
+def hedge(book: pd.Series, h: pd.Series) -> tuple[pd.Series, pd.Series]:
+    """book minus trailing-beta x h, net of borrow and hedge trading. Returns (net, beta)."""
+    h = h.reindex(book.index)
+    beta = (book.rolling(BETA_WINDOW, min_periods=126).cov(h)
+            / h.rolling(BETA_WINDOW, min_periods=126).var()).shift(1).clip(0, 2)
+    beta = beta.fillna(beta.dropna().iloc[0] if beta.notna().any() else 0.0)
+    cost = beta * HEDGE_BORROW / config.ANN + beta.diff().abs().fillna(0) * HEDGE_COST_BP / 1e4
+    return (book - beta * h - cost).dropna(), beta
+
+
+def alpha(r: pd.Series, h: pd.Series) -> dict:
+    """Jensen alpha of r on h (daily OLS), annualised, Newey-West t (5 lags)."""
+    d = pd.concat([r.rename("r"), h.rename("h")], axis=1).dropna()
+    X = np.column_stack([np.ones(len(d)), d["h"].values])
+    coef, *_ = np.linalg.lstsq(X, d["r"].values, rcond=None)
+    e = d["r"].values - X @ coef
+    n, L = len(d), 5
+    Xe = X * e[:, None]
+    S = Xe.T @ Xe
+    for lag in range(1, L + 1):
+        w = 1 - lag / (L + 1)
+        G = Xe[lag:].T @ Xe[:-lag]
+        S += w * (G + G.T)
+    XtXi = np.linalg.inv(X.T @ X)
+    se = np.sqrt(np.diag(XtXi @ S @ XtXi))
+    return {"alpha": float(coef[0] * config.ANN), "beta": float(coef[1]), "t": float(coef[0] / se[0])}
+
+
+def names_turnover(weights: pd.DataFrame, exposure: pd.Series) -> float:
+    """Annual two-way turnover from changing names, scaled by the overlay's exposure."""
+    w = weights.loc[START:END]
+    chg = w.diff().abs().sum(axis=1)
+    chg = chg[chg > 1e-9].iloc[1:]
+    years = (w.index[-1] - w.index[0]).days / 365.25
+    return float((chg * exposure.reindex(chg.index).fillna(1.0)).sum() * (1 - config.HEDGE_SLEEVE_WEIGHT) / years)
+
+
+def overlay_turnover(d: dict) -> dict:
+    raw, core, book = d["raw"], d["core"], d["book"]
+    w_s = config.HEDGE_SLEEVE_WEIGHT
+    rf = config.RF / config.ANN
+    denom = (raw - rf).where((raw - rf).abs() > 1e-9)
+    exp = ((core - rf) / denom).clip(0, config.VOL_MAX_LEVERAGE).ffill().fillna(1.0)
+    years = (raw.index[-1] - raw.index[0]).days / 365.25
+    sleeve = (book - (1 - w_s) * core) / w_s
+    turn = {"names": names_turnover(d["weights"], exp),
+            "resize": float(exp.diff().abs().sum()) * (1 - w_s) / years,
+            "sleeve": float((w_s * (1 - w_s) * (sleeve - exp * raw).abs()).sum()) / years}
+    turn["total"] = sum(turn.values())
+    return turn
+
+
+# ------------------------------------------------------------- figures ----
+def fig_selection(top, ew, bench):
+    fig, ax = plt.subplots(figsize=(8.4, 4.3))
+    ends = []
+    for label, r, c, lw in [("Selection book", top, a1.C_BOOK, 2.3),
+                            ("Published book (all names)", ew, a1.FAINT, 1.7),
+                            ("GRID ETF", bench["GRID"], a1.C_GRID, 1.5)]:
+        cv = a1.curve(r.loc[START:END])
+        ax.plot(cv.index, cv.values, color=c, lw=lw, label=label)
+        ends.append([float(cv.iloc[-1]), cv.index[-1], c, float(cv.iloc[-1])])
+    ends.sort(key=lambda e: e[0])
+    for i in range(1, len(ends)):                 # push near-equal endpoints apart (log space)
+        if np.log10(ends[i][0]) - np.log10(ends[i - 1][0]) < 0.035:
+            ends[i][0] = 10 ** (np.log10(ends[i - 1][0]) + 0.035)
+    for ypos, xend, c, val in ends:
+        ax.annotate(f"  {val:.2f}x", (xend, ypos), color=c, fontsize=9.5, va="center", weight="bold")
+    ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
+    ax.text(pd.Timestamp("2023-02-01"), ax.get_ylim()[1] * 0.97, "grid tight (2023 on)",
+            color=a1.SOFT, fontsize=9, va="top")
+    ax.set_yscale("log")
+    ax.set_yticks([1, 2, 3, 4, 6])
+    ax.get_yaxis().set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}x"))
+    ax.set_ylabel("growth of $1 (log scale)")
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.set_xlim(cv.index[0], cv.index[-1] + pd.Timedelta(days=330))
+    ax.legend(loc="upper left", fontsize=9.5, labelcolor=a1.INK)
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/selection.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def fig_hedged(hedged_top, hedged_ew):
+    fig, ax = plt.subplots(figsize=(8.4, 3.8))
+    for label, r, c, lw in [("Selection book, short GRID", hedged_top, a1.C_BOOK, 2.3),
+                            ("Published book, short GRID", hedged_ew, a1.FAINT, 1.7)]:
+        cv = a1.curve(r.loc[START:END])
+        ax.plot(cv.index, cv.values, color=c, lw=lw, label=label)
+        ax.annotate(f"  {cv.iloc[-1]:.2f}x", (cv.index[-1], cv.iloc[-1]), color=c, fontsize=9.5,
+                    va="center", weight="bold")
+    ax.axhline(1.0, color=a1.FAINT, lw=1)
+    ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
+    ax.set_ylabel("growth of $1, theme hedged out")
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.set_xlim(cv.index[0], cv.index[-1] + pd.Timedelta(days=330))
+    ax.legend(loc="upper left", fontsize=9.5, labelcolor=a1.INK)
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/hedged.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+# ------------------------------------------------------------------ main ----
+def window_stats(r, spy):
+    return {w: a1.stats(r.loc[a:b], spy) for w, (a, b) in WINDOWS.items()}
+
+
+def main():
+    pub, members, px, comp = load()
+    spy_ret = px["SPY"].loc[START:END].pct_change()
+    dfii10 = fetch_series(config.HEDGE_SHORT_SIGNAL, "2003-01-01", END)
+    bench = {b: px[b].loc[START:END].pct_change() for b in BENCH if b in px.columns}
+    top = build_book(("top", None, comp), members, px, spy_ret, dfii10)
+    ew = build_book(None, members, px, spy_ret, dfii10)
+    spy = bench["SPY"]
+
+    out = {"window": [START, END], "book": a1.stats(top["book"], spy),
+           "published": a1.stats(ew["book"], spy),
+           "bench": {b: a1.stats(r, spy) for b, r in bench.items()},
+           "windows": {"book": window_stats(top["book"], spy), "published": window_stats(ew["book"], spy)},
+           "stages": {k: a1.stats(top[k], spy) for k in ["raw", "vol_only", "core", "book"]},
+           "ytd": a1.stats(top["book"].loc["2026"], spy), "by_year": {}}
+    for y in range(2019, 2027):
+        seg, eseg = top["book"].loc[f"{y}"], ew["book"].loc[f"{y}"]
+        out["by_year"][y] = {
+            "book_ret": round(float((1 + seg).prod() - 1), 4),
+            "pub_ret": round(float((1 + eseg).prod() - 1), 4),
+            "spy_ret": round(float((1 + spy.loc[f"{y}"].dropna()).prod() - 1), 4),
+            "grid_ret": round(float((1 + bench["GRID"].loc[f"{y}"].dropna()).prod() - 1), 4),
+            "book_sharpe": a1.stats(seg)["sharpe"], "book_maxdd": a1.stats(seg)["maxdd"],
+            "book_calmar": a1.stats(seg)["calmar"],
+            "names": round(float(top["held"].loc[f"{y}"].mean()), 1)}
+
+    # hedged versions: trailing beta, borrow + trading charged
+    out["hedged"] = {}
+    hedged_series = {}
+    for hname in HEDGES:
+        for lab, bk in (("book", top["book"]), ("published", ew["book"])):
+            net, beta = hedge(bk, bench[hname])
+            hedged_series[(hname, lab)] = net
+            out["hedged"][f"{lab} - {hname}"] = {
+                **{w: a1.stats(net.loc[a:b]) for w, (a, b) in WINDOWS.items()},
+                "beta_mean": round(float(beta.loc[START:END].mean()), 2),
+                "beta_last": round(float(beta.iloc[-1]), 2)}
+    # alpha: Jensen alpha of each book on GRID; and selection = book minus published book
+    out["alpha"] = {}
+    for w, (a, b) in WINDOWS.items():
+        out["alpha"][w] = {
+            "book_vs_GRID": alpha(top["book"].loc[a:b], bench["GRID"].loc[a:b]),
+            "published_vs_GRID": alpha(ew["book"].loc[a:b], bench["GRID"].loc[a:b]),
+            "book_vs_published": alpha(top["book"].loc[a:b], ew["book"].loc[a:b]),
+            "book_vs_SPY": alpha(top["book"].loc[a:b], spy.loc[a:b])}
+
+    # costs
+    turn = overlay_turnover(top)
+    turn_pub = overlay_turnover(ew)
+    net = {bp: a1.stats(top["book"] - turn["total"] * bp / 1e4 / config.ANN)
+           for bp in (2, 10, 20, 30)}
+    net_fee = {fee: a1.stats(top["book"] - turn["total"] * 10 / 1e4 / config.ANN - fee / config.ANN)
+               for fee in (0.01, 0.02)}
+    net23 = {bp: a1.stats((top["book"] - turn["total"] * bp / 1e4 / config.ANN).loc["2023-01-01":END])
+             for bp in (10, 20)}
+    hg = hedged_series[("GRID", "book")]
+    hedged_net = {bp: {w: a1.stats((hg - turn["total"] * bp / 1e4 / config.ANN).loc[a:b])
+                       for w, (a, b) in WINDOWS.items()} for bp in (10, 20)}
+    out["cost"] = {"turnover": turn, "turnover_published": turn_pub, "net": net, "net_fee": net_fee,
+                   "net_2023": net23, "hedged_net": hedged_net}
+
+    w = top["weights"].iloc[-1]
+    out["holdings"] = sorted(w[w > 0].index)
+    wp = ew["weights"].iloc[-1]
+    out["holdings_published"] = sorted(wp[wp > 0].index)
+    out["composite_last"] = {t: round(float(v), 2) for t, v in
+                             comp.dropna(how="all").iloc[-1].reindex(out["holdings_published"]).fillna(0).sort_values(ascending=False).items()}
+    out["breadth"] = {"mean": round(float(top["held"].loc[START:END].mean()), 1),
+                      "mean_2023": round(float(top["held"].loc["2023-01-01":END].mean()), 1),
+                      "last": int(top["held"].iloc[-1]), "min": int(top["held"].loc[START:END].min()),
+                      "published_last": int(ew["held"].iloc[-1])}
+    liq = data.dollar_volume()[out["holdings"]].loc[:END].tail(252).median()
+    out["liquidity"] = {"min_name": liq.idxmin(), "min_dollar_volume_m": round(float(liq.min()) / 1e6, 1),
+                        "median_dollar_volume_m": round(float(liq.median()) / 1e6, 1)}
+    json.dump(out, open(f"{OUT}/stats.json", "w"), indent=1, default=float)
+
+    d = {"book": top["book"], "raw": top["raw"], "vol_only": top["vol_only"], "core": top["core"],
+         "bench": bench, "held": top["held"].loc[START:END]}
+    a1.fig_growth(d); a1.fig_drawdown(d); a1.fig_years(d); a1.fig_riskreturn(d)
+    a1.fig_breadth(d); a1.fig_overlay(d); a1.fig_beta(d, out)
+    fig_selection(top["book"], ew["book"], bench)
+    fig_hedged(hedged_series[("GRID", "book")], hedged_series[("GRID", "published")])
+    print(f"wrote figures + stats.json to {OUT}")
+    print(json.dumps({"book": out["book"], "published": out["published"]}, indent=1, default=float))
+
+
+if __name__ == "__main__":
+    main()
