@@ -192,3 +192,42 @@ capex-heavy short earns more in 2023-26 but deepens the drawdown to −41%, is w
 1.5× gross short in names that were un-borrowable in the earlier short-leg work, and the
 50/50 blend's gain (0.81 → 0.87 SR, Calmar 0.41 → 0.51) is within noise and all 2023-26. All three
 are labelled ALPHA, but every one is ~zero in 2019-22.
+
+## Plan step 3a — text-similar peer momentum (2026-09-24)
+
+**Build.** Hoberg-Phillips TNIC is keyed by Compustat gvkey (paid mapping) and ends 2023, so the
+same measure was rebuilt from free EDGAR text: 10-K Item 1 (Business) for the eligible universe
+ever + current S&P 500 (655 firms, 5,375 filings 2017-2026, `research/xsec_alpha_probe/tenk.py`).
+Each month-end: TF-IDF (stop words out, words in >25% of docs out, sublinear tf) over every firm's
+latest Item 1 filed ≤ t and within 18 months; follower → its 10 highest-cosine leaders. Pool
+475-562 firms/month. Two extraction problems found and fixed before running: (1) 640 filings /
+109 firms where Item 1 could not be located fell back to the whole 10-K and matched each other on
+legal boilerplate (WESCO's "peers" were MCD, O, CAH) → excluded; (2) 708 filings / 159 firms where a
+cross-reference inside Risk Factors was taken as Item 1 (MYRG) → rule changed to the first real
+section, refetched.
+
+**Pre-registered signal** (`peers.py`): cosine-weighted mean of the leaders' month-t returns,
+predicting month t+1. Primary `peer_day_out` = leaders outside the month's eligible universe,
+daytime (open→close) returns; secondaries `peer_day_all` (all leaders), `peer_cc_out` (close-to-close).
+
+| signal | 1m t full / 19-22 / 23-26 | 3m t | verdict | top-quintile − universe SR (full / 19-22 / 23-26) | GRID-hedged |
+|---|---|---|---|---|---|
+| **peer_day_out** (primary) | 1.62 / 0.53 / 1.90 | 0.79 | CLOSE (1m) / FAIL (3m) | 0.31 / 0.12 / 0.46 | 0.18 |
+| peer_day_all | 2.17 / **−0.18** / 3.87 | 0.67 | FAIL (sign flip) | 0.64 / −0.18 / 1.35 | 0.42 |
+| peer_cc_out | 1.10 / 0.56 / 1.04 | 0.78 | FAIL | 0.51 / 0.66 / 0.40 | 0.22 |
+
+**Against the benchmark (TOP_HALF of the book, GRID-hedged 0.81 / Calmar 0.41, ALPHA):**
+
+| book | SR | Calmar | maxDD | alpha/yr | hedged SR full / 19-22 / 23-26 | hedged Calmar | alpha t | label |
+|---|---|---|---|---|---|---|---|---|
+| TOP_HALF composite (benchmark) | 1.23 | 0.89 | −39% | 12% | 0.81 / 0.22 / 1.34 | 0.41 | 2.07 | ALPHA |
+| TOP_HALF by peer_day_out alone | 1.02 | **1.03** | **−28%** | 6% | 0.40 / −0.18 / 0.95 | 0.21 | 1.13 | BETA |
+| TOP_HALF by composite + peer | 1.11 | 0.95 | −35% | 8% | 0.58 / −0.08 / 1.23 | 0.29 | 1.63 | BETA |
+
+**Verdict: FAIL / NOT ADOPTED.** The primary signal is CLOSE at 1m only (2019-22 t 0.53) and fails
+at 3m. Blending it into the composite *lowers* the benchmark's hedged Sharpe (0.81 → 0.58) and
+turns it from ALPHA to BETA. The all-leaders version is the theme again: t 3.87 in 2023-26, negative
+in 2019-22. The one thing it does is lower drawdown unhedged (Calmar 1.03, maxDD −28%) — a beta
+property, not selection. Consistent with the literature: spillovers are weakest in heavily covered
+large caps. Caveats: S&P 500 pool is today's list; ~12% of filings excluded; residual extraction
+noise (~112 filings still read like Risk Factors).

@@ -65,12 +65,13 @@ def weights(members: list[str], z: pd.Series) -> dict[str, pd.Series]:
     return {k: v / v.sum() for k, v in out.items() if v.sum() > 0}
 
 
-def book_returns() -> pd.DataFrame:
+def book_returns(score: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Monthly book returns; `score` replaces the frozen composite (for later steps)."""
     px_m = data.monthly_prices(data.prices())
     fwd1 = px_m.pct_change(fill_method=None).shift(-1)
     univ = data.universe()
     book = book_membership(univ.index)
-    comp = composite(univ, book)
+    comp = composite(univ, book) if score is None else score.reindex(univ.index)
     rows, prev = {}, {}
     for dt in univ.index:
         if dt not in fwd1.index:
