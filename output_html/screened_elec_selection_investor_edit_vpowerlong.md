@@ -442,13 +442,37 @@ for exposure to the theme is alpha. A t-statistic above 2 means the result is un
 | Long/short vs S&P 500 | 20.8% | 3.4 |
 | *Ranking alone: top half vs all qualifying names, equally weighted* | 7.1% | 2.7 |
 
-- **The alpha survives the short.** About 21.7% a year against GRID since 2023, at a beta of 0.47 to
-  GRID: the short removes theme exposure, not stock-selection skill.
+- **The alpha survives the short.** About 21.7% a year of return is not explained by moving with GRID
+  (beta 0.47 to GRID). The short removes theme exposure; what remains comes from the sources below.
 - **The alpha is statistically strong**, with a t-statistic of 3.9 against GRID and 3.4 against the S&P 500.
-- **The ranking adds about 7 points a year** over holding every qualifying name equally
-  (t ≈ 2.7). Much of that shows up together with the volatility target: the ranked names are
-  more volatile, and the target sizes them down when they are. It reflects how the ranking and the risk
-  controls work together, not stock picking alone.
+
+#### Sources of the Alpha
+
+The strategy's daily return splits into the pieces below; each piece's alpha against GRID adds up
+exactly to the total.
+
+| 2023 – Aug 2026 | alpha vs GRID, a year | share |
+|---|---|---|
+| *Long stock selection: the held names, at the book's average size (67% exposure)* | **11.8%** | 54% |
+| *Short stock selection: the shorted names doing worse than their theme exposure implies* | 2.0% | 9% |
+| *Risk-control timing: volatility target and stretch cut, versus holding the average size throughout* | 5.9% | 27% |
+| *Gold/Treasury sleeve (15%)* | 1.6% | 7% |
+| *Cash interest on the part the risk controls keep out of stocks* | 1.1% | 5% |
+| *Short borrow cost* | −0.2% | −1% |
+| *Trading costs* | −0.5% | −2% |
+| **Total** | **21.7%** | 100% |
+
+- **About two-thirds is stock selection** (14 points, long and short together). Per dollar, the long
+  names beat their GRID exposure by 20.5% a year and the shorted names fell short of theirs by 7.4%.
+  Part of this is choosing which corner of the theme to own (capital-light, profitable, on-theme
+  suppliers); the ranking within that corner adds about 7 points a year (t ≈ 2.7) over holding every
+  qualifying name equally. Part is style: controlling for momentum, size, quality and the other style
+  factors leaves 18.6% of the 21.7% (see *Style Factors* below).
+- **About a quarter is timing from the risk controls** (6 points): the book was larger when markets
+  were calm and smaller when they were volatile or stretched.
+- **The gold/Treasury sleeve and cash add about 3 points**: their returns are unrelated to GRID.
+- **The short earns positive alpha (2.0%) even though it lost money** (about −2% a year): by removing
+  theme exposure it gives up GRID-driven return, and what it contributes beyond that is positive.
 
 ### Style Factors
 

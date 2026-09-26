@@ -11,8 +11,8 @@ signal is skipped, not counted as zero), instead of `build_tophalf_proposal`'s t
 
 Writes to output_html/img/tophalf_powerlong/:
   * every chart and stats.json      -- via build_tophalf_proposal.main() with OUT redirected;
-  * extras.json                     -- the write-up tables stats.json does not hold: risk-control
-                                       stages (full + 2023+), short/step-aside stages, style-factor
+  * extras.json                     -- the write-up tables stats.json does not hold: alpha split,
+                                       risk-control stages (full + 2023+), short/step-aside stages, style-factor
                                        regressions (2023+), momentum-sell-off episodes, and the
                                        up/down-month short rationale.
 
@@ -130,6 +130,54 @@ def extras(comp: pd.DataFrame) -> dict:
     return out
 
 
+def alpha_split(comp: pd.DataFrame, start: str = "2023-01-01") -> dict:
+    """Split the strategy's alpha vs GRID into additive sources (write-up §Sources of the Alpha).
+
+    Re-runs investor_book.build's daily loop (same order of updates, 10bp) and books each day's return
+    as long selection at the window's mean exposure, cash on the unexposed part, risk-control timing
+    (exposure minus its mean, times the long book's excess over cash), sleeve, short, borrow and costs.
+    The pieces sum to build()'s returns; OLS alpha is linear, so their alphas sum to the total."""
+    from electrification_strategy import hedge_overlay
+    pub, members, px, _ = t.load()
+    spy = px["SPY"].loc[t.START:t.END].pct_change()
+    grid = px["GRID"].pct_change()
+    ib._CACHE.clear()
+    cost, rf, k = 10 / 1e4, config.RF / config.ANN, t.FIXED_K
+    raw, W = ib.long_book(members, comp, px)
+    days = raw.loc[t.START:t.END].index
+    raw, W = raw.reindex(days).fillna(0.0), W.reindex(days).ffill().fillna(0.0)
+    hx, rtrade = ib.banded_exposure(raw, spy.reindex(days))
+    sl = hedge_overlay.sleeve_returns(px).reindex(days).fillna(0.0)
+    ws = config.HEDGE_SLEEVE_WEIGHT
+    month_end = set(pd.Series(days, index=days).resample("ME").last().values)
+    b, btrade, _, _ = ib.short_basket(px, days, long_weights=W, key=(ib.LONG_HOLD, True))
+    hbar = float(hx.loc[start:].mean())
+    rows, sleeve_tr, short_tr, wsl, s = [], [], [], ws, k
+    for d in days:
+        rb = (1 - wsl) * (hx[d] * raw[d] + (1 - hx[d]) * rf) + wsl * sl[d]
+        r = rb - s * b[d] - s * t.NAME_BORROW / config.ANN
+        rows.append({"long_selection": (1 - wsl) * hbar * raw[d], "cash": (1 - wsl) * (1 - hbar) * rf,
+                     "timing": (1 - wsl) * (hx[d] - hbar) * (raw[d] - rf), "sleeve": wsl * sl[d],
+                     "short": -s * b[d], "borrow": -s * t.NAME_BORROW / config.ANN})
+        wd, sd = wsl * (1 + sl[d]) / (1 + rb), s * (1 + b[d]) / (1 + r)
+        sleeve_tr.append(abs(wd - ws) * 2 if d in month_end else 0.0)
+        short_tr.append(abs(sd - k) if d in month_end else 0.0)
+        wsl, s = (ws, k) if d in month_end else (wd, sd)
+    C = pd.DataFrame(rows, index=days)
+    trades = [W.diff().abs().sum(axis=1).fillna(0.0) * hx * (1 - ws), rtrade * (1 - ws),
+              pd.Series(sleeve_tr, index=days), btrade * k, pd.Series(short_tr, index=days)]
+    C["costs"] = -sum(trades) * cost
+
+    def alpha(y):
+        d = pd.concat([y.rename("y"), grid.rename("g")], axis=1).loc[start:t.END].dropna()
+        return float(np.linalg.lstsq(np.column_stack([np.ones(len(d)), d.g]), d.y, rcond=None)[0][0] * config.ANN)
+    out = {c: round(alpha(C[c]), 4) for c in C.columns}
+    out["total"] = round(alpha(C.sum(axis=1)), 4)
+    out["mean_exposure"] = round(hbar, 3)
+    out["per_dollar"] = {"long_names": round(alpha(raw), 4), "short_basket": round(alpha(b), 4)}
+    return out
+
+
 def main() -> None:
     os.makedirs(OUT, exist_ok=True)
     warm = os.path.join(t.OUT, "_warmup_members.pkl")          # the warm-up membership main() reads from OUT
@@ -145,7 +193,7 @@ def main() -> None:
         return pub, members, px, comp.reindex(index=frozen.index.union(comp.index)).sort_index()
     t.load = load
     t.main()
-    json.dump(extras(comp), open(os.path.join(OUT, "extras.json"), "w"), indent=1)
+    json.dump(extras(comp) | {"alpha_split_2023": alpha_split(comp)}, open(os.path.join(OUT, "extras.json"), "w"), indent=1)
     print("wrote", OUT)
 
 

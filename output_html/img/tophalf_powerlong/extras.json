@@ -340,5 +340,20 @@
    "LOVOLe_b": -0.2,
    "SIZEe_b": 0.19
   }
+ },
+ "alpha_split_2023": {
+  "long_selection": 0.1179,
+  "cash": 0.0111,
+  "timing": 0.059,
+  "sleeve": 0.0161,
+  "short": 0.0197,
+  "borrow": -0.0025,
+  "costs": -0.0045,
+  "total": 0.2168,
+  "mean_exposure": 0.673,
+  "per_dollar": {
+   "long_names": 0.2054,
+   "short_basket": -0.0737
+  }
  }
 }
