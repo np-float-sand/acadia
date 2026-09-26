@@ -1,0 +1,25 @@
+{
+  "winner": "('marquee', 'plain')",
+  "runner_up": "('marquee', '+val+sleeve')",
+  "n_passing": 11,
+  "plateau": [
+    {
+      "scale": 0.8,
+      "sharpe": 0.68,
+      "max_dd": -0.315,
+      "cagr": 0.1526
+    },
+    {
+      "scale": 1.0,
+      "sharpe": 0.718,
+      "max_dd": -0.315,
+      "cagr": 0.1648
+    },
+    {
+      "scale": 1.2,
+      "sharpe": 0.753,
+      "max_dd": -0.315,
+      "cagr": 0.174
+    }
+  ]
+}

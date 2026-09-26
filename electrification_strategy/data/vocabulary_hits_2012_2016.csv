@@ -1,0 +1,1207 @@
+# EDGAR full-text hits, 10-K, 2012-01-01..2016-12-31, customer + policy terms (2016-18 holdout).
+# Rows with phrase __done__ mark a completed ticker (resume markers).
+ticker,phrase,file_date
+AEE,"""substation""",2016-02-26
+AEE,"""substation""",2015-03-02
+AEE,"""substation""",2014-03-03
+AEE,"""substation""",2013-03-01
+AEE,"""transmission and distribution""",2016-02-26
+AEE,"""transmission and distribution""",2015-03-02
+AEE,"""transmission and distribution""",2013-03-01
+AEE,"""transmission and distribution""",2014-03-03
+AEE,"""transmission and distribution""",2012-02-28
+AEE,"""grid modernization""",2013-03-01
+AEE,"""electric utilities""",2012-02-28
+AEE,"""electric utilities""",2013-03-01
+AEE,"""electric utilities""",2014-03-03
+AEE,"""electric utilities""",2016-02-26
+AEE,"""electric utilities""",2015-03-02
+AEE,"""investment tax credit""",2014-03-03
+AEE,"""investment tax credit""",2012-02-28
+AEE,"""investment tax credit""",2013-03-01
+AEE,"""investment tax credit""",2016-02-26
+AEE,"""investment tax credit""",2015-03-02
+AEE,__done__,
+AEIS,"""switchgear""",2012-03-02
+AEIS,"""switchgear""",2014-03-03
+AEIS,"""switchgear""",2013-03-06
+AEIS,"""switchgear""",2015-02-26
+AEIS,__done__,
+AEP,"""transmission and distribution""",2016-02-24
+AEP,"""transmission and distribution""",2015-02-20
+AEP,"""transmission and distribution""",2014-02-25
+AEP,"""transmission and distribution""",2013-02-26
+AEP,"""transmission and distribution""",2012-02-28
+AEP,"""transmission and distribution""",2016-02-24
+AEP,"""transmission and distribution""",2015-02-20
+AEP,"""transmission and distribution""",2014-02-25
+AEP,"""transmission and distribution""",2014-02-25
+AEP,"""transmission and distribution""",2012-02-28
+AEP,"""transmission and distribution""",2013-02-26
+AEP,"""transmission and distribution""",2014-02-25
+AEP,"""electric utilities""",2014-02-25
+AEP,"""electric utilities""",2012-02-28
+AEP,"""electric utilities""",2015-02-20
+AEP,"""electric utilities""",2014-02-25
+AEP,"""electric utilities""",2013-02-26
+AEP,"""electric utilities""",2016-02-24
+AEP,"""electric utilities""",2015-02-20
+AEP,"""electric utilities""",2016-02-24
+AEP,"""electric utilities""",2014-02-25
+AEP,"""electric utilities""",2013-02-26
+AEP,"""electric utilities""",2012-02-28
+AEP,"""investment tax credit""",2016-02-24
+AEP,"""production tax credit""",2016-02-24
+AEP,__done__,
+AES,"""transmission and distribution""",2012-02-27
+AES,"""transmission and distribution""",2013-02-27
+AES,"""transmission and distribution""",2016-02-24
+AES,"""transmission and distribution""",2015-02-26
+AES,"""transmission and distribution""",2014-02-26
+AES,"""electric utilities""",2012-02-27
+AES,"""electric utilities""",2013-02-27
+AES,"""electric utilities""",2014-02-26
+AES,"""electric utilities""",2015-02-26
+AES,"""electric utilities""",2016-02-24
+AES,__done__,
+AME,"""transmission and distribution""",2012-02-23
+AME,"""transmission and distribution""",2013-02-21
+AME,"""transmission and distribution""",2015-02-24
+AME,"""transmission and distribution""",2014-02-26
+AME,"""transmission and distribution""",2016-02-25
+AME,__done__,
+ASML,__done__,
+ATO,"""data center""",2012-11-13
+ATO,"""transmission and distribution""",2016-11-14
+ATO,"""transmission and distribution""",2015-11-06
+ATO,"""transmission and distribution""",2014-11-06
+ATO,"""transmission and distribution""",2013-11-13
+ATO,"""transmission and distribution""",2012-11-13
+ATO,"""electric utilities""",2016-11-14
+ATO,"""electric utilities""",2015-11-06
+ATO,"""electric utilities""",2014-11-06
+ATO,"""electric utilities""",2013-11-13
+ATO,"""electric utilities""",2012-11-13
+ATO,"""investment tax credit""",2013-11-13
+ATO,"""investment tax credit""",2012-11-13
+ATO,__done__,
+AVA,"""transmission and distribution""",2012-02-28
+AVA,"""transmission and distribution""",2014-02-26
+AVA,"""transmission and distribution""",2016-02-24
+AVA,"""transmission and distribution""",2013-02-26
+AVA,"""transmission and distribution""",2015-02-25
+AVA,"""grid modernization""",2012-02-28
+AVA,"""grid modernization""",2013-02-26
+AVA,"""electric utilities""",2012-02-28
+AVA,"""electric utilities""",2013-02-26
+AVA,"""electric utilities""",2014-02-26
+AVA,"""electric utilities""",2015-02-25
+AVA,"""electric utilities""",2016-02-24
+AVA,__done__,
+BC,__done__,
+BKH,"""substation""",2015-08-07
+BKH,"""substation""",2015-02-25
+BKH,"""substation""",2016-02-25
+BKH,"""transmission and distribution""",2012-02-29
+BKH,"""transmission and distribution""",2015-02-25
+BKH,"""transmission and distribution""",2016-02-25
+BKH,"""transmission and distribution""",2014-02-26
+BKH,"""transmission and distribution""",2013-02-25
+BKH,"""transmission and distribution""",2015-08-07
+BKH,__done__,
+BMA,__done__,
+BTU,"""electric utilities""",2012-02-27
+BTU,"""electric utilities""",2016-03-16
+BTU,"""electric utilities""",2013-02-25
+BTU,"""electric utilities""",2014-02-21
+BTU,"""electric utilities""",2015-02-25
+BTU,__done__,
+BWXT,"""electric utilities""",2015-02-25
+BWXT,"""electric utilities""",2015-02-25
+BWXT,"""electric utilities""",2012-02-29
+BWXT,"""electric utilities""",2014-02-26
+BWXT,"""electric utilities""",2013-02-28
+BWXT,__done__,
+CCJ,__done__,
+CGNX,__done__,
+CMI,"""data centers""",2016-02-12
+CMI,"""data centers""",2013-02-20
+CMI,"""data centers""",2014-02-18
+CMI,"""data centers""",2015-02-17
+CMI,"""switchgear""",2013-02-20
+CMI,"""switchgear""",2014-02-18
+CMI,"""switchgear""",2015-02-17
+CMI,"""switchgear""",2016-02-12
+CMI,"""switchgear""",2012-02-21
+CMI,__done__,
+CMS,"""substation""",2016-02-11
+CMS,"""substation""",2014-02-06
+CMS,"""substation""",2015-02-05
+CMS,"""substation""",2013-02-21
+CMS,"""substation""",2012-02-23
+CMS,"""transmission and distribution""",2016-02-11
+CMS,"""transmission and distribution""",2015-02-05
+CMS,"""transmission and distribution""",2014-02-06
+CMS,"""transmission and distribution""",2013-02-21
+CMS,"""transmission and distribution""",2012-02-23
+CMS,"""grid modernization""",2015-02-05
+CMS,"""grid modernization""",2014-02-06
+CMS,"""grid modernization""",2013-02-21
+CMS,"""grid modernization""",2012-02-23
+CMS,"""grid modernization""",2016-02-11
+CMS,"""electric utilities""",2015-02-05
+CMS,"""electric utilities""",2014-02-06
+CMS,"""electric utilities""",2016-02-11
+CMS,"""electric utilities""",2012-02-23
+CMS,"""electric utilities""",2013-02-21
+CMS,"""electric utilities""",2014-02-06
+CMS,"""electric utilities""",2013-02-21
+CMS,"""electric utilities""",2012-02-23
+CMS,"""investment tax credit""",2016-02-11
+CMS,"""investment tax credit""",2015-02-05
+CMS,"""investment tax credit""",2014-02-06
+CMS,"""investment tax credit""",2013-02-21
+CMS,"""investment tax credit""",2012-02-23
+CMS,__done__,
+CNP,"""substation""",2015-02-26
+CNP,"""substation""",2016-02-26
+CNP,"""substation""",2012-02-29
+CNP,"""substation""",2013-02-27
+CNP,"""substation""",2014-02-26
+CNP,"""transmission and distribution""",2012-02-29
+CNP,"""transmission and distribution""",2013-02-27
+CNP,"""transmission and distribution""",2014-02-26
+CNP,"""transmission and distribution""",2015-02-26
+CNP,"""transmission and distribution""",2016-02-26
+CNP,"""electric utilities""",2013-02-27
+CNP,"""electric utilities""",2012-02-29
+CNP,"""electric utilities""",2014-02-26
+CNP,"""electric utilities""",2015-02-26
+CNP,"""electric utilities""",2016-02-26
+CNP,"""investment tax credit""",2013-02-27
+CNP,"""investment tax credit""",2012-02-29
+CNP,"""investment tax credit""",2014-02-26
+CNP,"""investment tax credit""",2015-02-26
+CNP,__done__,
+CW,"""switchgear""",2016-02-25
+CW,"""switchgear""",2015-02-19
+CW,"""switchgear""",2013-02-21
+CW,"""switchgear""",2012-02-24
+CW,"""switchgear""",2014-02-21
+CW,__done__,
+CXT,__done__,
+D,"""data center""",2013-02-28
+D,"""data centers""",2015-02-27
+D,"""data centers""",2014-02-28
+D,"""data centers""",2016-02-26
+D,"""data centers""",2013-02-28
+D,"""data centers""",2012-02-28
+D,"""substation""",2012-02-28
+D,"""substation""",2016-02-26
+D,"""substation""",2014-02-28
+D,"""substation""",2013-02-28
+D,"""substation""",2015-02-27
+D,"""substation""",2012-02-28
+D,"""transmission and distribution""",2012-02-28
+D,"""transmission and distribution""",2015-02-27
+D,"""transmission and distribution""",2016-02-26
+D,"""transmission and distribution""",2014-02-28
+D,"""transmission and distribution""",2013-02-28
+D,"""electric utilities""",2016-02-26
+D,"""electric utilities""",2013-02-28
+D,"""electric utilities""",2015-02-27
+D,"""investment tax credit""",2016-02-26
+D,__done__,
+DB,__done__,
+DHR,"""switchgear""",2016-02-24
+DHR,"""transmission and distribution""",2014-02-21
+DHR,"""transmission and distribution""",2012-02-24
+DHR,"""transmission and distribution""",2015-02-25
+DHR,"""transmission and distribution""",2013-02-22
+DHR,__done__,
+DTE,"""electric utilities""",2014-02-14
+DTE,"""electric utilities""",2015-02-13
+DTE,"""electric utilities""",2016-02-10
+DTE,"""electric utilities""",2012-02-16
+DTE,"""investment tax credit""",2016-02-10
+DTE,"""investment tax credit""",2015-02-13
+DTE,"""investment tax credit""",2013-02-20
+DTE,"""investment tax credit""",2014-02-14
+DTE,"""investment tax credit""",2012-02-16
+DTE,"""investment tax credit""",2013-02-20
+DTE,"""production tax credit""",2015-02-13
+DTE,"""production tax credit""",2013-02-20
+DTE,"""production tax credit""",2014-02-14
+DTE,"""production tax credit""",2016-02-10
+DTE,"""production tax credit""",2012-02-16
+DTE,"""production tax credit""",2013-02-20
+DTE,__done__,
+DUK,"""substation""",2016-02-25
+DUK,"""substation""",2013-03-01
+DUK,"""substation""",2014-02-28
+DUK,"""substation""",2015-03-02
+DUK,"""transmission and distribution""",2013-03-01
+DUK,"""transmission and distribution""",2012-02-28
+DUK,"""transmission and distribution""",2014-02-28
+DUK,"""transmission and distribution""",2015-03-02
+DUK,"""transmission and distribution""",2016-02-25
+DUK,"""grid modernization""",2016-02-25
+DUK,"""grid modernization""",2015-03-02
+DUK,"""grid modernization""",2013-03-01
+DUK,"""grid modernization""",2014-02-28
+DUK,"""electric utilities""",2016-02-25
+DUK,"""electric utilities""",2012-02-28
+DUK,"""electric utilities""",2014-02-28
+DUK,"""electric utilities""",2015-03-02
+DUK,"""electric utilities""",2013-03-01
+DUK,"""investment tax credit""",2012-02-28
+DUK,"""investment tax credit""",2014-02-28
+DUK,"""investment tax credit""",2016-02-25
+DUK,"""investment tax credit""",2015-03-02
+DUK,"""investment tax credit""",2013-03-01
+DUK,"""production tax credit""",2013-03-01
+DUK,"""net energy metering""",2016-02-25
+DUK,__done__,
+DY,"""transmission and distribution""",2012-09-04
+DY,"""transmission and distribution""",2013-09-13
+DY,"""electric utilities""",2012-09-04
+DY,"""electric utilities""",2013-09-13
+DY,"""electric utilities""",2014-09-09
+DY,__done__,
+ED,"""substation""",2013-02-21
+ED,"""substation""",2014-02-21
+ED,"""substation""",2012-02-21
+ED,"""substation""",2016-02-18
+ED,"""substation""",2015-02-19
+ED,"""transmission and distribution""",2012-02-21
+ED,"""transmission and distribution""",2013-02-21
+ED,"""transmission and distribution""",2014-02-21
+ED,"""transmission and distribution""",2016-02-18
+ED,"""transmission and distribution""",2015-02-19
+ED,"""electric utilities""",2016-02-18
+ED,"""electric utilities""",2014-02-21
+ED,"""electric utilities""",2015-02-19
+ED,"""electric utilities""",2012-02-21
+ED,"""electric utilities""",2013-02-21
+ED,"""net energy metering""",2016-02-18
+ED,__done__,
+EIX,"""substation""",2016-02-23
+EIX,"""substation""",2013-02-26
+EIX,"""substation""",2014-02-25
+EIX,"""substation""",2012-02-29
+EIX,"""substation""",2015-02-24
+EIX,"""switchgear""",2015-02-24
+EIX,"""switchgear""",2014-02-25
+EIX,"""switchgear""",2013-02-26
+EIX,"""switchgear""",2012-02-29
+EIX,"""transmission and distribution""",2016-02-23
+EIX,"""transmission and distribution""",2014-02-25
+EIX,"""transmission and distribution""",2015-02-24
+EIX,"""transmission and distribution""",2013-02-26
+EIX,"""transmission and distribution""",2012-02-29
+EIX,"""electric utilities""",2016-02-23
+EIX,"""electric utilities""",2015-02-24
+EIX,"""electric utilities""",2012-02-29
+EIX,"""electric utilities""",2013-02-26
+EIX,"""electric utilities""",2014-02-25
+EIX,"""net energy metering""",2015-02-24
+EIX,"""net energy metering""",2016-02-23
+EIX,"""net energy metering""",2014-02-25
+EIX,__done__,
+EME,"""data centers""",2013-02-26
+EME,"""data centers""",2016-02-25
+EME,"""data centers""",2015-02-26
+EME,"""data centers""",2014-02-25
+EME,"""data centers""",2012-02-27
+EME,"""transmission and distribution""",2013-02-26
+EME,"""transmission and distribution""",2016-02-25
+EME,"""transmission and distribution""",2014-02-25
+EME,"""transmission and distribution""",2015-02-26
+EME,"""transmission and distribution""",2012-02-27
+EME,__done__,
+EMR,"""data center""",2014-11-19
+EMR,"""data center""",2015-11-18
+EMR,"""data center""",2013-11-19
+EMR,"""data center""",2012-11-20
+EMR,"""data center""",2015-11-18
+EMR,"""data center""",2014-11-19
+EMR,"""data center""",2012-11-20
+EMR,"""data center""",2013-11-19
+EMR,"""data center""",2016-11-16
+EMR,"""data center""",2016-11-16
+EMR,"""data centers""",2012-11-20
+EMR,"""data centers""",2014-11-19
+EMR,"""data centers""",2015-11-18
+EMR,"""data centers""",2013-11-19
+EMR,"""data centers""",2015-11-18
+EMR,"""data centers""",2016-11-16
+EMR,"""data centers""",2016-11-16
+EMR,"""data centers""",2012-11-20
+EMR,"""data centers""",2014-11-19
+EMR,"""data centers""",2013-11-19
+EMR,"""investment tax credit""",2016-11-16
+EMR,__done__,
+ENR,__done__,
+ENS,"""switchgear""",2013-05-28
+ENS,"""switchgear""",2013-05-28
+ENS,"""switchgear""",2013-05-28
+ENS,"""switchgear""",2012-05-25
+ENS,"""switchgear""",2014-05-28
+ENS,"""switchgear""",2013-05-28
+ENS,"""switchgear""",2012-05-25
+ENS,"""switchgear""",2015-05-27
+ENS,"""switchgear""",2016-05-31
+ENS,"""electric utilities""",2013-05-28
+ENS,"""electric utilities""",2012-05-25
+ENS,"""electric utilities""",2014-05-28
+ENS,"""electric utilities""",2012-05-25
+ENS,"""electric utilities""",2013-05-28
+ENS,"""electric utilities""",2015-05-27
+ENS,"""electric utilities""",2016-05-31
+ENS,__done__,
+EPAC,__done__,
+EPD,__done__,
+ES,"""substation""",2014-02-25
+ES,"""substation""",2013-02-28
+ES,"""substation""",2012-02-24
+ES,"""substation""",2016-02-26
+ES,"""substation""",2015-02-25
+ES,"""substation""",2014-02-25
+ES,"""transmission and distribution""",2014-02-25
+ES,"""transmission and distribution""",2013-02-28
+ES,"""transmission and distribution""",2012-02-24
+ES,"""transmission and distribution""",2015-02-25
+ES,"""transmission and distribution""",2014-02-25
+ES,"""transmission and distribution""",2016-02-26
+ES,"""grid modernization""",2016-02-26
+ES,"""electric utilities""",2014-02-25
+ES,"""electric utilities""",2013-02-28
+ES,"""electric utilities""",2015-02-25
+ES,"""electric utilities""",2016-02-26
+ES,"""electric utilities""",2012-02-24
+ES,"""investment tax credit""",2016-02-26
+ES,"""investment tax credit""",2015-02-25
+ES,"""investment tax credit""",2014-02-25
+ES,"""investment tax credit""",2013-02-28
+ES,"""investment tax credit""",2012-02-24
+ES,__done__,
+ET,"""data center""",2014-02-27
+ET,"""data center""",2013-03-01
+ET,"""data center""",2016-02-29
+ET,"""data center""",2015-03-02
+ET,"""data center""",2013-03-01
+ET,"""data center""",2016-02-29
+ET,"""data center""",2015-03-02
+ET,"""data center""",2014-02-27
+ET,"""data centers""",2015-03-02
+ET,"""data centers""",2014-02-27
+ET,"""data centers""",2013-03-01
+ET,"""data centers""",2016-02-29
+ET,"""electric utilities""",2015-03-02
+ET,"""electric utilities""",2016-02-29
+ET,"""electric utilities""",2014-02-27
+ET,"""electric utilities""",2013-03-01
+ET,"""electric utilities""",2012-02-22
+ET,__done__,
+ETN,"""data center""",2013-02-28
+ETN,"""data centers""",2015-02-26
+ETN,"""data centers""",2014-02-26
+ETN,"""data centers""",2013-02-28
+ETN,"""data centers""",2016-02-24
+ETN,"""switchgear""",2016-02-24
+ETN,"""switchgear""",2015-02-26
+ETN,"""switchgear""",2013-02-28
+ETN,"""switchgear""",2014-02-26
+ETN,"""switchgear""",2013-02-28
+ETN,"""switchgear""",2014-02-26
+ETN,"""switchgear""",2015-02-26
+ETN,"""transmission and distribution""",2013-02-28
+ETN,__done__,
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2014-02-27
+ETR,"""substation""",2012-02-28
+ETR,"""substation""",2016-02-26
+ETR,"""substation""",2013-02-27
+ETR,"""substation""",2015-02-26
+ETR,"""substation""",2014-02-27
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2012-02-28
+ETR,"""transmission and distribution""",2013-02-27
+ETR,"""transmission and distribution""",2014-02-27
+ETR,"""transmission and distribution""",2015-02-26
+ETR,"""transmission and distribution""",2016-02-26
+ETR,"""electric utilities""",2012-02-28
+ETR,"""electric utilities""",2013-02-27
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2015-02-26
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2014-02-27
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2015-02-26
+ETR,"""electric utilities""",2016-02-26
+ETR,"""electric utilities""",2012-02-28
+ETR,"""electric utilities""",2013-02-27
+ETR,"""electric utilities""",2014-02-27
+ETR,"""investment tax credit""",2013-02-27
+ETR,"""investment tax credit""",2015-02-26
+ETR,"""investment tax credit""",2016-02-26
+ETR,"""investment tax credit""",2014-02-27
+ETR,"""investment tax credit""",2012-02-28
+ETR,__done__,
+EVRG,__done__,
+EXC,"""substation""",2014-02-14
+EXC,"""substation""",2012-02-09
+EXC,"""substation""",2013-02-22
+EXC,"""substation""",2015-02-13
+EXC,"""substation""",2016-02-10
+EXC,"""transmission and distribution""",2012-02-09
+EXC,"""transmission and distribution""",2013-02-22
+EXC,"""transmission and distribution""",2014-02-14
+EXC,"""transmission and distribution""",2015-02-13
+EXC,"""transmission and distribution""",2016-02-10
+EXC,"""transmission and distribution""",2015-02-13
+EXC,"""transmission and distribution""",2016-02-10
+EXC,"""grid modernization""",2013-02-22
+EXC,"""electric utilities""",2014-02-14
+EXC,"""electric utilities""",2013-02-22
+EXC,"""electric utilities""",2015-02-13
+EXC,"""electric utilities""",2012-02-09
+EXC,"""electric utilities""",2016-02-10
+EXC,"""investment tax credit""",2012-02-09
+EXC,"""investment tax credit""",2013-02-22
+EXC,"""investment tax credit""",2014-02-14
+EXC,"""investment tax credit""",2015-02-13
+EXC,"""investment tax credit""",2016-02-10
+EXC,__done__,
+FE,"""data centers""",2016-02-16
+FE,"""data centers""",2015-02-17
+FE,"""data centers""",2014-02-27
+FE,"""data centers""",2013-02-25
+FE,"""data centers""",2012-02-28
+FE,"""transmission and distribution""",2016-02-16
+FE,"""transmission and distribution""",2015-02-17
+FE,"""transmission and distribution""",2014-02-27
+FE,"""transmission and distribution""",2012-02-28
+FE,"""transmission and distribution""",2013-02-25
+FE,"""grid modernization""",2016-02-16
+FE,"""electric utilities""",2014-02-27
+FE,"""electric utilities""",2013-02-25
+FE,"""electric utilities""",2012-02-28
+FE,"""electric utilities""",2015-02-17
+FE,"""electric utilities""",2016-02-16
+FE,"""investment tax credit""",2014-02-27
+FE,"""investment tax credit""",2013-02-25
+FE,"""investment tax credit""",2012-02-28
+FE,"""investment tax credit""",2015-02-17
+FE,"""investment tax credit""",2016-02-16
+FE,__done__,
+FLS,__done__,
+FTV,__done__,
+GE,"""data center""",2015-02-27
+GE,"""data center""",2016-02-26
+GE,"""data centers""",2015-02-27
+GE,"""switchgear""",2012-02-24
+GE,"""switchgear""",2015-02-27
+GE,"""switchgear""",2016-02-26
+GE,"""switchgear""",2013-02-26
+GE,"""switchgear""",2014-02-27
+GE,"""transmission and distribution""",2014-02-27
+GE,"""production tax credit""",2015-02-27
+GE,"""production tax credit""",2016-02-26
+GE,__done__,
+GGG,__done__,
+GNRC,"""data centers""",2016-02-26
+GNRC,"""data centers""",2015-02-27
+GNRC,"""data centers""",2014-03-03
+GNRC,__done__,
+HE,"""substation""",2016-02-23
+HE,"""substation""",2012-02-17
+HE,"""substation""",2013-02-19
+HE,"""substation""",2014-02-21
+HE,"""substation""",2012-02-17
+HE,"""substation""",2012-02-17
+HE,"""substation""",2013-02-19
+HE,"""substation""",2015-02-26
+HE,"""substation""",2016-02-23
+HE,"""substation""",2015-11-16
+HE,"""switchgear""",2012-02-17
+HE,"""transmission and distribution""",2012-02-17
+HE,"""transmission and distribution""",2013-02-19
+HE,"""transmission and distribution""",2012-02-17
+HE,"""transmission and distribution""",2014-02-21
+HE,"""transmission and distribution""",2013-02-19
+HE,"""transmission and distribution""",2013-03-15
+HE,"""transmission and distribution""",2015-11-16
+HE,"""transmission and distribution""",2016-02-23
+HE,"""transmission and distribution""",2012-02-17
+HE,"""transmission and distribution""",2015-02-26
+HE,"""transmission and distribution""",2013-02-19
+HE,"""transmission and distribution""",2014-02-21
+HE,"""transmission and distribution""",2012-02-17
+HE,"""grid modernization""",2016-02-23
+HE,"""grid modernization""",2015-11-16
+HE,"""grid modernization""",2015-02-26
+HE,"""electric utilities""",2013-02-19
+HE,"""electric utilities""",2012-02-17
+HE,"""electric utilities""",2014-02-21
+HE,"""electric utilities""",2013-03-15
+HE,"""electric utilities""",2016-02-23
+HE,"""electric utilities""",2013-02-19
+HE,"""electric utilities""",2015-02-26
+HE,"""electric utilities""",2015-11-16
+HE,"""electric utilities""",2014-02-21
+HE,"""electric utilities""",2013-02-19
+HE,"""electric utilities""",2016-02-23
+HE,"""electric utilities""",2015-02-26
+HE,"""net energy metering""",2013-02-19
+HE,"""net energy metering""",2014-02-21
+HE,"""net energy metering""",2015-11-16
+HE,"""net energy metering""",2015-02-26
+HE,"""net energy metering""",2014-02-21
+HE,"""net energy metering""",2015-02-26
+HE,"""net energy metering""",2016-02-23
+HE,"""net energy metering""",2012-02-17
+HE,__done__,
+HMY,__done__,
+HUBB,"""substation""",2016-02-18
+HUBB,"""substation""",2015-02-19
+HUBB,"""substation""",2013-02-13
+HUBB,"""substation""",2014-02-18
+HUBB,"""substation""",2012-02-15
+HUBB,"""transmission and distribution""",2015-02-19
+HUBB,"""transmission and distribution""",2016-02-18
+HUBB,"""electric utilities""",2014-02-18
+HUBB,"""electric utilities""",2013-02-13
+HUBB,"""electric utilities""",2012-02-15
+HUBB,"""electric utilities""",2015-02-19
+HUBB,"""electric utilities""",2016-02-18
+HUBB,__done__,
+IDA,"""substation""",2015-02-19
+IDA,"""substation""",2012-02-22
+IDA,"""substation""",2013-02-21
+IDA,"""substation""",2014-02-20
+IDA,"""substation""",2015-02-19
+IDA,"""substation""",2016-02-18
+IDA,"""transmission and distribution""",2015-02-19
+IDA,"""transmission and distribution""",2015-02-19
+IDA,"""transmission and distribution""",2015-02-19
+IDA,"""transmission and distribution""",2016-02-18
+IDA,"""transmission and distribution""",2014-02-20
+IDA,"""transmission and distribution""",2012-02-22
+IDA,"""transmission and distribution""",2013-02-21
+IDA,"""electric utilities""",2015-02-19
+IDA,"""electric utilities""",2016-02-18
+IDA,"""electric utilities""",2012-02-22
+IDA,"""electric utilities""",2015-02-19
+IDA,"""electric utilities""",2013-02-21
+IDA,"""electric utilities""",2015-02-19
+IDA,"""electric utilities""",2014-02-20
+IDA,"""investment tax credit""",2013-02-21
+IDA,"""investment tax credit""",2014-02-20
+IDA,"""investment tax credit""",2015-02-19
+IDA,"""investment tax credit""",2012-02-22
+IDA,"""investment tax credit""",2016-02-18
+IDA,__done__,
+IEX,__done__,
+ITT,__done__,
+JBTM,__done__,
+JCI,__done__,
+KEP,__done__,
+KEYS,"""data center""",2016-12-19
+KEYS,"""data centers""",2014-12-22
+KEYS,__done__,
+KMI,"""electric utilities""",2014-02-24
+KMI,"""electric utilities""",2015-02-23
+KMI,"""electric utilities""",2013-03-01
+KMI,"""electric utilities""",2016-02-16
+KMI,"""electric utilities""",2012-02-23
+KMI,__done__,
+LFUS,"""switchgear""",2016-03-01
+LFUS,__done__,
+LII,__done__,
+LNG,"""substation""",2016-02-29
+LNG,"""substation""",2016-02-19
+LNG,"""substation""",2014-02-21
+LNG,"""substation""",2015-02-20
+LNG,"""switchgear""",2016-02-29
+LNG,"""switchgear""",2014-02-21
+LNG,"""switchgear""",2016-02-19
+LNG,"""switchgear""",2015-02-20
+LNG,__done__,
+LNT,"""transmission and distribution""",2016-02-24
+LNT,"""transmission and distribution""",2015-02-25
+LNT,"""transmission and distribution""",2014-02-25
+LNT,"""investment tax credit""",2013-02-26
+LNT,"""investment tax credit""",2012-02-27
+LNT,"""investment tax credit""",2012-02-27
+LNT,"""production tax credit""",2013-02-26
+LNT,"""production tax credit""",2012-02-27
+LNT,"""production tax credit""",2012-02-27
+LNT,__done__,
+MKSI,__done__,
+MRCY,__done__,
+MTZ,"""substation""",2014-02-27
+MTZ,"""substation""",2016-02-26
+MTZ,"""substation""",2015-07-31
+MTZ,"""substation""",2012-02-29
+MTZ,"""substation""",2013-02-28
+MTZ,"""transmission and distribution""",2014-02-27
+MTZ,"""transmission and distribution""",2013-02-28
+MTZ,"""transmission and distribution""",2016-02-26
+MTZ,"""transmission and distribution""",2012-02-29
+MTZ,"""transmission and distribution""",2015-07-31
+MTZ,"""electric utilities""",2016-02-26
+MTZ,"""electric utilities""",2015-07-31
+MTZ,"""electric utilities""",2014-02-27
+MTZ,"""electric utilities""",2012-02-29
+MTZ,"""electric utilities""",2013-02-28
+MTZ,"""investment tax credit""",2013-02-28
+MTZ,"""investment tax credit""",2014-02-27
+MTZ,"""investment tax credit""",2012-02-29
+MTZ,"""investment tax credit""",2016-02-26
+MTZ,"""investment tax credit""",2015-07-31
+MTZ,"""production tax credit""",2014-02-27
+MTZ,"""production tax credit""",2013-02-28
+MTZ,"""production tax credit""",2012-02-29
+MTZ,"""production tax credit""",2015-07-31
+MTZ,"""production tax credit""",2016-02-26
+MTZ,__done__,
+MWA,__done__,
+NDSN,__done__,
+NEE,"""substation""",2012-02-28
+NEE,"""substation""",2013-02-28
+NEE,"""substation""",2015-02-20
+NEE,"""substation""",2016-02-22
+NEE,"""substation""",2014-02-24
+NEE,"""transmission and distribution""",2015-02-20
+NEE,"""transmission and distribution""",2013-02-28
+NEE,"""transmission and distribution""",2012-02-28
+NEE,"""transmission and distribution""",2016-02-22
+NEE,"""transmission and distribution""",2014-02-24
+NEE,"""electric utilities""",2012-02-28
+NEE,"""electric utilities""",2013-02-28
+NEE,"""electric utilities""",2015-02-20
+NEE,"""electric utilities""",2016-02-22
+NEE,"""electric utilities""",2014-02-24
+NEE,"""investment tax credit""",2015-02-20
+NEE,"""investment tax credit""",2016-02-22
+NEE,"""investment tax credit""",2014-02-24
+NEE,"""production tax credit""",2015-02-20
+NEE,"""production tax credit""",2016-02-22
+NEE,"""production tax credit""",2014-02-24
+NEE,__done__,
+NFG,"""investment tax credit""",2013-11-22
+NFG,"""investment tax credit""",2014-11-21
+NFG,"""investment tax credit""",2012-11-21
+NFG,"""investment tax credit""",2015-11-20
+NFG,"""investment tax credit""",2016-11-18
+NFG,"""investment tax credit""",2012-11-21
+NFG,"""investment tax credit""",2016-11-18
+NFG,"""investment tax credit""",2014-11-21
+NFG,"""investment tax credit""",2015-11-20
+NFG,"""investment tax credit""",2013-11-22
+NFG,__done__,
+NGG,__done__,
+NI,"""substation""",2016-02-18
+NI,"""transmission and distribution""",2016-02-18
+NI,"""transmission and distribution""",2014-02-18
+NI,"""transmission and distribution""",2013-02-19
+NI,"""transmission and distribution""",2015-02-18
+NI,"""transmission and distribution""",2012-02-24
+NI,"""electric utilities""",2016-02-18
+NI,"""electric utilities""",2015-02-18
+NI,"""electric utilities""",2012-02-24
+NI,"""electric utilities""",2014-02-18
+NI,"""electric utilities""",2013-02-19
+NI,__done__,
+NJR,"""electric utilities""",2013-11-26
+NJR,"""electric utilities""",2012-11-29
+NJR,"""electric utilities""",2014-11-25
+NJR,"""electric utilities""",2015-11-24
+NJR,"""electric utilities""",2016-11-22
+NJR,"""investment tax credit""",2013-11-26
+NJR,"""investment tax credit""",2012-11-29
+NJR,"""investment tax credit""",2014-11-25
+NJR,"""investment tax credit""",2015-11-24
+NJR,"""investment tax credit""",2016-11-22
+NJR,"""production tax credit""",2013-11-26
+NJR,"""production tax credit""",2012-11-29
+NJR,"""production tax credit""",2014-11-25
+NJR,"""production tax credit""",2015-11-24
+NJR,"""production tax credit""",2016-11-22
+NJR,__done__,
+NOVT,__done__,
+NRG,"""transmission and distribution""",2012-02-28
+NRG,"""transmission and distribution""",2014-02-28
+NRG,"""transmission and distribution""",2015-02-27
+NRG,"""transmission and distribution""",2013-02-27
+NRG,"""transmission and distribution""",2016-02-29
+NRG,"""transmission and distribution""",2014-09-10
+NRG,"""electric utilities""",2012-02-28
+NRG,"""electric utilities""",2014-02-28
+NRG,"""electric utilities""",2015-02-27
+NRG,"""electric utilities""",2016-02-29
+NRG,"""electric utilities""",2013-02-27
+NRG,"""investment tax credit""",2016-02-29
+NRG,"""investment tax credit""",2015-02-27
+NRG,"""production tax credit""",2016-02-29
+NRG,"""production tax credit""",2015-02-27
+NRG,"""production tax credit""",2014-09-10
+NRG,"""production tax credit""",2012-02-28
+NRG,"""production tax credit""",2014-02-28
+NRG,"""production tax credit""",2013-02-27
+NRG,"""net energy metering""",2016-02-29
+NRG,"""net energy metering""",2014-02-28
+NRG,"""net energy metering""",2013-02-27
+NRG,__done__,
+NWE,__done__,
+OGE,"""substation""",2013-02-27
+OGE,"""substation""",2012-02-16
+OGE,"""substation""",2014-02-25
+OGE,"""substation""",2016-02-26
+OGE,"""substation""",2015-02-26
+OGE,"""transmission and distribution""",2014-02-25
+OGE,"""transmission and distribution""",2013-02-27
+OGE,"""transmission and distribution""",2012-02-16
+OGE,"""transmission and distribution""",2015-02-26
+OGE,"""transmission and distribution""",2016-02-26
+OGE,"""electric utilities""",2014-02-25
+OGE,"""electric utilities""",2012-02-16
+OGE,"""electric utilities""",2013-02-27
+OGE,"""investment tax credit""",2012-02-16
+OGE,"""investment tax credit""",2013-02-27
+OGE,__done__,
+OGS,__done__,
+OKE,"""electric utilities""",2012-02-21
+OKE,"""electric utilities""",2013-02-26
+OKE,"""electric utilities""",2014-02-25
+OKE,"""electric utilities""",2015-02-25
+OKE,"""electric utilities""",2016-02-23
+OKE,__done__,
+OLED,__done__,
+ORA,"""data center""",2014-02-28
+ORA,"""data center""",2015-02-26
+ORA,"""data center""",2016-02-26
+ORA,"""substation""",2012-02-29
+ORA,"""substation""",2012-02-29
+ORA,"""substation""",2015-02-26
+ORA,"""substation""",2013-03-11
+ORA,"""substation""",2014-02-28
+ORA,"""substation""",2012-02-29
+ORA,"""substation""",2016-02-26
+ORA,"""transmission and distribution""",2015-02-26
+ORA,"""transmission and distribution""",2013-03-11
+ORA,"""transmission and distribution""",2012-02-29
+ORA,"""electric utilities""",2012-02-29
+ORA,"""electric utilities""",2013-03-11
+ORA,"""electric utilities""",2015-02-26
+ORA,"""electric utilities""",2014-02-28
+ORA,"""electric utilities""",2016-02-26
+ORA,"""electric utilities""",2012-02-29
+ORA,"""electric utilities""",2012-02-29
+ORA,"""investment tax credit""",2016-02-26
+ORA,"""investment tax credit""",2015-02-26
+ORA,"""investment tax credit""",2012-02-29
+ORA,"""investment tax credit""",2015-02-26
+ORA,"""investment tax credit""",2013-03-11
+ORA,"""investment tax credit""",2014-02-28
+ORA,"""production tax credit""",2015-02-26
+ORA,"""production tax credit""",2015-02-26
+ORA,"""production tax credit""",2012-02-29
+ORA,"""production tax credit""",2013-03-11
+ORA,"""production tax credit""",2014-02-28
+ORA,"""production tax credit""",2016-02-26
+ORA,__done__,
+PAM,__done__,
+PCG,"""data center""",2013-02-21
+PCG,"""substation""",2012-02-16
+PCG,"""substation""",2014-02-11
+PCG,"""substation""",2013-02-21
+PCG,"""substation""",2014-02-11
+PCG,"""substation""",2012-02-16
+PCG,"""substation""",2016-02-18
+PCG,"""substation""",2015-02-10
+PCG,"""substation""",2013-02-21
+PCG,"""transmission and distribution""",2012-02-16
+PCG,"""transmission and distribution""",2016-02-18
+PCG,"""transmission and distribution""",2013-02-21
+PCG,"""transmission and distribution""",2014-02-11
+PCG,"""transmission and distribution""",2015-02-10
+PCG,"""transmission and distribution""",2012-02-16
+PCG,"""transmission and distribution""",2013-02-21
+PCG,"""transmission and distribution""",2014-02-11
+PCG,"""electric utilities""",2013-02-21
+PCG,"""electric utilities""",2014-02-11
+PCG,"""electric utilities""",2012-02-16
+PCG,"""electric utilities""",2015-02-10
+PCG,"""electric utilities""",2016-02-18
+PCG,"""electric utilities""",2013-02-21
+PCG,"""electric utilities""",2012-02-16
+PCG,"""electric utilities""",2014-02-11
+PCG,"""net energy metering""",2015-02-10
+PCG,"""net energy metering""",2016-02-18
+PCG,"""net energy metering""",2014-02-11
+PCG,"""net energy metering""",2014-02-11
+PCG,"""net energy metering""",2013-02-21
+PCG,"""net energy metering""",2013-02-21
+PCG,__done__,
+PEG,"""substation""",2015-02-26
+PEG,"""substation""",2016-02-26
+PEG,"""transmission and distribution""",2014-02-26
+PEG,"""transmission and distribution""",2013-02-26
+PEG,"""transmission and distribution""",2015-02-26
+PEG,"""transmission and distribution""",2016-02-26
+PEG,"""transmission and distribution""",2012-02-27
+PEG,"""electric utilities""",2015-02-26
+PEG,"""electric utilities""",2013-02-26
+PEG,"""electric utilities""",2016-02-26
+PEG,"""electric utilities""",2014-02-26
+PEG,"""electric utilities""",2012-02-27
+PEG,"""investment tax credit""",2014-02-26
+PEG,"""investment tax credit""",2013-02-26
+PEG,"""investment tax credit""",2012-02-27
+PEG,"""investment tax credit""",2015-02-26
+PEG,"""investment tax credit""",2016-02-26
+PEG,__done__,
+PH,"""electric utilities""",2015-08-26
+PH,"""electric utilities""",2013-08-29
+PH,"""electric utilities""",2014-08-22
+PH,"""electric utilities""",2012-08-24
+PH,"""electric utilities""",2016-08-26
+PH,__done__,
+PI,__done__,
+PNR,"""data center""",2015-02-24
+PNR,"""data center""",2016-02-26
+PNR,"""data center""",2013-02-26
+PNR,"""data center""",2014-02-25
+PNR,"""transmission and distribution""",2013-02-28
+PNR,"""transmission and distribution""",2013-02-26
+PNR,"""transmission and distribution""",2015-02-24
+PNR,"""transmission and distribution""",2014-02-25
+PNR,__done__,
+PNW,"""substation""",2012-02-24
+PNW,"""substation""",2015-02-20
+PNW,"""substation""",2013-02-22
+PNW,"""substation""",2012-02-24
+PNW,"""substation""",2014-02-21
+PNW,"""substation""",2016-02-19
+PNW,"""transmission and distribution""",2016-02-19
+PNW,"""transmission and distribution""",2015-02-20
+PNW,"""transmission and distribution""",2016-02-19
+PNW,"""transmission and distribution""",2013-02-22
+PNW,"""transmission and distribution""",2012-02-24
+PNW,"""transmission and distribution""",2014-02-21
+PNW,"""transmission and distribution""",2012-02-24
+PNW,"""electric utilities""",2012-02-24
+PNW,"""electric utilities""",2013-02-22
+PNW,"""electric utilities""",2014-02-21
+PNW,"""electric utilities""",2015-02-20
+PNW,"""electric utilities""",2016-02-19
+PNW,"""investment tax credit""",2016-02-19
+PNW,"""investment tax credit""",2014-02-21
+PNW,"""investment tax credit""",2015-02-20
+PNW,"""investment tax credit""",2013-02-22
+PNW,"""investment tax credit""",2012-02-24
+PNW,__done__,
+POR,"""substation""",2013-02-22
+POR,"""substation""",2016-02-12
+POR,"""substation""",2015-02-13
+POR,"""substation""",2012-02-24
+POR,"""substation""",2014-02-14
+POR,"""transmission and distribution""",2015-02-13
+POR,"""transmission and distribution""",2016-02-12
+POR,"""transmission and distribution""",2013-02-22
+POR,"""transmission and distribution""",2012-02-24
+POR,"""transmission and distribution""",2014-02-14
+POR,"""transmission and distribution""",2015-02-13
+POR,"""electric utilities""",2012-02-24
+POR,"""electric utilities""",2013-02-22
+POR,"""electric utilities""",2014-02-14
+POR,__done__,
+PPL,"""data center""",2014-02-24
+PPL,"""substation""",2013-02-28
+PPL,"""substation""",2012-02-28
+PPL,"""substation""",2016-02-19
+PPL,"""substation""",2015-02-23
+PPL,"""substation""",2014-02-24
+PPL,"""switchgear""",2013-02-28
+PPL,"""switchgear""",2016-02-19
+PPL,"""switchgear""",2012-02-28
+PPL,"""switchgear""",2015-02-23
+PPL,"""switchgear""",2014-02-24
+PPL,"""transmission and distribution""",2014-02-24
+PPL,"""transmission and distribution""",2013-02-28
+PPL,"""transmission and distribution""",2015-02-23
+PPL,"""transmission and distribution""",2012-02-28
+PPL,"""transmission and distribution""",2016-02-19
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2015-02-23
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2014-02-24
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2016-02-19
+PPL,"""electric utilities""",2013-02-28
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2012-02-28
+PPL,"""electric utilities""",2013-02-28
+PPL,"""investment tax credit""",2014-02-24
+PPL,"""investment tax credit""",2016-02-19
+PPL,"""investment tax credit""",2015-02-23
+PPL,"""investment tax credit""",2012-02-28
+PPL,"""investment tax credit""",2013-02-28
+PPL,__done__,
+PUK,__done__,
+PWR,"""data center""",2014-03-03
+PWR,"""data center""",2015-03-02
+PWR,"""substation""",2013-03-01
+PWR,"""substation""",2014-03-03
+PWR,"""substation""",2015-03-02
+PWR,"""substation""",2016-02-29
+PWR,"""substation""",2012-02-29
+PWR,"""substation""",2013-05-31
+PWR,"""transmission and distribution""",2012-02-29
+PWR,"""transmission and distribution""",2014-03-03
+PWR,"""transmission and distribution""",2013-03-01
+PWR,"""transmission and distribution""",2016-02-29
+PWR,"""transmission and distribution""",2015-03-02
+PWR,"""transmission and distribution""",2013-05-31
+PWR,"""electric utilities""",2016-02-29
+PWR,"""electric utilities""",2015-03-02
+PWR,__done__,
+ROK,__done__,
+ROP,__done__,
+RRX,"""data centers""",2012-02-29
+RRX,"""data centers""",2013-03-26
+RRX,"""data centers""",2013-02-27
+RRX,"""data centers""",2014-02-26
+RRX,"""data centers""",2015-03-04
+RRX,"""data centers""",2016-03-02
+RRX,"""switchgear""",2014-02-26
+RRX,"""switchgear""",2013-02-27
+RRX,"""switchgear""",2012-02-29
+RRX,"""switchgear""",2013-03-26
+RRX,__done__,
+SO,"""substation""",2016-02-26
+SO,"""substation""",2012-02-24
+SO,"""substation""",2015-03-02
+SO,"""substation""",2013-02-28
+SO,"""substation""",2014-02-27
+SO,"""transmission and distribution""",2012-02-24
+SO,"""transmission and distribution""",2013-02-28
+SO,"""transmission and distribution""",2016-02-26
+SO,"""transmission and distribution""",2015-03-02
+SO,"""transmission and distribution""",2014-02-27
+SO,"""electric utilities""",2013-02-28
+SO,"""electric utilities""",2012-02-24
+SO,"""electric utilities""",2015-03-02
+SO,"""electric utilities""",2016-02-26
+SO,"""electric utilities""",2014-02-27
+SO,"""investment tax credit""",2016-02-26
+SO,"""investment tax credit""",2015-03-02
+SO,"""investment tax credit""",2013-02-28
+SO,"""investment tax credit""",2012-02-24
+SO,"""production tax credit""",2015-03-02
+SO,"""production tax credit""",2016-02-26
+SO,__done__,
+SPB,__done__,
+SR,__done__,
+ST,__done__,
+SUPV,__done__,
+SWX,__done__,
+TDY,__done__,
+THG,__done__,
+TMO,__done__,
+TRGP,"""electric utilities""",2012-02-27
+TRGP,"""electric utilities""",2014-02-14
+TRGP,"""electric utilities""",2013-02-19
+TRGP,"""electric utilities""",2015-02-17
+TRGP,"""electric utilities""",2016-02-29
+TRGP,__done__,
+TRMB,"""data center""",2013-02-25
+TRMB,"""data center""",2012-02-28
+TRMB,"""data center""",2014-02-25
+TRMB,"""transmission and distribution""",2013-02-25
+TRMB,"""transmission and distribution""",2012-02-28
+TRMB,__done__,
+TRP,__done__,
+TXNM,"""transmission and distribution""",2013-03-01
+TXNM,"""transmission and distribution""",2014-02-28
+TXNM,"""transmission and distribution""",2012-02-29
+TXNM,"""transmission and distribution""",2015-02-27
+TXNM,"""transmission and distribution""",2016-02-29
+TXNM,"""transmission and distribution""",2012-02-29
+TXNM,"""electric utilities""",2015-02-27
+TXNM,"""electric utilities""",2014-02-28
+TXNM,"""electric utilities""",2016-02-29
+TXNM,"""electric utilities""",2012-02-29
+TXNM,"""electric utilities""",2013-03-01
+TXNM,"""investment tax credit""",2013-03-01
+TXNM,"""investment tax credit""",2012-02-29
+TXNM,"""investment tax credit""",2015-02-27
+TXNM,"""investment tax credit""",2014-02-28
+TXNM,"""investment tax credit""",2016-02-29
+TXNM,"""production tax credit""",2013-03-01
+TXNM,"""production tax credit""",2015-02-27
+TXNM,"""production tax credit""",2014-02-28
+TXNM,"""production tax credit""",2012-02-29
+TXNM,"""production tax credit""",2016-02-29
+TXNM,__done__,
+VSH,__done__,
+VST,__done__,
+WCC,"""data center""",2012-02-22
+WCC,"""data center""",2013-03-01
+WCC,"""data center""",2015-02-24
+WCC,"""data center""",2016-02-22
+WCC,"""data center""",2014-02-21
+WCC,"""data centers""",2012-02-22
+WCC,"""data centers""",2013-03-01
+WCC,"""data centers""",2015-02-24
+WCC,"""data centers""",2016-02-22
+WCC,"""data centers""",2014-02-21
+WCC,"""substation""",2015-02-24
+WCC,"""substation""",2013-03-01
+WCC,"""substation""",2014-02-21
+WCC,"""substation""",2016-02-22
+WCC,"""transmission and distribution""",2012-02-22
+WCC,"""transmission and distribution""",2013-03-01
+WCC,"""transmission and distribution""",2015-02-24
+WCC,"""transmission and distribution""",2014-02-21
+WCC,"""transmission and distribution""",2016-02-22
+WCC,__done__,
+WEC,"""data center""",2016-02-26
+WEC,"""substation""",2016-02-26
+WEC,"""substation""",2015-02-27
+WEC,"""substation""",2014-02-27
+WEC,"""substation""",2016-02-26
+WEC,"""transmission and distribution""",2016-02-26
+WEC,"""electric utilities""",2016-02-26
+WEC,"""electric utilities""",2013-02-27
+WEC,"""electric utilities""",2012-02-28
+WEC,"""electric utilities""",2015-02-27
+WEC,"""electric utilities""",2014-02-27
+WEC,"""investment tax credit""",2015-02-27
+WEC,"""investment tax credit""",2014-02-27
+WEC,"""investment tax credit""",2013-02-27
+WEC,"""investment tax credit""",2012-02-28
+WEC,"""investment tax credit""",2016-02-26
+WEC,__done__,
+WMB,"""data center""",2012-02-28
+WMB,"""transmission and distribution""",2015-02-25
+WMB,"""transmission and distribution""",2014-02-26
+WMB,"""transmission and distribution""",2013-02-27
+WMB,"""transmission and distribution""",2016-02-26
+WMB,__done__,
+WWD,"""data centers""",2014-11-12
+WWD,"""switchgear""",2012-11-15
+WWD,"""switchgear""",2013-11-14
+WWD,__done__,
+XEL,"""substation""",2016-02-19
+XEL,"""substation""",2015-02-20
+XEL,"""substation""",2013-02-22
+XEL,"""substation""",2014-02-21
+XEL,"""substation""",2012-02-24
+XEL,"""transmission and distribution""",2013-02-22
+XEL,"""transmission and distribution""",2012-02-24
+XEL,"""transmission and distribution""",2016-02-19
+XEL,"""transmission and distribution""",2015-02-20
+XEL,"""transmission and distribution""",2014-02-21
+XEL,"""grid modernization""",2016-02-19
+XEL,"""grid modernization""",2015-02-20
+XEL,"""electric utilities""",2015-02-20
+XEL,"""electric utilities""",2012-02-24
+XEL,"""electric utilities""",2016-02-19
+XEL,"""electric utilities""",2013-02-22
+XEL,"""electric utilities""",2014-02-21
+XEL,"""investment tax credit""",2016-02-19
+XEL,"""investment tax credit""",2012-02-24
+XEL,"""investment tax credit""",2015-02-20
+XEL,"""investment tax credit""",2013-02-22
+XEL,"""investment tax credit""",2014-02-21
+XEL,"""production tax credit""",2016-02-19
+XEL,"""production tax credit""",2015-02-20
+XEL,"""production tax credit""",2013-02-22
+XEL,"""production tax credit""",2014-02-21
+XEL,__done__,
+XYL,"""data centers""",2012-02-28
+XYL,"""data centers""",2014-02-27
+XYL,"""data centers""",2015-02-26
+XYL,"""data centers""",2013-02-25
+XYL,__done__,

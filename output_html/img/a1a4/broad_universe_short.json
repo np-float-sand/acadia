@@ -1,0 +1,32 @@
+{
+ "ALL sectors|heaviest 25%": {
+  "names": 15.0,
+  "cagr": 0.5595,
+  "sharpe": 1.278
+ },
+ "ALL sectors|heaviest 40%": {
+  "names": 22.4,
+  "cagr": 0.5007,
+  "sharpe": 1.234
+ },
+ "ALL sectors|heaviest 50%": {
+  "names": 25.6,
+  "cagr": 0.4844,
+  "sharpe": 1.226
+ },
+ "EX-electricity|heaviest 25%": {
+  "names": 15.0,
+  "cagr": 0.5274,
+  "sharpe": 1.208
+ },
+ "EX-electricity|heaviest 40%": {
+  "names": 20.8,
+  "cagr": 0.52,
+  "sharpe": 1.252
+ },
+ "EX-electricity|heaviest 50%": {
+  "names": 23.8,
+  "cagr": 0.4956,
+  "sharpe": 1.236
+ }
+}

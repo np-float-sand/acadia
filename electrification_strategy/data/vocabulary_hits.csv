@@ -1,0 +1,1255 @@
+# EDGAR full-text hits behind `screen_auto`s vocabulary filters (retrieved 2026-09-23).
+# Regenerate: python -m electrification_strategy.build_auto_screen --refresh
+ticker,phrase,file_date
+AEIS,"""data center""",2020-03-02
+AEIS,"""data center""",2021-02-24
+AEIS,"""data center""",2022-03-16
+AEIS,"""data center""",2023-02-17
+AEIS,"""data center""",2024-02-20
+AEIS,"""data center""",2025-02-18
+AEIS,"""data centers""",2020-03-02
+AEIS,"""data centers""",2021-02-24
+AEIS,"""data centers""",2022-03-16
+AEIS,"""data centers""",2023-02-17
+AEIS,"""data centers""",2024-02-20
+AEIS,"""data centers""",2025-02-18
+AEP,"""data center""",2024-02-26
+AEP,"""data center""",2025-02-13
+AEP,"""data centers""",2017-02-28
+AEP,"""data centers""",2018-02-23
+AEP,"""data centers""",2019-02-21
+AEP,"""data centers""",2019-02-21
+AEP,"""data centers""",2020-02-20
+AEP,"""data centers""",2020-02-20
+AEP,"""data centers""",2021-02-25
+AEP,"""data centers""",2022-02-24
+AEP,"""data centers""",2023-02-23
+AEP,"""data centers""",2024-02-26
+AEP,"""data centers""",2025-02-13
+AEP,"""electric utilities""",2017-02-28
+AEP,"""electric utilities""",2017-02-28
+AEP,"""electric utilities""",2018-02-23
+AEP,"""electric utilities""",2018-02-23
+AEP,"""electric utilities""",2019-02-21
+AEP,"""electric utilities""",2019-02-21
+AEP,"""electric utilities""",2020-02-20
+AEP,"""electric utilities""",2020-02-20
+AEP,"""electric utilities""",2021-02-25
+AEP,"""electric utilities""",2022-02-24
+AEP,"""electric utilities""",2023-02-23
+AEP,"""electric utilities""",2024-02-26
+AEP,"""electric utilities""",2025-02-13
+AEP,"""substation""",2023-02-23
+AEP,"""transmission and distribution""",2017-02-28
+AEP,"""transmission and distribution""",2017-02-28
+AEP,"""transmission and distribution""",2018-02-23
+AEP,"""transmission and distribution""",2018-02-23
+AEP,"""transmission and distribution""",2019-02-21
+AEP,"""transmission and distribution""",2019-02-21
+AEP,"""transmission and distribution""",2020-02-20
+AEP,"""transmission and distribution""",2020-02-20
+AEP,"""transmission and distribution""",2021-02-25
+AEP,"""transmission and distribution""",2022-02-24
+AEP,"""transmission and distribution""",2023-02-23
+AEP,"""transmission and distribution""",2024-02-26
+AEP,"""transmission and distribution""",2025-02-13
+AME,"""data centers""",2019-02-21
+AMPX,"""data centers""",2023-03-30
+AMPX,"""data centers""",2024-03-28
+AMPX,"""data centers""",2025-03-20
+AMR,"""electric utilities""",2019-04-01
+AMR,"""electric utilities""",2020-03-18
+AMR,"""electric utilities""",2021-03-15
+AMR,"""electric utilities""",2022-03-07
+AMR,"""electric utilities""",2023-02-23
+AMR,"""electric utilities""",2024-02-26
+AMR,"""electric utilities""",2025-02-28
+AMR,"""substation""",2022-03-07
+AMR,"""substation""",2023-02-23
+AMR,"""substation""",2024-02-26
+AMR,"""substation""",2025-02-28
+AMSC,"""data centers""",2025-05-21
+AMSC,"""electric utilities""",2017-05-25
+AMSC,"""electric utilities""",2018-06-06
+AMSC,"""electric utilities""",2019-06-05
+AMSC,"""electric utilities""",2020-06-02
+AMSC,"""electric utilities""",2021-06-02
+AMSC,"""electric utilities""",2022-06-01
+AMSC,"""electric utilities""",2023-05-31
+AMSC,"""electric utilities""",2024-05-29
+AMSC,"""electric utilities""",2025-05-21
+AMSC,"""grid modernization""",2017-05-25
+AMSC,"""grid modernization""",2018-06-06
+AMSC,"""grid modernization""",2019-06-05
+AMSC,"""grid modernization""",2020-06-02
+AMSC,"""grid modernization""",2021-06-02
+AMSC,"""grid modernization""",2022-06-01
+AMSC,"""grid modernization""",2023-05-31
+AMSC,"""grid modernization""",2024-05-29
+AMSC,"""grid modernization""",2025-05-21
+AMSC,"""production tax credit""",2017-05-25
+AMSC,"""production tax credit""",2018-06-06
+AMSC,"""production tax credit""",2019-06-05
+AMSC,"""production tax credit""",2020-06-02
+AMSC,"""production tax credit""",2021-06-02
+AMSC,"""production tax credit""",2022-06-01
+AMSC,"""production tax credit""",2023-05-31
+AMSC,"""production tax credit""",2024-05-29
+AMSC,"""production tax credit""",2025-05-21
+AMSC,"""substation""",2017-05-25
+AMSC,"""substation""",2018-06-06
+AMSC,"""substation""",2019-06-05
+AMSC,"""substation""",2020-06-02
+AMSC,"""substation""",2021-06-02
+AMSC,"""substation""",2022-06-01
+AMSC,"""substation""",2023-05-31
+AMSC,"""substation""",2024-05-29
+AMSC,"""substation""",2025-05-21
+AMSC,"""switchgear""",2021-06-02
+AMSC,"""switchgear""",2022-06-01
+AMSC,"""switchgear""",2023-05-31
+AMSC,"""switchgear""",2024-05-29
+AMSC,"""switchgear""",2025-05-21
+AMSC,"""transmission and distribution""",2017-05-25
+AMSC,"""transmission and distribution""",2018-06-06
+AMSC,"""transmission and distribution""",2019-06-05
+AMSC,"""transmission and distribution""",2020-06-02
+AMSC,"""transmission and distribution""",2021-06-02
+AMSC,"""transmission and distribution""",2022-06-01
+AMSC,"""transmission and distribution""",2023-05-31
+AMSC,"""transmission and distribution""",2024-05-29
+AMSC,"""transmission and distribution""",2025-05-21
+AMT,"""data center""",2022-02-25
+AMT,"""data center""",2022-02-25
+AMT,"""data center""",2023-02-23
+AMT,"""data center""",2023-02-23
+AMT,"""data center""",2024-02-27
+AMT,"""data center""",2024-02-27
+AMT,"""data center""",2025-02-25
+AMT,"""data center""",2025-02-25
+AMT,"""data centers""",2017-02-27
+AMT,"""data centers""",2018-02-28
+AMT,"""data centers""",2019-02-27
+AMT,"""data centers""",2020-02-25
+AMT,"""data centers""",2021-02-25
+AMT,"""data centers""",2022-02-25
+AMT,"""data centers""",2023-02-23
+AMT,"""data centers""",2024-02-27
+AMT,"""data centers""",2025-02-25
+APG,"""data center""",2021-03-24
+APG,"""data centers""",2021-03-24
+APG,"""data centers""",2022-03-01
+APG,"""data centers""",2025-02-26
+APG,"""transmission and distribution""",2021-03-24
+APG,"""transmission and distribution""",2022-03-01
+ATKR,"""data center""",2017-11-29
+ATKR,"""data center""",2018-11-28
+ATKR,"""data center""",2019-11-22
+ATKR,"""data center""",2020-11-19
+ATKR,"""data center""",2023-11-17
+ATKR,"""data center""",2024-11-21
+ATKR,"""data center""",2025-11-26
+ATKR,"""data centers""",2017-11-29
+ATKR,"""data centers""",2018-11-28
+ATKR,"""data centers""",2019-11-22
+ATKR,"""data centers""",2020-11-19
+ATKR,"""data centers""",2021-11-18
+ATKR,"""data centers""",2022-11-18
+ATKR,"""data centers""",2023-11-17
+ATKR,"""data centers""",2024-11-21
+ATKR,"""data centers""",2025-11-26
+AYI,"""data center""",2024-10-28
+AYI,"""data center""",2025-10-27
+AYI,"""electric utilities""",2017-10-26
+AYI,"""electric utilities""",2018-10-25
+AYI,"""electric utilities""",2019-10-29
+AYI,"""electric utilities""",2020-10-23
+AYI,"""electric utilities""",2021-10-27
+AYI,"""electric utilities""",2022-10-26
+AYI,"""electric utilities""",2023-10-26
+AYI,"""electric utilities""",2024-10-28
+AZZ,"""switchgear""",2017-04-20
+AZZ,"""switchgear""",2018-04-19
+AZZ,"""switchgear""",2018-05-15
+AZZ,"""switchgear""",2019-05-17
+AZZ,"""switchgear""",2020-04-29
+AZZ,"""switchgear""",2021-04-23
+AZZ,"""switchgear""",2022-04-22
+AZZ,"""switchgear""",2023-04-25
+AZZ,"""switchgear""",2024-04-22
+AZZ,"""switchgear""",2025-04-21
+AZZ,"""transmission and distribution""",2017-04-20
+AZZ,"""transmission and distribution""",2018-04-19
+AZZ,"""transmission and distribution""",2018-05-15
+AZZ,"""transmission and distribution""",2019-05-17
+AZZ,"""transmission and distribution""",2020-04-29
+AZZ,"""transmission and distribution""",2021-04-23
+AZZ,"""transmission and distribution""",2022-04-22
+AZZ,"""transmission and distribution""",2023-04-25
+AZZ,"""transmission and distribution""",2024-04-22
+AZZ,"""transmission and distribution""",2025-04-21
+BE,"""data center""",2019-03-22
+BE,"""data center""",2020-03-31
+BE,"""data center""",2020-03-31
+BE,"""data center""",2021-02-26
+BE,"""data center""",2022-02-25
+BE,"""data center""",2024-02-15
+BE,"""data center""",2025-02-27
+BE,"""data centers""",2019-03-22
+BE,"""data centers""",2020-03-31
+BE,"""data centers""",2021-02-26
+BE,"""data centers""",2022-02-25
+BE,"""data centers""",2023-02-21
+BE,"""data centers""",2024-02-15
+BE,"""data centers""",2025-02-27
+BE,"""electric utilities""",2019-03-22
+BE,"""electric utilities""",2020-03-31
+BE,"""electric utilities""",2021-02-26
+BE,"""electric utilities""",2022-02-25
+BE,"""electric utilities""",2023-02-21
+BE,"""electric utilities""",2024-02-15
+BE,"""electric utilities""",2025-02-27
+BE,"""investment tax credit""",2019-03-22
+BE,"""investment tax credit""",2019-03-22
+BE,"""investment tax credit""",2020-03-31
+BE,"""investment tax credit""",2020-03-31
+BE,"""investment tax credit""",2020-03-31
+BE,"""investment tax credit""",2021-02-26
+BE,"""investment tax credit""",2022-02-25
+BE,"""investment tax credit""",2023-02-21
+BE,"""investment tax credit""",2024-02-15
+BE,"""investment tax credit""",2025-02-27
+BE,"""net energy metering""",2021-02-26
+BE,"""net energy metering""",2022-02-25
+BE,"""net energy metering""",2023-02-21
+BE,"""net energy metering""",2024-02-15
+BE,"""net energy metering""",2025-02-27
+BE,"""production tax credit""",2023-02-21
+BE,"""production tax credit""",2024-02-15
+BE,"""production tax credit""",2025-02-27
+BE,"""switchgear""",2019-03-22
+BE,"""switchgear""",2020-03-31
+BE,"""transmission and distribution""",2019-03-22
+BE,"""transmission and distribution""",2020-03-31
+BE,"""transmission and distribution""",2021-02-26
+BE,"""transmission and distribution""",2022-02-25
+BE,"""transmission and distribution""",2023-02-21
+BE,"""transmission and distribution""",2024-02-15
+BE,"""transmission and distribution""",2025-02-27
+BWXT,"""transmission and distribution""",2025-02-24
+BWXT,"""transmission and distribution""",2025-03-19
+CARR,"""data center""",2025-02-11
+CARR,"""data centers""",2024-02-06
+CARR,"""data centers""",2025-02-11
+CHPT,"""data center""",2021-02-10
+CHPT,"""data center""",2021-05-27
+CHPT,"""data center""",2022-04-04
+CHPT,"""data center""",2023-04-03
+CHPT,"""data center""",2024-04-01
+CHPT,"""data center""",2025-03-28
+CHPT,"""data centers""",2021-02-10
+CHPT,"""data centers""",2021-05-27
+CHPT,"""data centers""",2022-04-04
+CHPT,"""data centers""",2023-04-03
+CHPT,"""data centers""",2024-04-01
+CHPT,"""data centers""",2025-03-28
+CMI,"""data center""",2019-02-11
+CMI,"""data center""",2020-02-11
+CMI,"""data center""",2023-02-14
+CMI,"""data center""",2024-02-12
+CMI,"""data center""",2025-02-11
+CMI,"""data centers""",2017-02-13
+CMI,"""data centers""",2018-02-14
+CMI,"""data centers""",2019-02-11
+CMI,"""data centers""",2020-02-11
+CMI,"""data centers""",2021-02-10
+CMI,"""data centers""",2022-02-08
+CTRI,"""data centers""",2025-02-26
+CTRI,"""electric utilities""",2025-02-26
+CTRI,"""investment tax credit""",2025-02-26
+CTRI,"""substation""",2025-02-26
+CTRI,"""transmission and distribution""",2025-02-26
+CW,"""data centers""",2025-02-13
+CW,"""switchgear""",2017-02-21
+CW,"""switchgear""",2018-02-22
+CW,"""switchgear""",2019-02-27
+CW,"""switchgear""",2020-02-27
+CW,"""switchgear""",2021-02-25
+CW,"""switchgear""",2022-02-24
+CW,"""switchgear""",2023-02-22
+CW,"""switchgear""",2024-02-20
+CW,"""switchgear""",2025-02-13
+DY,"""data centers""",2025-02-28
+DY,"""electric utilities""",2021-03-05
+DY,"""electric utilities""",2022-03-04
+DY,"""electric utilities""",2023-03-03
+DY,"""electric utilities""",2024-03-01
+ED,"""data centers""",2025-02-20
+ED,"""electric utilities""",2017-02-16
+ED,"""electric utilities""",2018-02-15
+ED,"""electric utilities""",2019-02-21
+ED,"""electric utilities""",2020-02-20
+ED,"""electric utilities""",2021-02-18
+ED,"""electric utilities""",2022-02-17
+ED,"""electric utilities""",2023-02-16
+ED,"""electric utilities""",2024-02-15
+ED,"""electric utilities""",2025-02-20
+ED,"""net energy metering""",2017-02-16
+ED,"""net energy metering""",2018-02-15
+ED,"""net energy metering""",2019-02-21
+ED,"""net energy metering""",2020-02-20
+ED,"""net energy metering""",2021-02-18
+ED,"""net energy metering""",2022-02-17
+ED,"""net energy metering""",2023-02-16
+ED,"""net energy metering""",2024-02-15
+ED,"""net energy metering""",2025-02-20
+ED,"""production tax credit""",2024-02-15
+ED,"""substation""",2017-02-16
+ED,"""substation""",2018-02-15
+ED,"""substation""",2019-02-21
+ED,"""substation""",2020-02-20
+ED,"""substation""",2021-02-18
+ED,"""substation""",2022-02-17
+ED,"""substation""",2023-02-16
+ED,"""substation""",2024-02-15
+ED,"""substation""",2025-02-20
+ED,"""transmission and distribution""",2017-02-16
+ED,"""transmission and distribution""",2018-02-15
+ED,"""transmission and distribution""",2019-02-21
+ED,"""transmission and distribution""",2020-02-20
+ED,"""transmission and distribution""",2021-02-18
+ED,"""transmission and distribution""",2022-02-17
+ED,"""transmission and distribution""",2023-02-16
+ED,"""transmission and distribution""",2024-02-15
+ED,"""transmission and distribution""",2025-02-20
+EME,"""data center""",2023-02-23
+EME,"""data center""",2024-02-28
+EME,"""data center""",2025-02-26
+EME,"""data centers""",2017-02-23
+EME,"""data centers""",2018-02-22
+EME,"""data centers""",2019-02-21
+EME,"""data centers""",2020-02-27
+EME,"""data centers""",2021-02-25
+EME,"""data centers""",2022-02-24
+EME,"""data centers""",2023-02-23
+EME,"""data centers""",2024-02-28
+EME,"""data centers""",2025-02-26
+EME,"""transmission and distribution""",2017-02-23
+EME,"""transmission and distribution""",2018-02-22
+EME,"""transmission and distribution""",2019-02-21
+EME,"""transmission and distribution""",2020-02-27
+EME,"""transmission and distribution""",2021-02-25
+EME,"""transmission and distribution""",2023-02-23
+EMR,"""data center""",2017-11-20
+EMR,"""data centers""",2017-11-20
+EMR,"""data centers""",2024-11-12
+EMR,"""data centers""",2025-11-10
+ENR,"""advanced manufacturing production credit""",2025-11-18
+ENR,"""data center""",2021-11-16
+ENR,"""data center""",2022-11-15
+ENR,"""data center""",2023-11-14
+ENR,"""data center""",2024-11-19
+ENR,"""data center""",2025-11-18
+ENR,"""production tax credit""",2025-11-18
+ENS,"""advanced manufacturing production credit""",2024-05-22
+ENS,"""advanced manufacturing production credit""",2025-05-21
+ENS,"""data center""",2021-05-26
+ENS,"""data center""",2023-05-24
+ENS,"""data center""",2024-05-22
+ENS,"""data center""",2025-05-21
+ENS,"""data centers""",2023-05-24
+ENS,"""data centers""",2024-05-22
+ENS,"""data centers""",2025-05-21
+ENS,"""electric utilities""",2017-05-30
+ENS,"""electric utilities""",2018-05-30
+ENS,"""electric utilities""",2019-05-29
+ENS,"""electric utilities""",2020-06-01
+ENS,"""electric utilities""",2020-06-01
+ENS,"""electric utilities""",2021-05-26
+ENS,"""electric utilities""",2022-05-25
+ENS,"""electric utilities""",2023-05-24
+ENS,"""electric utilities""",2024-05-22
+ENS,"""electric utilities""",2025-05-21
+ENS,"""production tax credit""",2024-05-22
+ENS,"""production tax credit""",2025-05-21
+ENS,"""switchgear""",2017-05-30
+ENS,"""switchgear""",2018-05-30
+ENS,"""switchgear""",2019-05-29
+ENS,"""switchgear""",2020-06-01
+ENS,"""switchgear""",2020-06-01
+ENS,"""switchgear""",2021-05-26
+ENS,"""switchgear""",2021-05-26
+ENS,"""switchgear""",2021-05-26
+ENS,"""switchgear""",2021-05-26
+ENS,"""switchgear""",2022-05-25
+ENS,"""switchgear""",2022-05-25
+ENS,"""switchgear""",2023-05-24
+ENS,"""switchgear""",2024-05-22
+ENS,"""switchgear""",2025-05-21
+ENS,"""switchgear""",2025-05-21
+EPD,"""data centers""",2025-02-28
+ET,"""data center""",2017-02-24
+ET,"""data center""",2017-02-24
+ET,"""data center""",2018-02-23
+ET,"""data center""",2018-02-23
+ET,"""data center""",2019-02-22
+ET,"""data center""",2020-02-21
+ET,"""data center""",2021-02-19
+ET,"""data center""",2022-02-18
+ET,"""data center""",2023-02-17
+ET,"""data center""",2024-02-16
+ET,"""data center""",2025-02-14
+ET,"""data centers""",2017-02-24
+ET,"""data centers""",2018-02-23
+ET,"""data centers""",2019-02-22
+ET,"""data centers""",2020-02-21
+ET,"""data centers""",2021-02-19
+ET,"""data centers""",2022-02-18
+ET,"""data centers""",2023-02-17
+ET,"""data centers""",2024-02-16
+ET,"""data centers""",2025-02-14
+ET,"""transmission and distribution""",2021-02-19
+ETN,"""data centers""",2017-02-22
+ETN,"""data centers""",2018-02-28
+ETN,"""data centers""",2019-02-27
+ETN,"""data centers""",2020-02-26
+ETN,"""data centers""",2021-02-24
+ETN,"""data centers""",2022-02-23
+ETN,"""data centers""",2023-02-23
+ETN,"""data centers""",2024-02-29
+ETN,"""data centers""",2025-02-27
+ETN,"""switchgear""",2017-02-22
+ETN,"""switchgear""",2019-02-27
+ETN,"""switchgear""",2020-02-26
+ETN,"""switchgear""",2020-02-26
+ETN,"""switchgear""",2021-02-24
+ETN,"""switchgear""",2022-02-23
+ETR,"""data center""",2025-02-18
+ETR,"""data centers""",2025-02-18
+ETR,"""electric utilities""",2017-02-24
+ETR,"""electric utilities""",2018-02-26
+ETR,"""electric utilities""",2018-02-26
+ETR,"""electric utilities""",2019-02-26
+ETR,"""electric utilities""",2020-02-21
+ETR,"""electric utilities""",2020-02-21
+ETR,"""electric utilities""",2021-02-26
+ETR,"""electric utilities""",2021-02-26
+ETR,"""electric utilities""",2022-02-25
+ETR,"""electric utilities""",2022-02-25
+ETR,"""electric utilities""",2023-02-24
+ETR,"""electric utilities""",2024-02-23
+ETR,"""electric utilities""",2024-02-23
+ETR,"""electric utilities""",2025-02-18
+ETR,"""grid modernization""",2019-02-26
+ETR,"""grid modernization""",2020-02-21
+ETR,"""grid modernization""",2021-02-26
+ETR,"""grid modernization""",2022-02-25
+ETR,"""grid modernization""",2023-02-24
+ETR,"""grid modernization""",2024-02-23
+ETR,"""grid modernization""",2025-02-18
+ETR,"""investment tax credit""",2017-02-24
+ETR,"""investment tax credit""",2017-02-24
+ETR,"""investment tax credit""",2018-02-26
+ETR,"""investment tax credit""",2019-02-26
+ETR,"""investment tax credit""",2019-02-26
+ETR,"""investment tax credit""",2020-02-21
+ETR,"""investment tax credit""",2021-02-26
+ETR,"""investment tax credit""",2022-02-25
+ETR,"""investment tax credit""",2023-02-24
+ETR,"""investment tax credit""",2024-02-23
+ETR,"""investment tax credit""",2025-02-18
+ETR,"""net energy metering""",2020-02-21
+ETR,"""net energy metering""",2021-02-26
+ETR,"""net energy metering""",2022-02-25
+ETR,"""net energy metering""",2023-02-24
+ETR,"""net energy metering""",2024-02-23
+ETR,"""net energy metering""",2025-02-18
+ETR,"""substation""",2017-02-24
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2018-02-26
+ETR,"""substation""",2019-02-26
+ETR,"""substation""",2020-02-21
+ETR,"""substation""",2021-02-26
+ETR,"""substation""",2022-02-25
+ETR,"""substation""",2023-02-24
+ETR,"""substation""",2024-02-23
+ETR,"""substation""",2025-02-18
+ETR,"""transmission and distribution""",2017-02-24
+ETR,"""transmission and distribution""",2017-02-24
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2018-02-26
+ETR,"""transmission and distribution""",2019-02-26
+ETR,"""transmission and distribution""",2019-02-26
+ETR,"""transmission and distribution""",2020-02-21
+ETR,"""transmission and distribution""",2020-02-21
+ETR,"""transmission and distribution""",2020-02-21
+ETR,"""transmission and distribution""",2020-02-21
+ETR,"""transmission and distribution""",2020-02-21
+ETR,"""transmission and distribution""",2021-02-26
+ETR,"""transmission and distribution""",2021-02-26
+ETR,"""transmission and distribution""",2022-02-25
+ETR,"""transmission and distribution""",2022-02-25
+ETR,"""transmission and distribution""",2023-02-24
+ETR,"""transmission and distribution""",2023-02-24
+ETR,"""transmission and distribution""",2023-02-24
+ETR,"""transmission and distribution""",2023-02-24
+ETR,"""transmission and distribution""",2024-02-23
+ETR,"""transmission and distribution""",2024-02-23
+ETR,"""transmission and distribution""",2025-02-18
+FCEL,"""data center""",2017-01-12
+FCEL,"""data center""",2023-12-19
+FCEL,"""data center""",2025-12-18
+FCEL,"""data centers""",2017-01-12
+FCEL,"""data centers""",2018-01-11
+FCEL,"""data centers""",2019-01-10
+FCEL,"""data centers""",2020-01-22
+FCEL,"""data centers""",2021-01-21
+FCEL,"""data centers""",2021-12-29
+FCEL,"""data centers""",2022-12-20
+FCEL,"""data centers""",2023-12-19
+FCEL,"""data centers""",2024-12-27
+FCEL,"""data centers""",2025-12-18
+FCEL,"""electric utilities""",2017-01-12
+FCEL,"""electric utilities""",2018-01-11
+FCEL,"""electric utilities""",2019-01-10
+FCEL,"""electric utilities""",2020-01-22
+FCEL,"""electric utilities""",2021-01-21
+FCEL,"""investment tax credit""",2017-01-12
+FCEL,"""investment tax credit""",2017-01-12
+FCEL,"""investment tax credit""",2018-01-11
+FCEL,"""investment tax credit""",2019-01-10
+FCEL,"""investment tax credit""",2019-01-10
+FCEL,"""investment tax credit""",2020-01-22
+FCEL,"""investment tax credit""",2021-01-21
+FCEL,"""investment tax credit""",2021-12-29
+FCEL,"""investment tax credit""",2022-12-20
+FCEL,"""investment tax credit""",2023-12-19
+FCEL,"""investment tax credit""",2024-12-27
+FCEL,"""investment tax credit""",2025-12-18
+FCEL,"""production tax credit""",2022-12-20
+FCEL,"""production tax credit""",2023-12-19
+FCEL,"""production tax credit""",2025-12-18
+FCEL,"""substation""",2017-01-12
+FCEL,"""substation""",2018-01-11
+FCEL,"""substation""",2019-01-10
+FCEL,"""substation""",2025-12-18
+FCEL,"""switchgear""",2017-01-12
+FCEL,"""switchgear""",2017-01-12
+FCEL,"""transmission and distribution""",2017-01-12
+FCEL,"""transmission and distribution""",2018-01-11
+FCEL,"""transmission and distribution""",2019-01-10
+FCEL,"""transmission and distribution""",2020-01-22
+FCEL,"""transmission and distribution""",2021-01-21
+FCEL,"""transmission and distribution""",2021-12-29
+FCEL,"""transmission and distribution""",2022-12-20
+FCEL,"""transmission and distribution""",2023-12-19
+FCEL,"""transmission and distribution""",2024-12-27
+FCEL,"""transmission and distribution""",2025-12-18
+FELE,"""data center""",2019-02-28
+FELE,"""data center""",2020-02-25
+FELE,"""data center""",2021-02-24
+FELE,"""data center""",2022-02-25
+FELE,"""data center""",2023-02-22
+FELE,"""data center""",2024-02-23
+FELE,"""data center""",2025-02-21
+FELE,"""data centers""",2021-02-24
+FELE,"""substation""",2019-02-28
+FELE,"""substation""",2020-02-25
+FELE,"""substation""",2021-02-24
+FELE,"""substation""",2025-02-21
+FELE,"""switchgear""",2023-02-22
+FELE,"""switchgear""",2024-02-23
+FELE,"""switchgear""",2025-02-21
+FIX,"""data center""",2024-02-22
+FIX,"""data center""",2025-02-20
+FIX,"""data centers""",2024-02-22
+FIX,"""data centers""",2025-02-20
+FIX,"""switchgear""",2022-02-23
+FIX,"""switchgear""",2023-02-22
+FIX,"""switchgear""",2024-02-22
+FIX,"""switchgear""",2025-02-20
+FLNC,"""advanced manufacturing production credit""",2022-12-14
+FLNC,"""data center""",2024-11-29
+FLNC,"""data center""",2025-11-25
+FLNC,"""data centers""",2024-11-29
+FLNC,"""data centers""",2025-11-25
+FLNC,"""electric utilities""",2021-12-14
+FLNC,"""electric utilities""",2022-12-14
+FLNC,"""electric utilities""",2023-11-29
+FLNC,"""electric utilities""",2024-11-29
+FLNC,"""electric utilities""",2025-11-25
+FLNC,"""grid modernization""",2021-12-14
+FLNC,"""grid modernization""",2022-12-14
+FLNC,"""grid modernization""",2023-11-29
+FLNC,"""grid modernization""",2024-11-29
+FLNC,"""investment tax credit""",2021-12-14
+FLNC,"""investment tax credit""",2022-12-14
+FLNC,"""investment tax credit""",2023-11-29
+FLNC,"""investment tax credit""",2024-11-29
+FLNC,"""investment tax credit""",2025-11-25
+FLNC,"""production tax credit""",2021-12-14
+FLNC,"""production tax credit""",2022-12-14
+FLNC,"""production tax credit""",2023-11-29
+FLNC,"""production tax credit""",2024-11-29
+FLNC,"""production tax credit""",2025-11-25
+FLNC,"""substation""",2021-12-14
+FLNC,"""switchgear""",2021-12-14
+FLNC,"""transmission and distribution""",2021-12-14
+FLNC,"""transmission and distribution""",2021-12-14
+FLNC,"""transmission and distribution""",2021-12-14
+FLNC,"""transmission and distribution""",2022-12-14
+FLNC,"""transmission and distribution""",2023-11-29
+FLNC,"""transmission and distribution""",2024-11-29
+FLNC,"""transmission and distribution""",2025-11-25
+FTV,"""electric utilities""",2017-02-28
+FTV,"""switchgear""",2017-02-28
+FTV,"""switchgear""",2018-02-28
+FTV,"""switchgear""",2019-02-28
+FTV,"""switchgear""",2020-02-27
+GE,"""data center""",2017-02-24
+GE,"""data center""",2018-02-23
+GE,"""substation""",2018-02-23
+GE,"""substation""",2019-02-26
+GE,"""switchgear""",2017-02-24
+GE,"""switchgear""",2018-02-23
+GE,"""switchgear""",2019-02-26
+GE,"""switchgear""",2020-02-24
+GE,"""switchgear""",2021-02-12
+GEV,"""data centers""",2025-02-06
+GEV,"""grid modernization""",2025-02-06
+GEV,"""production tax credit""",2025-02-06
+GEV,"""substation""",2025-02-06
+GEV,"""switchgear""",2025-02-06
+GEV,"""transmission and distribution""",2025-02-06
+GNRC,"""data center""",2023-02-22
+GNRC,"""data center""",2024-02-21
+GNRC,"""data center""",2025-02-19
+GNRC,"""data centers""",2017-02-24
+GNRC,"""data centers""",2018-02-26
+GNRC,"""data centers""",2019-02-26
+GNRC,"""data centers""",2020-02-25
+GNRC,"""data centers""",2021-02-23
+GNRC,"""data centers""",2022-02-22
+GNRC,"""data centers""",2023-02-22
+GNRC,"""data centers""",2024-02-21
+GNRC,"""data centers""",2025-02-19
+GNRC,"""transmission and distribution""",2020-02-25
+GNRC,"""transmission and distribution""",2021-02-23
+HUBB,"""data center""",2022-02-11
+HUBB,"""data center""",2023-02-09
+HUBB,"""data center""",2024-02-08
+HUBB,"""data center""",2025-02-13
+HUBB,"""electric utilities""",2017-02-16
+HUBB,"""electric utilities""",2018-02-15
+HUBB,"""electric utilities""",2019-02-15
+HUBB,"""electric utilities""",2020-02-14
+HUBB,"""electric utilities""",2021-02-11
+HUBB,"""electric utilities""",2022-02-11
+HUBB,"""electric utilities""",2023-02-09
+HUBB,"""electric utilities""",2024-02-08
+HUBB,"""electric utilities""",2025-02-13
+HUBB,"""substation""",2017-02-16
+HUBB,"""substation""",2018-02-15
+HUBB,"""substation""",2019-02-15
+HUBB,"""substation""",2020-02-14
+HUBB,"""substation""",2021-02-11
+HUBB,"""substation""",2022-02-11
+HUBB,"""substation""",2023-02-09
+HUBB,"""substation""",2024-02-08
+HUBB,"""substation""",2025-02-13
+HUBB,"""transmission and distribution""",2017-02-16
+HUBB,"""transmission and distribution""",2018-02-15
+HUBB,"""transmission and distribution""",2019-02-15
+HUBB,"""transmission and distribution""",2020-02-14
+HUBB,"""transmission and distribution""",2021-02-11
+HUBB,"""transmission and distribution""",2022-02-11
+HUBB,"""transmission and distribution""",2023-02-09
+HUBB,"""transmission and distribution""",2024-02-08
+HUBB,"""transmission and distribution""",2025-02-13
+IESC,"""data center""",2017-12-08
+IESC,"""data center""",2018-12-07
+IESC,"""data center""",2019-12-06
+IESC,"""data center""",2020-12-07
+IESC,"""data center""",2021-12-03
+IESC,"""data center""",2022-12-06
+IESC,"""data center""",2023-12-07
+IESC,"""data center""",2024-11-22
+IESC,"""data center""",2025-11-21
+IESC,"""data centers""",2017-12-08
+IESC,"""data centers""",2018-12-07
+IESC,"""data centers""",2019-12-06
+IESC,"""data centers""",2020-12-07
+IESC,"""data centers""",2021-12-03
+IESC,"""data centers""",2022-12-06
+IESC,"""data centers""",2023-12-07
+IESC,"""data centers""",2024-11-22
+IESC,"""data centers""",2025-11-21
+IESC,"""switchgear""",2017-12-08
+IESC,"""transmission and distribution""",2017-12-08
+IESC,"""transmission and distribution""",2018-12-07
+IESC,"""transmission and distribution""",2019-12-06
+IESC,"""transmission and distribution""",2020-12-07
+IESC,"""transmission and distribution""",2021-12-03
+IESC,"""transmission and distribution""",2022-12-06
+IESC,"""transmission and distribution""",2023-12-07
+IESC,"""transmission and distribution""",2024-11-22
+IESC,"""transmission and distribution""",2025-11-21
+IEX,"""data centers""",2024-02-22
+IEX,"""data centers""",2025-02-20
+IRM,"""data center""",2017-02-23
+IRM,"""data center""",2018-02-16
+IRM,"""data center""",2018-02-16
+IRM,"""data center""",2019-02-14
+IRM,"""data center""",2020-02-13
+IRM,"""data center""",2021-02-24
+IRM,"""data center""",2022-02-24
+IRM,"""data center""",2023-02-23
+IRM,"""data center""",2024-02-22
+IRM,"""data center""",2025-02-14
+IRM,"""data centers""",2017-02-23
+IRM,"""data centers""",2018-02-16
+IRM,"""data centers""",2018-02-16
+IRM,"""data centers""",2018-02-16
+IRM,"""data centers""",2019-02-14
+IRM,"""data centers""",2019-02-14
+IRM,"""data centers""",2020-02-13
+IRM,"""data centers""",2020-02-13
+IRM,"""data centers""",2020-02-13
+IRM,"""data centers""",2021-02-24
+IRM,"""data centers""",2021-02-24
+IRM,"""data centers""",2022-02-24
+IRM,"""data centers""",2022-02-24
+IRM,"""data centers""",2023-02-23
+IRM,"""data centers""",2023-02-23
+IRM,"""data centers""",2024-02-22
+IRM,"""data centers""",2024-02-22
+IRM,"""data centers""",2025-02-14
+IRM,"""data centers""",2025-02-14
+JCI,"""data centers""",2021-11-15
+JCI,"""data centers""",2022-11-15
+JCI,"""data centers""",2023-12-14
+JCI,"""data centers""",2024-11-19
+JCI,"""data centers""",2025-11-14
+KEYS,"""data center""",2017-12-20
+KEYS,"""data center""",2018-12-18
+KEYS,"""data center""",2019-12-18
+KEYS,"""data center""",2020-12-17
+KEYS,"""data center""",2021-12-17
+KEYS,"""data center""",2022-12-15
+KEYS,"""data center""",2023-12-15
+KEYS,"""data center""",2024-12-17
+KEYS,"""data center""",2025-12-17
+KEYS,"""data centers""",2017-12-20
+KEYS,"""data centers""",2018-12-18
+KEYS,"""data centers""",2019-12-18
+KEYS,"""data centers""",2020-12-17
+KEYS,"""data centers""",2021-12-17
+KEYS,"""data centers""",2022-12-15
+LEU,"""electric utilities""",2017-03-31
+LEU,"""electric utilities""",2018-03-15
+LEU,"""electric utilities""",2019-04-01
+LEU,"""electric utilities""",2020-03-27
+LEU,"""electric utilities""",2021-03-22
+LEU,"""electric utilities""",2022-03-11
+LEU,"""electric utilities""",2023-02-22
+LEU,"""electric utilities""",2024-02-09
+LEU,"""electric utilities""",2025-02-07
+LFUS,"""data center""",2022-02-17
+LFUS,"""data center""",2023-02-16
+LFUS,"""data center""",2024-02-16
+LFUS,"""data center""",2025-03-13
+LFUS,"""data centers""",2021-02-18
+LFUS,"""data centers""",2022-02-17
+LFUS,"""data centers""",2023-02-16
+LFUS,"""data centers""",2024-02-16
+LFUS,"""data centers""",2025-03-13
+LFUS,"""switchgear""",2017-02-27
+LII,"""data centers""",2017-02-21
+LII,"""data centers""",2018-02-16
+LII,"""data centers""",2019-02-19
+LII,"""data centers""",2020-02-18
+LII,"""data centers""",2021-02-16
+LII,"""data centers""",2022-02-15
+LII,"""data centers""",2023-02-21
+LII,"""data centers""",2024-02-13
+LII,"""data centers""",2025-02-11
+LNTH,"""investment tax credit""",2018-02-26
+LNTH,"""investment tax credit""",2019-02-20
+LNTH,"""investment tax credit""",2020-02-25
+LNTH,"""investment tax credit""",2021-02-25
+LNTH,"""investment tax credit""",2022-02-24
+LNTH,"""investment tax credit""",2023-02-23
+LNTH,"""investment tax credit""",2024-02-22
+MIR,"""data centers""",2025-02-26
+MKSI,"""data center""",2024-02-27
+MKSI,"""data centers""",2024-02-27
+MKSI,"""data centers""",2025-02-25
+MLAB,"""data center""",2019-06-03
+MLAB,"""data center""",2020-06-01
+MLAB,"""data center""",2021-06-01
+MOD,"""data center""",2017-05-26
+MOD,"""data center""",2018-05-24
+MOD,"""data center""",2019-05-23
+MOD,"""data center""",2020-05-29
+MOD,"""data center""",2021-05-27
+MOD,"""data center""",2022-05-26
+MOD,"""data center""",2023-05-25
+MOD,"""data center""",2024-05-22
+MOD,"""data center""",2025-05-21
+MOD,"""data centers""",2017-05-26
+MOD,"""data centers""",2018-05-24
+MOD,"""data centers""",2019-05-23
+MOD,"""data centers""",2020-05-29
+MOD,"""data centers""",2021-05-27
+MOD,"""data centers""",2022-05-26
+MOD,"""data centers""",2023-05-25
+MOD,"""data centers""",2024-05-22
+MOD,"""data centers""",2025-05-21
+MOG-A,"""data center""",2022-11-14
+MOG-A,"""data center""",2025-11-26
+MOG-A,"""data centers""",2025-11-26
+MTZ,"""data center""",2025-02-28
+MTZ,"""data centers""",2025-02-28
+MTZ,"""electric utilities""",2017-02-24
+MTZ,"""electric utilities""",2018-02-27
+MTZ,"""electric utilities""",2019-02-28
+MTZ,"""electric utilities""",2020-02-27
+MTZ,"""grid modernization""",2025-02-28
+MTZ,"""investment tax credit""",2017-02-24
+MTZ,"""investment tax credit""",2018-02-27
+MTZ,"""investment tax credit""",2019-02-28
+MTZ,"""investment tax credit""",2024-03-01
+MTZ,"""investment tax credit""",2025-02-28
+MTZ,"""production tax credit""",2017-02-24
+MTZ,"""production tax credit""",2018-02-27
+MTZ,"""production tax credit""",2019-02-28
+MTZ,"""production tax credit""",2023-03-16
+MTZ,"""production tax credit""",2024-03-01
+MTZ,"""production tax credit""",2025-02-28
+MTZ,"""substation""",2017-02-24
+MTZ,"""substation""",2018-02-27
+MTZ,"""substation""",2024-03-01
+MTZ,"""substation""",2025-02-28
+MTZ,"""transmission and distribution""",2017-02-24
+MTZ,"""transmission and distribution""",2018-02-27
+MTZ,"""transmission and distribution""",2019-02-28
+MTZ,"""transmission and distribution""",2020-02-27
+MTZ,"""transmission and distribution""",2021-02-25
+MTZ,"""transmission and distribution""",2022-03-01
+MTZ,"""transmission and distribution""",2023-03-16
+MTZ,"""transmission and distribution""",2024-03-01
+MTZ,"""transmission and distribution""",2025-02-28
+MWA,"""data centers""",2021-11-19
+MWA,"""data centers""",2022-11-18
+MWA,"""data centers""",2023-12-14
+MWA,"""data centers""",2024-11-20
+MWA,"""data centers""",2025-11-19
+MWA,"""electric utilities""",2025-11-19
+MYRG,"""data centers""",2017-02-16
+MYRG,"""data centers""",2017-03-09
+MYRG,"""data centers""",2018-03-07
+MYRG,"""data centers""",2019-03-06
+MYRG,"""data centers""",2020-03-04
+MYRG,"""data centers""",2021-03-03
+MYRG,"""data centers""",2022-02-23
+MYRG,"""data centers""",2023-02-22
+MYRG,"""data centers""",2024-02-28
+MYRG,"""data centers""",2025-02-26
+MYRG,"""electric utilities""",2017-02-16
+MYRG,"""electric utilities""",2017-03-09
+MYRG,"""electric utilities""",2017-03-09
+MYRG,"""electric utilities""",2017-03-09
+MYRG,"""electric utilities""",2018-03-07
+MYRG,"""electric utilities""",2019-03-06
+MYRG,"""electric utilities""",2019-03-06
+MYRG,"""electric utilities""",2020-03-04
+MYRG,"""electric utilities""",2021-03-03
+MYRG,"""electric utilities""",2022-02-23
+MYRG,"""electric utilities""",2023-02-22
+MYRG,"""electric utilities""",2023-02-22
+MYRG,"""electric utilities""",2024-02-28
+MYRG,"""electric utilities""",2025-02-26
+MYRG,"""investment tax credit""",2017-03-09
+MYRG,"""production tax credit""",2017-03-09
+MYRG,"""substation""",2017-02-16
+MYRG,"""substation""",2017-03-09
+MYRG,"""substation""",2018-03-07
+MYRG,"""substation""",2019-03-06
+MYRG,"""substation""",2020-03-04
+MYRG,"""substation""",2021-03-03
+MYRG,"""substation""",2022-02-23
+MYRG,"""substation""",2023-02-22
+MYRG,"""substation""",2024-02-28
+MYRG,"""substation""",2025-02-26
+MYRG,"""transmission and distribution""",2017-02-16
+MYRG,"""transmission and distribution""",2017-03-09
+MYRG,"""transmission and distribution""",2018-03-07
+MYRG,"""transmission and distribution""",2019-03-06
+MYRG,"""transmission and distribution""",2020-03-04
+MYRG,"""transmission and distribution""",2021-03-03
+MYRG,"""transmission and distribution""",2022-02-23
+MYRG,"""transmission and distribution""",2023-02-22
+MYRG,"""transmission and distribution""",2024-02-28
+MYRG,"""transmission and distribution""",2025-02-26
+NRG,"""data center""",2025-02-26
+NRG,"""electric utilities""",2017-02-28
+NRG,"""electric utilities""",2018-03-01
+NRG,"""electric utilities""",2018-03-01
+NRG,"""investment tax credit""",2017-02-28
+NRG,"""investment tax credit""",2018-03-01
+NRG,"""investment tax credit""",2018-03-01
+NRG,"""investment tax credit""",2019-02-28
+NRG,"""investment tax credit""",2020-02-27
+NRG,"""production tax credit""",2017-02-28
+NRG,"""production tax credit""",2018-03-01
+NRG,"""production tax credit""",2019-02-28
+NRG,"""production tax credit""",2020-02-27
+NRG,"""production tax credit""",2021-03-01
+NRG,"""production tax credit""",2023-02-23
+NRG,"""transmission and distribution""",2017-02-28
+NRG,"""transmission and distribution""",2018-03-01
+NRG,"""transmission and distribution""",2019-02-28
+NRG,"""transmission and distribution""",2020-02-27
+NRG,"""transmission and distribution""",2021-03-01
+NRG,"""transmission and distribution""",2022-02-24
+NRG,"""transmission and distribution""",2023-02-23
+NRG,"""transmission and distribution""",2024-02-28
+NRG,"""transmission and distribution""",2025-02-26
+NVT,"""data center""",2019-02-19
+NVT,"""data center""",2019-03-01
+NVT,"""data center""",2020-02-25
+NVT,"""data center""",2021-02-23
+NVT,"""data center""",2022-02-25
+NVT,"""data center""",2023-02-28
+OKE,"""data centers""",2025-02-25
+OKE,"""electric utilities""",2017-02-28
+OKE,"""electric utilities""",2018-02-27
+OKE,"""electric utilities""",2019-02-26
+OKE,"""electric utilities""",2020-02-25
+OKE,"""electric utilities""",2021-02-23
+OKE,"""electric utilities""",2022-03-01
+OKE,"""electric utilities""",2023-02-28
+OKE,"""electric utilities""",2024-02-27
+OKE,"""electric utilities""",2025-02-25
+PH,"""electric utilities""",2017-08-25
+PH,"""electric utilities""",2018-08-24
+PH,"""electric utilities""",2019-08-23
+PH,"""electric utilities""",2020-08-26
+PH,"""electric utilities""",2021-08-25
+PH,"""electric utilities""",2022-08-24
+PH,"""electric utilities""",2023-08-24
+PLPC,"""electric utilities""",2017-03-10
+PLPC,"""electric utilities""",2018-03-09
+PLPC,"""electric utilities""",2019-03-08
+PLPC,"""electric utilities""",2020-03-06
+PLPC,"""electric utilities""",2021-03-05
+PLPC,"""electric utilities""",2023-03-03
+PLPC,"""electric utilities""",2024-03-08
+PLPC,"""electric utilities""",2025-03-13
+PLPC,"""substation""",2017-03-10
+PLPC,"""substation""",2018-03-09
+PLPC,"""substation""",2019-03-08
+PLPC,"""substation""",2020-03-06
+PLPC,"""substation""",2021-03-05
+PLPC,"""substation""",2022-03-04
+PLPC,"""substation""",2023-03-03
+PLPC,"""substation""",2024-03-08
+PLPC,"""substation""",2025-03-13
+PLPC,"""transmission and distribution""",2017-03-10
+PLPC,"""transmission and distribution""",2018-03-09
+PLPC,"""transmission and distribution""",2019-03-08
+PLPC,"""transmission and distribution""",2020-03-06
+PLPC,"""transmission and distribution""",2021-03-05
+PLPC,"""transmission and distribution""",2022-03-04
+PLPC,"""transmission and distribution""",2023-03-03
+PLPC,"""transmission and distribution""",2024-03-08
+PLPC,"""transmission and distribution""",2025-03-13
+PLUG,"""advanced manufacturing production credit""",2024-02-29
+PLUG,"""data center""",2021-05-14
+PLUG,"""data center""",2022-03-01
+PLUG,"""data center""",2022-03-14
+PLUG,"""data center""",2023-03-01
+PLUG,"""data center""",2024-02-29
+PLUG,"""data center""",2025-03-03
+PLUG,"""data centers""",2021-05-14
+PLUG,"""data centers""",2022-03-01
+PLUG,"""data centers""",2022-03-14
+PLUG,"""data centers""",2023-03-01
+PLUG,"""data centers""",2023-05-01
+PLUG,"""data centers""",2024-02-29
+PLUG,"""data centers""",2025-03-03
+PLUG,"""data centers""",2025-04-30
+PLUG,"""investment tax credit""",2017-03-10
+PLUG,"""investment tax credit""",2018-03-12
+PLUG,"""investment tax credit""",2019-03-13
+PLUG,"""investment tax credit""",2020-03-10
+PLUG,"""investment tax credit""",2021-05-14
+PLUG,"""investment tax credit""",2021-05-14
+PLUG,"""investment tax credit""",2021-05-14
+PLUG,"""investment tax credit""",2022-03-01
+PLUG,"""investment tax credit""",2022-03-14
+PLUG,"""investment tax credit""",2023-03-01
+PLUG,"""investment tax credit""",2024-02-29
+PLUG,"""investment tax credit""",2025-03-03
+PLUG,"""production tax credit""",2023-03-01
+PLUG,"""production tax credit""",2024-02-29
+PLUG,"""production tax credit""",2025-03-03
+PNR,"""data center""",2017-02-21
+PNR,"""data center""",2018-02-27
+POWL,"""data center""",2024-11-20
+POWL,"""data centers""",2022-12-06
+POWL,"""data centers""",2023-12-06
+POWL,"""data centers""",2024-11-20
+POWL,"""data centers""",2025-11-19
+POWL,"""substation""",2025-11-19
+POWL,"""switchgear""",2017-12-06
+POWL,"""switchgear""",2018-12-12
+POWL,"""switchgear""",2019-12-05
+POWL,"""switchgear""",2020-12-09
+POWL,"""switchgear""",2021-12-08
+POWL,"""switchgear""",2022-12-06
+POWL,"""switchgear""",2023-12-06
+POWL,"""switchgear""",2024-11-20
+POWL,"""switchgear""",2025-11-19
+POWL,"""transmission and distribution""",2025-11-19
+PRIM,"""data centers""",2024-02-27
+PRIM,"""data centers""",2025-02-25
+PRIM,"""electric utilities""",2017-02-28
+PRIM,"""electric utilities""",2018-02-26
+PRIM,"""electric utilities""",2019-02-28
+PRIM,"""electric utilities""",2020-02-25
+PRIM,"""electric utilities""",2021-02-23
+PRIM,"""electric utilities""",2022-03-01
+PRIM,"""electric utilities""",2023-02-28
+PRIM,"""electric utilities""",2024-02-27
+PRIM,"""electric utilities""",2025-02-25
+PRIM,"""substation""",2018-02-26
+PRIM,"""substation""",2019-02-28
+PRIM,"""substation""",2020-02-25
+PRIM,"""substation""",2021-02-23
+PRIM,"""substation""",2025-02-25
+PRIM,"""transmission and distribution""",2019-02-28
+PRIM,"""transmission and distribution""",2020-02-25
+PRIM,"""transmission and distribution""",2021-02-23
+PRIM,"""transmission and distribution""",2022-03-01
+PRIM,"""transmission and distribution""",2023-02-28
+PRIM,"""transmission and distribution""",2024-02-27
+PRIM,"""transmission and distribution""",2025-02-25
+PWR,"""data center""",2022-02-25
+PWR,"""data center""",2023-02-23
+PWR,"""data center""",2024-02-22
+PWR,"""data center""",2025-02-20
+PWR,"""data centers""",2025-02-20
+PWR,"""electric utilities""",2017-03-01
+PWR,"""electric utilities""",2018-02-28
+PWR,"""electric utilities""",2021-03-01
+PWR,"""electric utilities""",2022-02-25
+PWR,"""electric utilities""",2023-02-23
+PWR,"""grid modernization""",2020-02-28
+PWR,"""grid modernization""",2021-03-01
+PWR,"""grid modernization""",2022-02-25
+PWR,"""grid modernization""",2023-02-23
+PWR,"""grid modernization""",2024-02-22
+PWR,"""grid modernization""",2025-02-20
+PWR,"""substation""",2017-03-01
+PWR,"""substation""",2018-02-28
+PWR,"""substation""",2019-02-28
+PWR,"""substation""",2020-02-28
+PWR,"""substation""",2021-03-01
+PWR,"""substation""",2022-02-25
+PWR,"""substation""",2023-02-23
+PWR,"""substation""",2024-02-22
+PWR,"""substation""",2025-02-20
+PWR,"""transmission and distribution""",2017-03-01
+PWR,"""transmission and distribution""",2018-02-28
+PWR,"""transmission and distribution""",2019-02-28
+PWR,"""transmission and distribution""",2020-02-28
+PWR,"""transmission and distribution""",2021-03-01
+PWR,"""transmission and distribution""",2022-02-25
+PWR,"""transmission and distribution""",2023-02-23
+PWR,"""transmission and distribution""",2024-02-22
+PWR,"""transmission and distribution""",2025-02-20
+ROP,"""data centers""",2023-02-27
+ROP,"""data centers""",2024-02-22
+ROP,"""data centers""",2025-02-24
+RRX,"""data center""",2023-02-24
+RRX,"""data center""",2024-02-26
+RRX,"""data center""",2025-02-21
+RRX,"""data centers""",2017-03-01
+RRX,"""data centers""",2018-02-27
+RRX,"""data centers""",2019-02-26
+RRX,"""data centers""",2020-02-26
+RRX,"""data centers""",2021-03-02
+RRX,"""data centers""",2022-03-02
+RRX,"""data centers""",2023-02-24
+RRX,"""data centers""",2024-02-26
+RRX,"""switchgear""",2020-02-26
+RRX,"""switchgear""",2021-03-02
+RRX,"""switchgear""",2022-03-02
+RRX,"""switchgear""",2023-02-24
+RRX,"""switchgear""",2024-02-26
+RRX,"""switchgear""",2025-02-21
+SPB,"""investment tax credit""",2021-11-23
+SPXC,"""data center""",2025-02-26
+STEM,"""data centers""",2022-02-28
+STEM,"""data centers""",2023-02-17
+STEM,"""data centers""",2024-02-29
+STEM,"""data centers""",2025-03-05
+STEM,"""electric utilities""",2022-02-28
+STEM,"""electric utilities""",2023-02-17
+STEM,"""electric utilities""",2024-02-29
+STEM,"""electric utilities""",2025-03-05
+STEM,"""investment tax credit""",2024-02-29
+STEM,"""investment tax credit""",2025-03-05
+STEM,"""production tax credit""",2023-02-17
+STEM,"""production tax credit""",2024-02-29
+STEM,"""production tax credit""",2025-03-05
+SYM,"""data center""",2022-03-23
+TDY,"""data centers""",2018-02-27
+TDY,"""data centers""",2019-02-25
+TDY,"""data centers""",2020-02-24
+TDY,"""data centers""",2022-02-25
+TDY,"""data centers""",2023-02-24
+TDY,"""data centers""",2024-02-23
+TDY,"""data centers""",2025-02-21
+TDY,"""investment tax credit""",2017-03-02
+TDY,"""investment tax credit""",2018-02-27
+TLN,"""data center""",2025-02-28
+TLN,"""data centers""",2025-02-28
+TLN,"""electric utilities""",2025-02-28
+TLN,"""investment tax credit""",2025-02-28
+TLN,"""production tax credit""",2025-02-28
+TLN,"""transmission and distribution""",2025-02-28
+TMO,"""data center""",2024-02-22
+TMO,"""data center""",2025-02-20
+TRGP,"""electric utilities""",2017-02-21
+TRGP,"""electric utilities""",2018-02-16
+TRGP,"""electric utilities""",2019-03-01
+TRGP,"""electric utilities""",2020-02-20
+TRGP,"""electric utilities""",2021-02-18
+TRGP,"""electric utilities""",2022-02-24
+TRGP,"""electric utilities""",2023-02-22
+TRGP,"""electric utilities""",2024-02-15
+TRGP,"""electric utilities""",2025-02-20
+TRGP,"""transmission and distribution""",2021-02-18
+TRGP,"""transmission and distribution""",2022-02-24
+TRGP,"""transmission and distribution""",2023-02-22
+TT,"""data center""",2025-02-06
+UEC,"""data center""",2024-09-27
+UEC,"""data center""",2025-09-24
+UEC,"""data centers""",2024-09-27
+UEC,"""data centers""",2025-09-24
+UEC,"""substation""",2022-09-29
+UEC,"""substation""",2023-04-03
+UEC,"""substation""",2023-04-03
+VICR,"""data center""",2020-02-28
+VICR,"""data center""",2021-03-01
+VICR,"""data center""",2022-03-01
+VICR,"""data center""",2023-02-28
+VICR,"""data center""",2024-02-28
+VICR,"""data center""",2025-03-03
+VICR,"""data centers""",2020-02-28
+VICR,"""data centers""",2021-03-01
+VICR,"""data centers""",2022-03-01
+VICR,"""data centers""",2023-02-28
+VICR,"""data centers""",2024-02-28
+VICR,"""data centers""",2025-03-03
+VICR,"""investment tax credit""",2017-03-07
+VICR,"""investment tax credit""",2018-03-09
+VICR,"""investment tax credit""",2019-02-28
+VICR,"""investment tax credit""",2020-02-28
+VICR,"""investment tax credit""",2021-03-01
+VICR,"""investment tax credit""",2022-03-01
+VICR,"""investment tax credit""",2023-02-28
+VICR,"""investment tax credit""",2024-02-28
+VICR,"""investment tax credit""",2025-03-03
+VRT,"""data center""",2020-03-12
+VRT,"""data center""",2021-03-01
+VRT,"""data center""",2021-04-30
+VRT,"""data center""",2022-03-01
+VRT,"""data center""",2023-02-27
+VRT,"""data center""",2024-02-23
+VRT,"""data center""",2025-02-18
+VRT,"""data centers""",2020-03-12
+VRT,"""data centers""",2021-03-01
+VRT,"""data centers""",2021-04-30
+VRT,"""data centers""",2022-03-01
+VRT,"""data centers""",2023-02-27
+VRT,"""data centers""",2024-02-23
+VRT,"""data centers""",2025-02-18
+VRT,"""switchgear""",2020-03-12
+VRT,"""switchgear""",2022-03-01
+VRT,"""switchgear""",2023-02-27
+VRT,"""switchgear""",2024-02-23
+VRT,"""switchgear""",2025-02-18
+WCC,"""data center""",2017-02-22
+WCC,"""data center""",2018-02-22
+WCC,"""data center""",2019-02-27
+WCC,"""data center""",2020-02-24
+WCC,"""data center""",2023-02-21
+WCC,"""data center""",2024-02-20
+WCC,"""data center""",2025-02-14
+WCC,"""data centers""",2017-02-22
+WCC,"""data centers""",2018-02-22
+WCC,"""data centers""",2019-02-27
+WCC,"""data centers""",2020-02-24
+WCC,"""data centers""",2021-03-01
+WCC,"""data centers""",2022-02-25
+WCC,"""data centers""",2023-02-21
+WCC,"""data centers""",2024-02-20
+WCC,"""data centers""",2025-02-14
+WCC,"""grid modernization""",2022-02-25
+WCC,"""grid modernization""",2023-02-21
+WCC,"""grid modernization""",2024-02-20
+WCC,"""grid modernization""",2025-02-14
+WCC,"""substation""",2017-02-22
+WCC,"""substation""",2021-03-01
+WCC,"""transmission and distribution""",2017-02-22
+WCC,"""transmission and distribution""",2018-02-22
+WCC,"""transmission and distribution""",2019-02-27
+WCC,"""transmission and distribution""",2020-02-24
+WCC,"""transmission and distribution""",2021-03-01
+WCC,"""transmission and distribution""",2022-02-25
+WCC,"""transmission and distribution""",2023-02-21
+WCC,"""transmission and distribution""",2024-02-20
+WCC,"""transmission and distribution""",2025-02-14
+WTS,"""data center""",2023-02-21
+WTS,"""data center""",2024-02-21
+WTS,"""data center""",2025-02-18
+WTS,"""data centers""",2022-02-22
+WTS,"""data centers""",2023-02-21
+WTS,"""data centers""",2024-02-21
+WTS,"""data centers""",2025-02-18
+WWD,"""data center""",2019-11-25
+WWD,"""data center""",2020-11-20
+WWD,"""data center""",2021-11-19
+WWD,"""data center""",2022-11-18
+WWD,"""data center""",2024-11-26
+WWD,"""data center""",2025-11-25
+WWD,"""data centers""",2025-11-25
+XYL,"""data centers""",2025-03-03

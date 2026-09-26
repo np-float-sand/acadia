@@ -1,8 +1,13 @@
 """Backtest comparison harness for the electrification strategy (spec 6).
 
-Builds a {marquee, frozen, thematic} x {plain, +val, +val+sleeve, +val+sleeve+short}
-grid, scores each cell on the pre-registered metrics, and names a pitch winner by
-the spec 6.3 rule. Simple-return convention.
+Builds a {marquee, frozen, thematic} x {plain, +val, +val+sleeve, +val+sleeve+short,
++val+sleeve+solar} grid, scores each cell on the pre-registered metrics, and names a
+pitch winner by the spec 6.3 rule. Simple-return convention.
+
+`+val+sleeve+solar` (open item #17, 2026-09-06 probe) layers the conditional
+solar-rotation long on top of the `+val+sleeve` stack -- it is independent of
+`+val+sleeve+short` (the two are not tested/offered combined here, matching the
+2026-09-06 probe which only ever tested the rotation on `screen +val+sleeve`).
 """
 from __future__ import annotations
 
@@ -19,10 +24,11 @@ from grid_equipment_basket import hedges as _geh
 from electrification_strategy import config, hedge_overlay, universe, valuation_overlay
 
 STACKS = [
-    ("plain", False, False, False),
-    ("+val", True, False, False),
-    ("+val+sleeve", True, True, False),
-    ("+val+sleeve+short", True, True, True),
+    ("plain", False, False, False, False),
+    ("+val", True, False, False, False),
+    ("+val+sleeve", True, True, False, False),
+    ("+val+sleeve+short", True, True, True, False),
+    ("+val+sleeve+solar", True, True, False, True),
 ]
 
 
@@ -118,8 +124,9 @@ def run_comparison(start, end, prices, dfii10, constructions=universe.CONSTRUCTI
     volt_ret = prices["VOLT"].pct_change() if "VOLT" in prices.columns else pd.Series(dtype=float)
     sleeve_r = hedge_overlay.sleeve_returns(prices)
     short_r = hedge_overlay.short_returns(prices)
+    solar_r = hedge_overlay.solar_rotation_returns(prices)
 
-    cand = sorted(set(config.MARQUEE_UNIVERSE) | set(universe.load_seed().index))
+    cand = universe.candidate_tickers(constructions)
     cand_prices = prices[[c for c in cand if c in prices.columns]]
 
     cells, plain_books, eff_n = {}, {}, {}
@@ -133,11 +140,14 @@ def run_comparison(start, end, prices, dfii10, constructions=universe.CONSTRUCTI
         plain_books[con] = plain_r
         plain_cagr = compute_metrics(plain_r, config.RF, config.ANN)["cagr"]
         mask = hedge_overlay.real_yield_rising_mask(dfii10, plain_r.index)
+        falling_mask = hedge_overlay.real_yield_falling_mask(dfii10, plain_r.index)
 
-        for label, use_val, use_slv, use_sht in STACKS:
+        for label, use_val, use_slv, use_sht, use_sol in STACKS:
             core_r = compose(base_r, spy_ret, use_valuation=use_val)
-            cell_r = (core_r if not (use_slv or use_sht)
-                      else hedge_overlay.apply_hedge(core_r, sleeve_r, short_r, mask, use_slv, use_sht))
+            cell_r = (core_r if not (use_slv or use_sht or use_sol)
+                      else hedge_overlay.apply_hedge(core_r, sleeve_r, short_r, mask, use_slv, use_sht,
+                                                     solar_r=solar_r, solar_mask=falling_mask,
+                                                     use_solar=use_sol))
             m = compute_metrics(cell_r, config.RF, config.ANN)
             cells[(con, label)] = {
                 "metrics": m,

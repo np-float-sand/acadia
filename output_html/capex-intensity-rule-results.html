@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The ex-ante discovery rule — capex intensity</title>
+<style>
+:root{
+  --bg:#fbfbfa; --surface:#fff; --surface-2:#f2f4f6; --ink:#1a1d21; --muted:#5b6672;
+  --border:#e2e6ea; --rule:#cfd6dd; --accent:#2f6690; --accent-soft:#eaf1f6;
+  --code-bg:#f5f7f9; --del:#96a0aa;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151a; --surface:#181d23; --surface-2:#1f262e; --ink:#e6ebf0; --muted:#95a1ad;
+    --border:#28313a; --rule:#37424d; --accent:#7fb2d8; --accent-soft:#17242e;
+    --code-bg:#161c22; --del:#6d7883;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151a; --surface:#181d23; --surface-2:#1f262e; --ink:#e6ebf0; --muted:#95a1ad;
+  --border:#28313a; --rule:#37424d; --accent:#7fb2d8; --accent-soft:#17242e;
+  --code-bg:#161c22; --del:#6d7883;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.page{max-width:none;width:min(1180px,100% - 3rem);margin:0 auto;padding:3rem 0 5rem}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;margin:2.2rem 0 .7rem;font-weight:650}
+h1{font-size:2rem;margin-top:0;letter-spacing:-.015em}
+h2{font-size:1.4rem;border-bottom:1px solid var(--rule);padding-bottom:.35rem;margin-top:2.6rem}
+h3{font-size:1.12rem}
+h4{font-size:1rem;color:var(--muted)}
+p,li{max-width:80ch}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:currentColor}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+del{color:var(--del)}
+strong{font-weight:650}
+blockquote{margin:1.3rem 0;padding:.6rem 0 .6rem 1.1rem;border-left:3px solid var(--accent);
+  background:var(--accent-soft);color:var(--ink)}
+blockquote p{margin:.35rem 0}
+code{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.875em;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:3px;padding:.08em .34em}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;
+  padding:.9rem 1.1rem;overflow-x:auto;line-height:1.5}
+pre code{background:none;border:0;padding:0;font-size:.85rem}
+.table-wrap{overflow-x:auto;margin:1.3rem 0;border:1px solid var(--border);
+  border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.55rem .75rem;border-bottom:1px solid var(--border);
+  text-align:left;vertical-align:top}
+td{max-width:64ch}
+th{background:var(--surface-2);font-weight:650;font-size:.78rem;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td code{white-space:nowrap}
+img{max-width:100%;height:auto;display:block;margin:1.5rem 0;
+  border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+figure{margin:1.5rem 0}
+ul,ol{padding-left:1.3rem}
+li{margin:.3rem 0}
+.docmeta{color:var(--muted);font-size:.82rem;margin:0 0 2rem;padding-bottom:1rem;
+  border-bottom:2px solid var(--rule);display:flex;gap:1.2rem;flex-wrap:wrap}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:1rem 1.2rem;margin:0 0 2rem}
+.toc-title{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);font-weight:650;margin-bottom:.5rem}
+.toc ul{padding-left:1.1rem;margin:.2rem 0}
+.toc>ul{padding-left:0;list-style:none}
+.toc>ul>li{margin:.25rem 0}
+.toc a{color:var(--ink)}
+.idx{list-style:none;padding:0;display:grid;gap:.15rem}
+.idx li{margin:0}
+.idx a{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .75rem;
+  border-radius:5px;border-bottom:0}
+.idx a:hover{background:var(--surface-2)}
+.idx .sz{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+@media print{body{background:#fff}.toc{break-inside:avoid}}
+
+.highlight pre{margin:0}
+.highlight .c,.highlight .c1,.highlight .cm{color:#6b7783;font-style:italic}
+.highlight .k,.highlight .kn,.highlight .kd{color:#a4459b;font-weight:600}
+.highlight .s,.highlight .s1,.highlight .s2{color:#2f7d4f}
+.highlight .n{color:inherit}
+.highlight .nb{color:#2f6690}
+.highlight .nf{color:#2f6690;font-weight:600}
+.highlight .mi,.highlight .mf{color:#b5651d}
+.highlight .o,.highlight .p{color:var(--muted)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .highlight .c,
+  :root:not([data-theme="light"]) .highlight .c1{color:#7d8894}
+  :root:not([data-theme="light"]) .highlight .k,
+  :root:not([data-theme="light"]) .highlight .kn{color:#d79bd0}
+  :root:not([data-theme="light"]) .highlight .s,
+  :root:not([data-theme="light"]) .highlight .s1,
+  :root:not([data-theme="light"]) .highlight .s2{color:#83c99e}
+  :root:not([data-theme="light"]) .highlight .nb,
+  :root:not([data-theme="light"]) .highlight .nf{color:#7fb2d8}
+  :root:not([data-theme="light"]) .highlight .mi,
+  :root:not([data-theme="light"]) .highlight .mf{color:#e0a264}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="docmeta"><span>capex-intensity-rule-results.md</span><span>1,172 words</span><span>136 lines</span></div><nav class="toc"><div class="toc-title">Contents</div><div class="toc">
+<ul>
+<li><a href="#1-problem-1-universe-membership-solved">1. Problem 1 — universe membership (SOLVED)</a></li>
+<li><a href="#2-problem-2-selection-the-actual-answer">2. Problem 2 — selection (THE ACTUAL ANSWER)</a><ul>
+<li><a href="#why-this-is-the-right-answer-economically">Why this is the right answer economically</a></li>
+</ul>
+</li>
+<li><a href="#3-the-rule">3. The rule</a></li>
+<li><a href="#4-performance-2023-onward-is-out-of-sample-for-the-discovery">4. Performance — 2023 onward is out-of-sample for the discovery</a></li>
+<li><a href="#5-robustness-every-obvious-objection-tested">5. Robustness — every obvious objection tested</a></li>
+<li><a href="#6-caveats-read-before-using">6. Caveats — read before using</a></li>
+</ul>
+</div>
+</nav><h1 id="the-ex-ante-discovery-rule-capex-intensity">The ex-ante discovery rule — capex intensity</h1>
+<p><strong>Date:</strong> 2026-09-21
+<strong>Status:</strong> <strong>RULE FOUND. Fully ex-ante, mechanical, OOS-tested. Regime caveat in §6.</strong>
+<strong>Parent:</strong> <code>docs/algorithmic-long-short-books-results.md</code> §6 (the ex-ante audit that forced this)</p>
+<p><strong>Question asked:</strong> the GSR names were identifiable ex-post but not ex-ante. Is there a rule —
+using <em>other metrics</em> — that discovers them in advance?</p>
+<p><strong>Answer: yes, and it is capex intensity.</strong> Two separate problems had to be solved: getting the
+names into the <em>universe</em>, and <em>selecting</em> them once there. The first turned out to be easy and the
+second is where the answer lives.</p>
+<hr />
+<h2 id="1-problem-1-universe-membership-solved">1. Problem 1 — universe membership (SOLVED)</h2>
+<p>Of the 23 GSR names, <strong>18 were already in the mechanical SIC+liquidity universe</strong>. Only 5 were
+missing, and not at random:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>missing</th>
+<th>actual SIC</th>
+<th>why missed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CCJ, UEC</td>
+<td><strong>1090</strong> Misc Metal Ores</td>
+<td>uranium miners sit in generic mining codes</td>
+</tr>
+<tr>
+<td>LEU, UUUU</td>
+<td><strong>1400</strong> Nonmetallic Minerals</td>
+<td>same</td>
+</tr>
+<tr>
+<td>MYRG</td>
+<td><strong>1623</strong> Water, Sewer, Pipeline, <strong>Power Line</strong> Construction</td>
+<td>a power-infrastructure code I had simply omitted</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two principled fixes, neither fitted to outcomes:</p>
+<ol>
+<li><strong>Add SIC 1623</strong> — literally "Power Line Construction". Recovers MYRG (and 32 filers).</li>
+<li><strong>EDGAR full-text rule</strong> over 10-K/40-F/20-F for nuclear-fuel-cycle vocabulary —
+   <code>"uranium concentrates"</code>, <code>"nuclear fuel cycle"</code>, <code>"uranium enrichment"</code>, <code>"yellowcake"</code>,
+   <code>"enriched uranium"</code> — run <strong>point-in-time</strong> (filings published before year <em>Y</em> define the
+   universe for year <em>Y</em>). Recovers <strong>all four</strong> uranium names, plus genuine peers nobody
+   hand-picked: DNN, NXE, URG, EU, ASPI, LTBR, NNE, INIS.</li>
+</ol>
+<p>Result: <strong>23/23 GSR names now inside a fully mechanical, point-in-time universe</strong> of 111 (2019) →
+150 (2023) → 187 (2025) names. The text rule is filer-authored language, not analyst judgment.</p>
+<p><strong>But recovering the names did not recover the performance</strong> — Book B on the widened universe still
+only managed 2023-26 Sharpe 0.56. That isolated the real problem.</p>
+<hr />
+<h2 id="2-problem-2-selection-the-actual-answer">2. Problem 2 — selection (THE ACTUAL ANSWER)</h2>
+<p>Eleven ex-ante, point-in-time metrics tested for their ability to separate the 23 GSR names from
+the other ~215 in the pool (Welch t, pooled monthly):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>metric</th>
+<th>2019-2022 (fit)</th>
+<th>2023-2026</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>capex intensity</strong></td>
+<td>GSR 0.030 vs 0.069 · <strong>t = −15.08</strong></td>
+<td>0.045 vs 0.082 · <strong>t = −15.20</strong></td>
+</tr>
+<tr>
+<td>size (log)</td>
+<td>t = −7.20</td>
+<td>t = 11.27</td>
+</tr>
+<tr>
+<td>market beta</td>
+<td>t = 4.89</td>
+<td>t = 13.66</td>
+</tr>
+<tr>
+<td>FCF margin</td>
+<td>t = −4.59</td>
+<td>t = 9.74</td>
+</tr>
+<tr>
+<td>operating margin</td>
+<td>t = −3.89</td>
+<td>t = 9.39</td>
+</tr>
+<tr>
+<td><strong>grid-stress beta</strong></td>
+<td>t = 2.49</td>
+<td><strong>t = 0.50</strong></td>
+</tr>
+<tr>
+<td>revenue growth</td>
+<td>t = 0.86</td>
+<td>t = 3.18</td>
+</tr>
+<tr>
+<td><strong>momentum 12-1</strong></td>
+<td><strong>t = −0.20</strong></td>
+<td>t = 11.09</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Capex intensity is the only metric that separates strongly in the fit window <em>and</em> holds
+afterwards</strong>, and it wins by more than 2x over the next best. Momentum separates them <em>only</em>
+ex-post (t = −0.20 → 11.09) — that is the outcome, not a predictor. Grid-stress beta, the metric
+GSR was originally built on, barely separates at all and decays to nothing.</p>
+<h3 id="why-this-is-the-right-answer-economically">Why this is the right answer economically</h3>
+<p>GSR names run <strong>roughly half the capex/revenue of the rest of the pool</strong>. They <strong>sell into</strong> the
+capital cycle rather than <em>being</em> the capital: asset-light equipment makers, contractors and
+fuel-cycle names, versus asset-heavy owners — regulated utilities, E&amp;Ps, miners. That is the
+capex-cycle-pair thesis, now <strong>measured rather than asserted</strong>.</p>
+<hr />
+<h2 id="3-the-rule">3. The rule</h2>
+<blockquote>
+<p><strong>Universe:</strong> US filers with SIC in the electrical/power set (1731, 3470, 3490, 3510, 3550, 3561,
+3569, 3585, 3590, 3600, 3612, 3613, 3620, 3621, 3670, 3679, 3690, 3823, 3829, 5063, <strong>1623</strong>,
+4911, 4931, 4991, 1221, 4922, 4923, 4924) <strong>∪</strong> names whose prior-year 10-K/40-F/20-F matches the
+nuclear-fuel-cycle lexicon — filtered monthly to trailing-1yr median dollar volume &gt; $10M.</p>
+<p><strong>Score:</strong> point-in-time <strong>TTM capex ÷ TTM revenue</strong>, from EDGAR using each fact's <code>filed</code> date.</p>
+<p><strong>Book:</strong> LONG the lightest quartile, SHORT the heaviest quartile at <strong>0.5x</strong>, monthly rebalance,
+20% vol target, 10bp costs.</p>
+</blockquote>
+<p>Nothing hand-selected. No 2026-dated flags. No labels required once the rule is stated.</p>
+<hr />
+<h2 id="4-performance-2023-onward-is-out-of-sample-for-the-discovery">4. Performance — 2023 onward is out-of-sample for the discovery</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>window</th>
+<th>CAGR</th>
+<th>Sharpe</th>
+<th>MaxDD</th>
+<th>Calmar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2019-2022 (fit)</td>
+<td>7.5%</td>
+<td>0.26</td>
+<td>−36.4%</td>
+<td>0.21</td>
+</tr>
+<tr>
+<td><strong>2023-2026 (OOS)</strong></td>
+<td>32.8%</td>
+<td><strong>1.26</strong></td>
+<td>−23.6%</td>
+<td><strong>1.39</strong></td>
+</tr>
+<tr>
+<td><strong>2025-2026 (OOS)</strong></td>
+<td>28.1%</td>
+<td><strong>1.07</strong></td>
+<td>−22.8%</td>
+<td><strong>1.23</strong></td>
+</tr>
+<tr>
+<td>Full 2019-2026</td>
+<td>18.9%</td>
+<td>0.74</td>
+<td>−36.4%</td>
+<td>0.52</td>
+</tr>
+</tbody>
+</table></div>
+<p>~15 long / 16 short, turnover <strong>1.2x/yr</strong>. It beats both earlier ex-ante books on the <em>same</em>
+mechanical universe (A: 0.85 / 0.78 · B: 0.56 / 0.66).</p>
+<p>Latest holdings — <strong>long</strong> UUUU, IESC, MTZ, FLNC, SYM, TRMB, SPB, AME, ED, POWL, WTS, PNR;
+<strong>short</strong> EOSE, DUK, PCG, ETR, IDA, VG, SLDP, ORA, KNTK, SERV. Long asset-light suppliers, short
+capital-heavy utilities and cash-burning developers.</p>
+<hr />
+<h2 id="5-robustness-every-obvious-objection-tested">5. Robustness — every obvious objection tested</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>objection</th>
+<th>test</th>
+<th>result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"It's just short utilities"</td>
+<td>drop <strong>all 44 utilities</strong> from the pool</td>
+<td>2023-26 <strong>1.10</strong>, 2025-26 <strong>1.05</strong> (vs 1.07) — survives</td>
+</tr>
+<tr>
+<td>"The short leg is decoration"</td>
+<td>short weight 0 → 0.25 → 0.5 → 1.0</td>
+<td>1.07 → 1.20 → <strong>1.26</strong> → 1.15; monotone to 0.5x</td>
+</tr>
+<tr>
+<td>Transaction costs</td>
+<td>5 / 10 / 25 / <strong>50</strong> bp</td>
+<td>1.27 / 1.26 / 1.22 / <strong>1.14</strong></td>
+</tr>
+<tr>
+<td>Quantile choice</td>
+<td>q = 0.15 / 0.20 / 0.25 / 0.33</td>
+<td>1.29 / 1.21 / 1.26 / 1.14</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>This is the first construction in this line where an algorithmic short genuinely earns its
+place.</strong> Books A and B needed the short shrunk to 0.15-0.25x to avoid damage; here it improves
+Sharpe monotonically out to 0.5x, because the heavy-capex basket is a <em>real</em> underperformer rather
+than a junk-rally basket.</p>
+<hr />
+<h2 id="6-caveats-read-before-using">6. Caveats — read before using</h2>
+<ol>
+<li><strong>It does not work pre-2023.</strong> Fit-window Sharpe is 0.18-0.38. The rule earns its returns in the
+   2023+ regime only; this is a capex-cycle bet, and it pays while the cycle runs.</li>
+<li><strong>Discovery used ex-post labels.</strong> The 23 GSR names came from a 2026 hand-classification, so
+   <em>which metric I landed on</em> carries selection risk. Mitigants: 11 metrics were screened, capex
+   intensity won by t = −15 versus −7.2 for the next best, and once stated <strong>the rule needs no
+   labels at all</strong> — the backtest above never references the 23 names.</li>
+<li><strong>Asset-light is a known factor.</strong> This overlaps quality/capital-discipline factors documented
+   in the general equity literature. The claim here is not a new anomaly but a <em>correctly specified</em>
+   one for this universe, with an economic rationale that matches the thesis.</li>
+<li><strong>Survivorship is still unfixed.</strong> 2,168 of 2,535 filers in the SIC set have no ticker today and
+   yfinance serves no delisted prices. Long legs flattered, short legs understated — for this book
+   and the shipped one alike. Needs CRSP or equivalent.</li>
+</ol>
+</div>
+</body>
+</html>

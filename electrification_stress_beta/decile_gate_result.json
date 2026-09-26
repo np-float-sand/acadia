@@ -1,0 +1,13 @@
+{
+  "cut": "10th-minus-1st decile (top-3/bottom-3 by count)",
+  "min_cross_section": 15,
+  "t_primary_2021on": 0.31770811404799826,
+  "n_primary": 67,
+  "t_pre_2021": -0.5641599720124622,
+  "n_pre": 41,
+  "gate1_pass": false,
+  "sign_primary": "positive",
+  "avg_monthly_cross_section_n": 29.560747663551403,
+  "months_seen_total": 108,
+  "months_dropped_below_min_n": 1
+}

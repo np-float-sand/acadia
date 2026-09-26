@@ -23,7 +23,7 @@ def main(argv=None) -> None:
     ap.add_argument("--start", default=config.START_DEFAULT)
     ap.add_argument("--end", default=_default_end())
     ap.add_argument("--universe",
-                    choices=["marquee", "frozen", "thematic", "screen", "screen_reit", "all"],
+                    choices=list(universe.ALL_CONSTRUCTIONS) + ["all"],
                     default="all")
     ap.add_argument("--output", default="./output_electrification")
     ap.add_argument("--no-plot", action="store_true")
@@ -31,9 +31,10 @@ def main(argv=None) -> None:
 
     cons = universe.CONSTRUCTIONS if args.universe == "all" else (args.universe,)
 
-    cand = sorted(set(config.MARQUEE_UNIVERSE) | set(universe.load_seed().index))
+    cand = universe.candidate_tickers(cons)
     tickers = sorted(set(cand) | set(config.BENCHMARKS) | set(config.HEDGE_SLEEVE_TICKERS)
-                     | set(config.HEDGE_SHORT_TICKERS) | {config.FEARED_PROXY})
+                     | set(config.HEDGE_SHORT_TICKERS) | set(config.SOLAR_ROTATION_TICKERS)
+                     | {config.FEARED_PROXY})
 
     prices = fetch_prices(tickers, args.start, args.end)
     dfii10 = fetch_series(config.HEDGE_SHORT_SIGNAL, "2003-01-01", args.end)

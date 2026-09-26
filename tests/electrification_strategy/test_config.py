@@ -18,6 +18,8 @@ def test_frozen_scalar_params():
     assert c.HEDGE_SHORT_TICKERS == ("DLR", "EQIX") and c.HEDGE_SHORT_WEIGHT == 0.25
     assert c.HEDGE_SHORT_SIGNAL == "DFII10"
     assert c.HEDGE_SHORT_LOOKBACK_DAYS == 126 and c.HEDGE_SHORT_LAG_DAYS == 5
+    assert c.SOLAR_ROTATION_TICKERS == ("ENPH", "SEDG", "CHPT", "RUN", "BLNK", "STEM")
+    assert c.SOLAR_ROTATION_WEIGHT == 0.10
     assert c.RF == 0.04 and c.ANN == 252
 
 

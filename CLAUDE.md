@@ -10,7 +10,15 @@
 
 ## Future Work (Tracked)
 
-- **GSI congestion signal — Phase 2:** Add LMP component-based extraction (energy/congestion/loss decomposition from gridstatus) AND promote inter-zonal spread to a separate 5th GSI sub-signal with rebalanced weights. Deferred until the spread signal is validated in backtesting. See `docs/superpowers/specs/2026-05-28-congestion-spread-design.md`.
+- **GSI congestion signal — Phase 2: NOT RECOMMENDED (validated 2026-09-08).** The Phase-1
+  spread fallback was checked offline against production caches: the "arrives as NaN for all
+  ISOs" diagnosis was only ever true for **ERCOT** (raw feed has no congestion component —
+  100% NaN before the fix, fully filled after, real non-trivial signal). **PJM's `congestion`
+  column was never broken** — 0% NaN before any fix, and the spread-fill changes 0 of 2,922
+  days there. Since PJM's component data is already correct and the GSI's documented problem
+  is signal strength / sample size (not construction, per the 2026-08-26 closeout audit),
+  decomposing further or promoting the spread to a 5th sub-signal has no live bug to fix and
+  low prior. See `docs/untried-tasks-log.md` §1, `docs/superpowers/specs/2026-05-28-congestion-spread-design.md`.
 
 ## Grid Search Findings (2026-06-17)
 
@@ -42,9 +50,9 @@ See `output/grid_search_results.csv` for all 243 combinations ranked by Sharpe.
 
 ## Future Work — Signal Improvements
 
-- **Interest Coverage Ratio (ICR) factor component:** Implemented in `equity_prices.fetch_icr()` and wired into `resilience_score.build_factor()` as a 15% weight (beta drops to 70%, renewables 15%). Currently **off by default** (`USE_ICR = False` in `config.py`, `--icr` / `--no-icr` CLI flag). Turn on to validate: does low-ICR identify better short candidates during rate stress events? Limitation: yfinance only returns ~4–12 quarters of history per ticker, so ICR contribution is weakest in the pre-2022 backtest window. Consider EDGAR as a historical data source before drawing firm conclusions.
+- **Interest Coverage Ratio (ICR) factor component: RETESTED, STAYS OFF (2026-09-08).** Implemented in `equity_prices.fetch_icr()` and wired into `resilience_score.build_factor()` as a 15% weight (beta drops to 70%, renewables 15%). `USE_ICR = False` in `config.py` — confirmed correct, not just a data-availability placeholder. The yfinance-depth limitation this note used to flag is resolved (EDGAR XBRL gives a median 63 quarters/ticker vs yfinance's 4-12), but retesting with full depth still fails: full-sample monthly rank-IC t=-0.95 (wrong sign), and the two three-year windows that look like a big effect are PCG/EIX wildfire-liability and VST/CEG AI-re-rating confounds, not a leverage relationship. See `docs/icr-edgar-retest-results.md`, `docs/untried-tasks-log.md` item 2.
 
-- **RT/DA LMP spread (5th GSI sub-signal):** Real-time vs day-ahead price spread cleanly separates generators (benefit from RT spikes) from T&D utilities (hurt by congestion charges). Infrastructure ~90% ready — needs a new `ISO_RT_LOCATION_TYPE` config dict and a `fetch_lmp_rt()` variant. Highest-impact addition after ICR is validated.
+- **RT/DA LMP spread (5th GSI sub-signal): FEASIBILITY CHECKED 2026-09-08.** ERCOT is fully feasible and easier than assumed — `ercot.get_lmp()` (already the production fetch) IS the real-time leg; only day-ahead (`get_dam_spp(year)`, full year in ~8s, 2011->present) needs adding, no new RT fetcher required. PJM is confirmed blocked for real-time-hourly LMP before ~2024 (forces a full ~10,000-pnode download per request, 429s within 6 pages even for a single day) but fine for recent dates. VST/NRG — the two names actually driving the stress-beta whipsaw — are both ERCOT, so the useful part of this doesn't need PJM's blocked history. See `docs/rt-da-spread-feasibility-results.md`, `docs/untried-tasks-log.md` item 4. Signal design/build itself not yet started.
 
 - **Value-chain signal — Q4 derivation + operating-margin variants:** the shipped signal uses
   company-wide gross-margin change. Spec 2026-08-29 §9 logs two untried refinements: company-wide

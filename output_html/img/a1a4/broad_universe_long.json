@@ -1,0 +1,82 @@
+[
+ {
+  "book":"The electrification book (A1+A4)",
+  "names":20.9,
+  "CAGR":"22.4%",
+  "Vol":"16.8%",
+  "Sharpe":1.05,
+  "MaxDD":"-20.0%",
+  "Calmar":1.118,
+  "beta":0.62
+ },
+ {
+  "book":"broad, ALL sectors: lightest 60% + profitable",
+  "names":251.6,
+  "CAGR":"18.9%",
+  "Vol":"16.6%",
+  "Sharpe":0.889,
+  "MaxDD":"-20.2%",
+  "Calmar":0.939,
+  "beta":0.7
+ },
+ {
+  "book":"broad, ALL sectors: lightest 50% + profitable",
+  "names":211.1,
+  "CAGR":"19.4%",
+  "Vol":"16.6%",
+  "Sharpe":0.908,
+  "MaxDD":"-20.1%",
+  "Calmar":0.963,
+  "beta":0.7
+ },
+ {
+  "book":"broad, ALL sectors: lightest 25% + profitable",
+  "names":105.7,
+  "CAGR":"18.8%",
+  "Vol":"16.6%",
+  "Sharpe":0.88,
+  "MaxDD":"-20.1%",
+  "Calmar":0.932,
+  "beta":0.68
+ },
+ {
+  "book":"broad, EX-electricity: lightest 60% + profitable",
+  "names":219.8,
+  "CAGR":"18.7%",
+  "Vol":"16.4%",
+  "Sharpe":0.887,
+  "MaxDD":"-19.9%",
+  "Calmar":0.939,
+  "beta":0.69
+ },
+ {
+  "book":"broad, EX-electricity: lightest 50% + profitable",
+  "names":183.8,
+  "CAGR":"18.2%",
+  "Vol":"16.5%",
+  "Sharpe":0.856,
+  "MaxDD":"-20.1%",
+  "Calmar":0.908,
+  "beta":0.7
+ },
+ {
+  "book":"broad, EX-electricity: lightest 25% + profitable",
+  "names":92.2,
+  "CAGR":"17.9%",
+  "Vol":"16.5%",
+  "Sharpe":0.838,
+  "MaxDD":"-19.9%",
+  "Calmar":0.898,
+  "beta":0.68
+ },
+ {
+  "book":"electricity universe, no screen at all",
+  "names":65.0,
+  "CAGR":"20.3%",
+  "Vol":"16.9%",
+  "Sharpe":0.941,
+  "MaxDD":"-21.6%",
+  "Calmar":0.938,
+  "beta":0.65
+ }
+]

@@ -19,6 +19,10 @@ got equal money. This proposal drops that last restraint. Since the grid became 
 2023, two facts in a supplier's own filings have separated the winners from the rest, and we now use
 them to hold only the stronger half.
 
+![Sharpe ratio: selection book vs published book and ETFs, by window and rolling 12 months](img/tophalf/sharpe.png)
+
+*Return per unit of risk. Bars: Sharpe over the full period (light) and since the grid became tight (dark). Lines: Sharpe over the trailing 12 months.*
+
 ![Selection book vs published book vs GRID](img/tophalf/selection.png)
 
 ---
@@ -101,18 +105,18 @@ This is the period the strategy is built for, and the one to judge it on.
 
 | | **Selection book** | Published book | S&P 500 | GRID ETF | PAVE ETF | Industrials (XLI) |
 |---|---|---|---|---|---|---|
-| **Return a year** | **35.4%** | 32.7% | 21.7% | 25.9% | 27.7% | 21.6% |
-| **Volatility** | **16.1%** | 16.6% | 14.8% | 20.3% | 20.5% | 16.4% |
-| **Sharpe ratio** | **1.72** | 1.55 | 1.13 | 1.04 | 1.10 | 1.03 |
-| **Sortino ratio** | **2.43** | 2.19 | 1.52 | 1.48 | 1.67 | 1.53 |
-| **Worst drawdown** | **−17.7%** | −19.3% | −18.8% | −22.2% | −27.9% | −20.2% |
-| **Calmar ratio** | **2.00** | 1.69 | 1.16 | 1.17 | 0.99 | 1.07 |
-| **Beta to S&P** | 0.74 | 0.79 | 1.00 | 1.09 | 1.08 | 0.89 |
-| **Up / down capture** | **0.91 / 0.74** | 0.96 / 0.83 | 1.00 / 1.00 | 1.18 / 1.22 | 1.11 / 1.11 | 0.90 / 0.90 |
+| **Return a year** | **35.4%** | 32.7% | 22.6% | 23.0% | 22.8% | 18.9% |
+| **Volatility** | **16.1%** | 16.6% | 15.0% | 20.3% | 20.6% | 16.5% |
+| **Sharpe ratio** | **1.72** | 1.55 | 1.16 | 0.93 | 0.91 | 0.89 |
+| **Sortino ratio** | **2.43** | 2.19 | 1.59 | 1.33 | 1.37 | 1.33 |
+| **Worst drawdown** | **−17.7%** | −19.3% | −18.8% | −20.8% | −26.2% | −18.5% |
+| **Calmar ratio** | **2.00** | 1.69 | 1.20 | 1.11 | 0.87 | 1.02 |
+| **Beta to S&P** | 0.74 | 0.79 | 1.00 | 1.10 | 1.09 | 0.90 |
+| **Up / down capture** | **0.91 / 0.74** | 0.96 / 0.83 | 1.00 / 1.00 | 1.19 / 1.23 | 1.11 / 1.13 | 0.91 / 0.91 |
 
 Against the published book it earns **2.7 points a year more with less volatility and a smaller
-drawdown** — every measure improves. Against GRID it earns 9.5 points more at four-fifths of the
-volatility and four-fifths of the drawdown.
+drawdown** — every measure improves. Against GRID it earns 12.4 points more at four-fifths of the
+volatility and 85% of the drawdown.
 
 ### The full period (January 2019 – August 2026)
 
@@ -434,7 +438,7 @@ risk overlay still dominates the bill.
 | 2023 on — net of trading @ 20bp | 33.3% | 1.619 | −17.9% | 1.86 |
 | **Hedged (short GRID), 2023 on — net @ 10bp** | 15.9% | 1.134 | −9.6% | 1.66 |
 | Hedged (short GRID), full period — net @ 10bp | 8.1% | 0.406 | −19.1% | 0.43 |
-| GRID ETF, 2023 on *(net of its fee)* | 25.9% | 1.042 | −22.2% | 1.17 |
+| GRID ETF, 2023 on *(net of its fee)* | 23.0% | 0.926 | −20.8% | 1.11 |
 
 Net of realistic trading costs the selection book keeps its lead over the published book and over
 every ETF alternative in the grid-tight period.

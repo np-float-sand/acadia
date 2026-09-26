@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capex-Intensity Long/Short — Research Details</title>
+<style>
+:root{
+  --bg:#12171c; --surface:#181e25; --surface-2:#1f272f; --ink:#e6ebf0; --muted:#97a3af;
+  --border:#2b343d; --rule:#3a4550; --accent:#6fb0dd; --accent-soft:#17242e;
+  --code-bg:#161c22; --del:#6d7883;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.68 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.page{width:min(1100px,100% - 3rem);margin:0 auto;padding:3rem 0 5rem}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;font-weight:650;color:var(--ink)}
+h1{font-size:2rem;margin:0 0 .5rem;letter-spacing:-.015em}
+h2{font-size:1.32rem;margin:2.8rem 0 .8rem;padding-bottom:.4rem;
+  border-bottom:1px solid var(--rule)}
+h3{font-size:1.08rem;margin:1.9rem 0 .5rem;color:var(--accent)}
+h4{font-size:.98rem;margin:1.4rem 0 .4rem;color:var(--muted)}
+p,li{max-width:82ch}
+p{margin:0 0 1.05rem}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:currentColor}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+hr{border:0;border-top:1px solid var(--rule);margin:2.6rem 0}
+del{color:var(--del)}
+strong{font-weight:650;color:#f4f7fa}
+blockquote{margin:1.4rem 0;padding:.9rem 1.2rem;border-left:3px solid var(--accent);
+  background:var(--accent-soft)}
+blockquote p{margin:.3rem 0}
+code{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.86em;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:3px;padding:.08em .34em;color:#cfe0ee}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;
+  padding:.9rem 1.1rem;overflow-x:auto;line-height:1.5}
+pre code{background:none;border:0;padding:0;font-size:.85rem}
+.table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--border);
+  border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.89rem}
+th,td{padding:.55rem .78rem;border-bottom:1px solid var(--border);
+  text-align:left;vertical-align:top}
+td{max-width:62ch;font-variant-numeric:tabular-nums}
+th{background:var(--surface-2);font-weight:650;font-size:.74rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td code{white-space:nowrap}
+img{max-width:100%;height:auto;display:block;margin:1.6rem 0;
+  border:1px solid var(--border);border-radius:6px}
+ul,ol{padding-left:1.3rem;margin:0 0 1.05rem}
+li{margin:.3rem 0}
+.docmeta{color:var(--muted);font-size:.8rem;margin:0 0 2rem;padding-bottom:1rem;
+  border-bottom:1px solid var(--rule);display:flex;gap:1.2rem;flex-wrap:wrap}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:1rem 1.2rem;margin:0 0 2.2rem}
+.toc-title{font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);font-weight:650;margin-bottom:.5rem}
+.toc ul{padding-left:1.1rem;margin:.2rem 0}
+.toc>ul{padding-left:0;list-style:none;font-size:.9rem}
+.toc>ul>li{margin:.24rem 0}
+.toc a{color:var(--ink)}
+.toc a:hover{color:var(--accent)}
+.idx{list-style:none;padding:0}
+.idx a{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .7rem;
+  border-radius:5px;border-bottom:0}
+.idx a:hover{background:var(--surface-2)}
+.idx .sz{color:var(--muted);font-size:.8rem}
+
+.highlight pre{margin:0}
+.highlight .c,.highlight .c1,.highlight .cm{color:#7d8894;font-style:italic}
+.highlight .k,.highlight .kn,.highlight .kd{color:#d79bd0;font-weight:600}
+.highlight .s,.highlight .s1,.highlight .s2{color:#83c99e}
+.highlight .n{color:inherit}
+.highlight .nb,.highlight .nf{color:#7fb2d8}
+.highlight .mi,.highlight .mf{color:#e0a264}
+.highlight .o,.highlight .p{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="docmeta"><span>capex-intensity-research_details.md</span><span>2,881 words</span><span>387 lines</span></div><nav class="toc"><div class="toc-title">Contents</div><div class="toc">
+<ul>
+<li><a href="#1-the-rule-in-full">1. The rule, in full</a></li>
+<li><a href="#2-performance">2. Performance</a></li>
+<li><a href="#3-leg-decomposition-where-the-return-actually-comes-from">3. Leg decomposition — where the return actually comes from</a></li>
+<li><a href="#4-interest-rate-sensitivity">4. Interest-rate sensitivity</a></li>
+<li><a href="#5-does-the-short-leg-help-the-shipped-book">5. Does the short leg help the shipped book?</a></li>
+<li><a href="#6-does-capital-intensity-work-outside-power">6. Does capital intensity work outside power?</a></li>
+<li><a href="#7-lexicon-design-why-nuclear-only">7. Lexicon design — why nuclear only</a></li>
+<li><a href="#8-what-electricityenergy-market-knowledge-is-actually-load-bearing">8. What electricity/energy-market knowledge is actually load-bearing</a></li>
+<li><a href="#9-known-weaknesses">9. Known weaknesses</a></li>
+<li><a href="#10-full-specification-step-by-step">10. Full specification — step by step</a><ul>
+<li><a href="#step-1-resolve-ticker-cik">Step 1 — Resolve ticker → CIK</a></li>
+<li><a href="#step-2-enumerate-the-structural-universe">Step 2 — Enumerate the structural universe</a></li>
+<li><a href="#step-3-discover-the-fuel-cycle-by-language">Step 3 — Discover the fuel cycle by language</a></li>
+<li><a href="#step-4-price-and-liquidity">Step 4 — Price and liquidity</a></li>
+<li><a href="#step-5-pull-point-in-time-fundamentals">Step 5 — Pull point-in-time fundamentals</a></li>
+<li><a href="#step-6-build-the-ttm-panel-point-in-time">Step 6 — Build the TTM panel, point-in-time</a></li>
+<li><a href="#step-7-score">Step 7 — Score</a></li>
+<li><a href="#step-8-eligibility-mask">Step 8 — Eligibility mask</a></li>
+<li><a href="#step-9-target-weights">Step 9 — Target weights</a></li>
+<li><a href="#step-10-returns-costs-volatility-target">Step 10 — Returns, costs, volatility target</a></li>
+<li><a href="#step-11-reporting">Step 11 — Reporting</a></li>
+</ul>
+</li>
+<li><a href="#11-implementation-map">11. Implementation map</a><ul>
+<li><a href="#caches-written-to-datacache">Caches written to data/cache/</a></li>
+<li><a href="#running-it">Running it</a></li>
+<li><a href="#test-coverage-testscapex_intensity_strategy-18-tests-offline">Test coverage (tests/capex_intensity_strategy/, 18 tests, offline)</a></li>
+<li><a href="#rebuilding-this-document">Rebuilding this document</a></li>
+</ul>
+</li>
+<li><a href="#12-reproduction">12. Reproduction</a></li>
+</ul>
+</div>
+</nav><h1 id="capex-intensity-longshort-research-details">Capex-Intensity Long/Short — Research Details</h1>
+<p><strong>Internal. Full specification, evidence, traps and known weaknesses. Not for distribution.</strong>
+Version 22 September 2026 · implemented in <code>capex_intensity_strategy/</code> · not live.</p>
+<hr />
+<h2 id="1-the-rule-in-full">1. The rule, in full</h2>
+<p><strong>Universe (mechanical, point-in-time).</strong></p>
+<ol>
+<li><strong>Structural screen.</strong> Every US 10-K filer whose SEC SIC code is in the electrical/power
+   set: <code>1731</code> electrical work · <code>3470</code> coating · <code>3490</code> fabricated metal · <code>3510</code> engines
+   &amp; turbines · <code>3550</code> special industry machinery · <code>3561</code> pumps · <code>3569</code> general
+   industrial machinery · <code>3585</code> HVAC · <code>3590</code> misc industrial · <code>3600</code> electronic &amp;
+   electrical equipment · <code>3612</code> transformers · <code>3613</code> switchgear · <code>3620</code> electrical
+   apparatus · <code>3621</code> motors &amp; generators · <code>3670</code> electronic components · <code>3679</code>
+   components NEC · <code>3690</code> misc electrical · <code>3823</code>/<code>3829</code> instruments · <code>5063</code> electrical
+   wholesale · <code>1623</code> <strong>power-line construction</strong> · <code>4911</code> electric services · <code>4922</code>/<code>4923</code>/
+   <code>4924</code> gas transmission &amp; distribution · <code>4931</code> electric &amp; other combined · <code>4991</code>
+   cogeneration · <code>1221</code> coal.
+   <strong>Excluded deliberately:</strong> <code>3674</code> semiconductors (505 filers; admits AMD/AVGO/ARM),
+   <code>1311</code> crude oil &amp; gas (~900), <code>1040</code> metal mining (523, mostly gold).</li>
+<li><strong>Lexicon screen.</strong> Any filer whose 10-K/40-F/20-F in the two preceding years contains
+   <em>"uranium concentrates"</em>, <em>"nuclear fuel cycle"</em>, <em>"uranium enrichment"</em>, <em>"yellowcake"</em>
+   or <em>"enriched uranium"</em>. Effective from that universe-year forward.</li>
+<li><strong>Liquidity.</strong> Trailing 1-year median dollar volume &gt; $10M, re-tested monthly.</li>
+</ol>
+<p><strong>Score.</strong> Point-in-time TTM capital expenditure ÷ TTM revenue, from EDGAR <code>companyfacts</code>,
+keyed on each fact's <code>filed</code> date. Only single-quarter flow facts (60–200 day spans).
+Four filed quarters required. Restatements resolve to latest-filed-as-of-date.</p>
+<p><strong>Book.</strong> Long lightest quartile equal-weighted; short heaviest quartile at <strong>0.5×</strong>;
+monthly rebalance; 10bp costs; 20% vol target, leverage cap 1.5×.</p>
+<h2 id="2-performance">2. Performance</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>period</th>
+<th>CAGR</th>
+<th>Vol</th>
+<th>Sharpe</th>
+<th>MaxDD</th>
+<th>Calmar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2019–2022 <em>(in-sample)</em></td>
+<td>11.0%</td>
+<td>21.1%</td>
+<td>0.41</td>
+<td>−29.1%</td>
+<td>0.38</td>
+</tr>
+<tr>
+<td><strong>2023–2026 <em>(OOS)</em></strong></td>
+<td>31.8%</td>
+<td>21.1%</td>
+<td><strong>1.23</strong></td>
+<td>−22.7%</td>
+<td><strong>1.40</strong></td>
+</tr>
+<tr>
+<td><strong>2025–2026 <em>(OOS)</em></strong></td>
+<td>29.5%</td>
+<td>21.6%</td>
+<td><strong>1.12</strong></td>
+<td>−22.6%</td>
+<td><strong>1.30</strong></td>
+</tr>
+<tr>
+<td>2019–2026</td>
+<td>20.6%</td>
+<td>21.1%</td>
+<td>0.80</td>
+<td>−29.1%</td>
+<td>0.71</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="Growth, time under water and worst drawdown versus the alternatives" src="img/dark/growth_and_drawdown.png" /></p>
+<p><img alt="Risk against return" src="img/dark/risk_return.png" /></p>
+<h2 id="3-leg-decomposition-where-the-return-actually-comes-from">3. Leg decomposition — where the return actually comes from</h2>
+<p><img alt="Combined book and the two legs" src="img/dark/legs.png" /></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>leg</th>
+<th>2023–26 Sharpe</th>
+<th>2025–26 Sharpe</th>
+<th>2019–26 Sharpe</th>
+<th>2019–26 CAGR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Long — asset-light suppliers</strong></td>
+<td>1.12</td>
+<td>1.09</td>
+<td>0.75</td>
+<td>+23.3%</td>
+</tr>
+<tr>
+<td><strong>Short — as held (capital-heavy)</strong></td>
+<td><strong>−0.42</strong></td>
+<td><strong>−0.40</strong></td>
+<td><strong>−0.45</strong></td>
+<td><strong>−8.2%</strong></td>
+</tr>
+<tr>
+<td>Short basket viewed long-only</td>
+<td>−0.02</td>
+<td>−0.03</td>
+<td>+0.08</td>
+<td>+3.4%</td>
+</tr>
+<tr>
+<td><strong>Combined 1.0L − 0.5S</strong></td>
+<td><strong>1.24</strong></td>
+<td><strong>1.24</strong></td>
+<td><strong>0.85</strong></td>
+<td>+21.5%</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The short leg loses money standalone and still improves the book</strong> — Sharpe 1.12 → 1.24.
+It is a <em>hedge, not an alpha source</em>. A position improves portfolio Sharpe when its own
+Sharpe exceeds <code>correlation × portfolio Sharpe</code>, which is a much lower bar than zero. This
+is the same arithmetic recorded in <code>docs/RESEARCH-LOG.md</code> (interconnection-queue thread).</p>
+<p>Practical consequence: <strong>do not market the short leg as a return driver, and do not size it
+as one.</strong> Past 0.5× it degrades the book.</p>
+<h2 id="4-interest-rate-sensitivity">4. Interest-rate sensitivity</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>measure</th>
+<th>result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Beta to daily change in 10y <strong>real</strong> yield</td>
+<td><strong>−0.0001, t = −0.03</strong> — rate-neutral</td>
+</tr>
+<tr>
+<td>High real-yield regime (above expanding median)</td>
+<td>Sharpe <strong>0.95</strong>, CAGR 24.4%</td>
+</tr>
+<tr>
+<td>Low real-yield regime</td>
+<td>Sharpe <strong>0.58</strong>, CAGR 14.9%</td>
+</tr>
+<tr>
+<td>Real yields <em>rising</em> (3m change &gt; 0), 2025–26</td>
+<td>Sharpe <strong>1.57</strong></td>
+</tr>
+<tr>
+<td>Real yields <em>falling</em>, 2025–26</td>
+<td>Sharpe <strong>0.60</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>It has no measurable duration beta, but it is structurally long the cost of capital.</strong>
+The short leg is capital-hungry, long-duration businesses — utilities, pipelines, developers
+— whose valuations and economics improve when capital is cheap. Expensive capital punishes
+them and rewards the asset-light long leg.</p>
+<p><strong>Weak environment: a sustained low or falling real-rate regime</strong> (Sharpe 0.58 vs 0.95).
+That is the mirror image of the shipped Screened Electrification book, whose disclosed
+primary risk is also a falling-rate reversal — so the two books share this exposure rather
+than offsetting it.</p>
+<h2 id="5-does-the-short-leg-help-the-shipped-book">5. Does the short leg help the shipped book?</h2>
+<p><strong>Yes — materially, and more than it helps its own book.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>base</th>
+<th>+ capex short</th>
+<th>2023–26 Sh / Cal</th>
+<th>2025–26 Sh / Cal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>screen +val+sleeve</code></td>
+<td>0.00×</td>
+<td>1.56 / 1.82</td>
+<td>1.30 / 1.57</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>0.25×</strong></td>
+<td><strong>1.67 / 2.02</strong></td>
+<td><strong>1.41 / 1.74</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>0.50×</td>
+<td>1.62 / 2.08</td>
+<td>1.40 / 1.79</td>
+</tr>
+<tr>
+<td><code>screen +val+sleeve+short</code></td>
+<td>0.00×</td>
+<td>1.54 / 2.31</td>
+<td>1.46 / 2.32</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>0.25×</strong></td>
+<td><strong>1.59 / 2.66</strong></td>
+<td><strong>1.56 / 2.60</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>0.50×</td>
+<td>1.47 / 2.69</td>
+<td>1.48 / 2.64</td>
+</tr>
+</tbody>
+</table></div>
+<p>A <strong>0.25× capex-intensity short sleeve improves the shipped book on both metrics in both
+windows</strong> — the best single result produced in this line of work
+(2025–26 Sharpe 1.56, Calmar 2.60). It also stacks with the existing DLR/EQIX short rather
+than replacing it: the two hedge different things (capital intensity vs rate-sensitive
+duration).</p>
+<p><strong>This is arguably the most commercially useful finding here</strong> — it improves an
+already-shipped book without changing its long leg.</p>
+<h2 id="6-does-capital-intensity-work-outside-power">6. Does capital intensity work outside power?</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>universe</th>
+<th>names</th>
+<th>2023–26 Sh / Cal</th>
+<th>2025–26 Sh / Cal</th>
+<th>2019–26 Sh</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Power / electrification</strong></td>
+<td>~150–190</td>
+<td><strong>1.23 / 1.40</strong></td>
+<td><strong>1.12 / 1.30</strong></td>
+<td><strong>0.80</strong></td>
+</tr>
+<tr>
+<td>Non-power industrials (7 themes)</td>
+<td>74</td>
+<td>0.79 / 1.20</td>
+<td>0.46 / 0.79</td>
+<td>0.52</td>
+</tr>
+<tr>
+<td>— semicap</td>
+<td>13</td>
+<td>0.11 / 0.10</td>
+<td>0.39 / 0.55</td>
+<td>0.26</td>
+</tr>
+<tr>
+<td>— reshoring / E&amp;C</td>
+<td>14</td>
+<td>0.48 / 0.48</td>
+<td>0.71 / 1.21</td>
+<td>0.46</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The factor is not power-exclusive, but power is where it works.</strong> Outside power it is
+positive and roughly half to a third as strong. Two readings, and I cannot separate them
+with this evidence:</p>
+<ul>
+<li><em>Economic:</em> power is where the capital cycle is currently most extreme, so the
+  supplier/owner distinction bites hardest.</li>
+<li><em>Statistical:</em> the non-power test has 74 names against 150–190 and a shorter effective
+  history, so it is a weaker test rather than a weaker effect.</li>
+</ul>
+<p><strong>Implication:</strong> treat it as a sector-specific application. Do not market it as a general
+equity factor without running the broad test properly.</p>
+<h2 id="7-lexicon-design-why-nuclear-only">7. Lexicon design — why nuclear only</h2>
+<p>Seven alternative lexicons were tested against one standard: <em>does the vocabulary recover
+issuers the SIC screen cannot reach, without admitting unrelated ones?</em></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>lexicon</th>
+<th>listed</th>
+<th>new vs SIC</th>
+<th>what the new names were</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nuclear fuel cycle</strong></td>
+<td>42</td>
+<td>16</td>
+<td><strong>Cameco, Centrus, Denison, NexGen, enCore, Ur-Energy</strong></td>
+</tr>
+<tr>
+<td>Battery storage</td>
+<td>94</td>
+<td>53</td>
+<td>Albemarle, BHP, micro-caps</td>
+</tr>
+<tr>
+<td>Hydrogen</td>
+<td>66</td>
+<td>46</td>
+<td>BP, Chevron, Air Products, CF</td>
+</tr>
+<tr>
+<td>Solar</td>
+<td>52</td>
+<td>37</td>
+<td>Applied Materials, CleanSpark</td>
+</tr>
+<tr>
+<td>Wind</td>
+<td>34</td>
+<td>24</td>
+<td>Eni, Equinor, Enbridge</td>
+</tr>
+<tr>
+<td>Marine / tidal</td>
+<td>9</td>
+<td>6</td>
+<td>TechnipFMC, Oceaneering, Ecopetrol</td>
+</tr>
+<tr>
+<td>Geothermal</td>
+<td>6</td>
+<td>5</td>
+<td>Newmont, Schlumberger</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Nuclear vocabulary is a term of art; the others are ESG boilerplate.</strong> An issuer writes
+"yellowcake" only if it handles the material. "Offshore wind" and "tidal energy" appear in
+every integrated oil company's sustainability section.</p>
+<p>Other verticals need no lexicon because SIC already reaches them: storage (Fluence, Eos,
+Enovix, Amprius — all 3690), hydrogen (Plug, Bloom, FuelCell, Ballard — all 3620),
+geothermal (Ormat — 4911). <strong>Nuclear fuel was the only genuine structural gap: 0 of 8
+names reachable.</strong></p>
+<p><strong>Widening was tested and rejected:</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>variant</th>
+<th>2023–26 Sharpe</th>
+<th>2025–26 Sharpe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nuclear only (shipped)</td>
+<td><strong>1.23</strong></td>
+<td><strong>1.12</strong></td>
+</tr>
+<tr>
+<td>+ solar</td>
+<td>0.90</td>
+<td>1.01</td>
+</tr>
+<tr>
+<td>+ wind</td>
+<td>1.23 (no change)</td>
+<td>1.12</td>
+</tr>
+</tbody>
+</table></div>
+<p>Solar costs a third of the Sharpe. ARRY and NXT are genuinely asset-light so they rank as
+<em>longs</em>, but their revenue depends on subsidy and they have no pricing power.
+<strong>Capital intensity measures where capital sits, not whether revenue is durable</strong> — a real
+and unfixed limitation of the signal. Wind changes nothing: no US-listed pure-play wind
+manufacturer clears the liquidity floor (BWEN too small, TPIC delisted).</p>
+<h2 id="8-what-electricityenergy-market-knowledge-is-actually-load-bearing">8. What electricity/energy-market knowledge is actually load-bearing</h2>
+<p>Honest accounting, because most of it turned out <strong>not</strong> to be:</p>
+<p><strong>Load-bearing:</strong>
+- <strong>Merit-order economics — knowing who funds capacity and who is paid by it.</strong> This is the
+  entire thesis and it is domain knowledge, not a screen someone would reach by accident.
+- <strong>SEC classification of the fuel cycle.</strong> Knowing that uranium miners file under generic
+  mining codes is why the universe is complete. No amount of statistics recovers it.
+- <strong>Fuel-cycle vocabulary.</strong> Knowing "yellowcake" and "uranium concentrates" are terms of
+  art while "green hydrogen" is boilerplate.
+- <strong>Intermittent vs firm capacity.</strong> Knowing why solar suppliers are structurally different
+  from switchgear suppliers explains §7's failure rather than leaving it a mystery.</p>
+<p><strong>Not load-bearing — tested and failed (see <code>docs/power-market-signal-root-cause-results.md</code>):</strong>
+- ISO/LMP prices, congestion, load forecasts, generation mix, capacity auctions, storage
+  levels, spark spreads, weather. <strong>~42 attempts.</strong> The mechanism: <em>energy futures markets
+  efficiently price public power fundamentals, and equities price off those futures</em>, so
+  public ISO data reaches equities already impounded.
+- Grid-stress indices specifically: a rolling grid-stress beta <strong>inverts</strong> — by 2025–26 it
+  ranks intermittent solar as most stress-exposed and uranium/merchant generation as least.</p>
+<p><strong>The usable conclusion: power-market knowledge pays in <em>classification</em>, not in <em>timing</em>.</strong>
+It tells you which companies belong in the universe and why the categories differ. It does
+not tell you when to be long.</p>
+<h2 id="9-known-weaknesses">9. Known weaknesses</h2>
+<ol>
+<li><strong>Cycle dependence.</strong> In-sample Sharpe 0.41. Kill condition: light-minus-heavy basket
+   spread flat for four consecutive quarters → stand down.</li>
+<li><strong>Metric selection used ex-post labels.</strong> Eleven metrics screened against a
+   hand-classified list; capex intensity won at t = −15.1 vs −7.2 next best. The stated
+   rule needs no labels, but the <em>choice</em> was outcome-informed. Only forward OOS resolves.</li>
+<li><strong>Factor overlap.</strong> Related to documented asset-light/quality factors. Untested against
+   a generic version outside this sector.</li>
+<li><strong>Borrow.</strong> Utilities are borrowable; EOSE/SLDP/SERV/NRGV are not. Assume the short book
+   is partially unfillable.</li>
+<li><strong>Survivorship — unfixed.</strong> 2,168 of 2,535 filers in these SIC codes have no current
+   listing; yfinance serves no delisted prices. Long legs flattered, short legs understated.
+   <strong>Affects the shipped book equally.</strong> Needs CRSP or equivalent.</li>
+<li><strong>Correlation 0.78 to the shipped book.</strong> These are not independent allocations.</li>
+</ol>
+<hr />
+<h2 id="10-full-specification-step-by-step">10. Full specification — step by step</h2>
+<p>Everything needed to rebuild the strategy from nothing. Each step names the module and
+function that implements it.</p>
+<h3 id="step-1-resolve-ticker-cik">Step 1 — Resolve ticker → CIK</h3>
+<p><code>edgar.ticker_to_cik()</code> → <code>https://www.sec.gov/files/company_tickers.json</code> (~10,459 filers),
+cached as <code>data/cache/ticker_cik.json</code>.</p>
+<blockquote>
+<p><strong>Trap:</strong> SEC returns <strong>HTTP 403</strong> unless the <code>User-Agent</code> carries a contact address, and
+<code>www.sec.gov/files/*</code> additionally rejects an explicit <code>Accept: application/json</code> (while
+<code>efts.sec.gov</code> requires it). <code>_headers(accept_json=False)</code> handles the split. Both cost a
+silent failure when first built.</p>
+</blockquote>
+<h3 id="step-2-enumerate-the-structural-universe">Step 2 — Enumerate the structural universe</h3>
+<p><code>edgar.sic_population(sic)</code> → <code>browse-edgar?action=getcompany&amp;SIC=…&amp;type=10-K&amp;output=atom</code>,
+paginated 100 per page to a 900 cap, parsed with
+<code>&lt;company-info[^&gt;]*&gt;</code> → <code>&lt;cik&gt;</code>. Run for every code in <code>data/sic_codes.csv</code>.</p>
+<blockquote>
+<p><strong>Trap:</strong> the tag carries attributes, so a bare <code>&lt;company-info&gt;</code> regex matches nothing, and
+EDGAR emits mangled <code>ARRAY(0x…)</code> company names — take the CIK, ignore the name.</p>
+</blockquote>
+<p>Codes, and the three deliberate exclusions, are listed in §1.
+Yield: <strong>2,535 filers, 367 currently listed.</strong></p>
+<h3 id="step-3-discover-the-fuel-cycle-by-language">Step 3 — Discover the fuel cycle by language</h3>
+<p><code>universe.discover_lexicon_members(fetch, cik_to_ticker, years)</code>.
+For each universe-year <em>Y</em>, query <code>efts.sec.gov/LATEST/search-index</code> with
+<code>forms=10-K,40-F,20-F</code> and <code>startdt=Y-2-01-01</code>, <code>enddt=Y-1-12-31</code> — <strong>strictly before <em>Y</em>
+begins</strong> — for each phrase in <code>config.FUEL_CYCLE_LEXICON</code>. Union the CIKs, map to tickers,
+record the year. A name stays eligible from its first qualifying year onward.</p>
+<p><code>fetch_ciks</code> is injected rather than imported, so this is testable with no network.</p>
+<h3 id="step-4-price-and-liquidity">Step 4 — Price and liquidity</h3>
+<p>Adjusted closes and volume for every candidate plus benchmarks. Require
+<code>MIN_PRICE_HISTORY_DAYS = 400</code>. <code>universe.liquidity_mask()</code> computes a
+<strong>252-day rolling median dollar volume</strong> (min 120 periods), resampled to month-end, and
+requires <strong>&gt; $10M</strong>. The universe therefore breathes: 100 names (2019) → 131 (2023) → 159 (2025).</p>
+<h3 id="step-5-pull-point-in-time-fundamentals">Step 5 — Pull point-in-time fundamentals</h3>
+<p><code>edgar.company_facts(cik)</code> → <code>data.sec.gov/api/xbrl/companyfacts/CIK##########.json</code>.
+Keep only <code>us-gaap</code> USD facts from <strong>10-Q/10-K</strong> with all of <code>start</code>, <code>end</code>, <code>filed</code>, and a
+span of <strong>60–200 days</strong>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>item</th>
+<th>tag preference order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>revenue</code></td>
+<td><code>Revenues</code> → <code>RevenueFromContractWithCustomerExcludingAssessedTax</code> → <code>…IncludingAssessedTax</code> → <code>SalesRevenueNet</code></td>
+</tr>
+<tr>
+<td><code>capex</code></td>
+<td><code>PaymentsToAcquirePropertyPlantAndEquipment</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>First tag with data wins</strong> (<code>break</code>), so a filer reporting both <code>Revenues</code> and the ASC-606
+tag is not double-counted.</p>
+<blockquote>
+<p><strong>Why the 60–200 day span filter:</strong> XBRL mixes quarterly, year-to-date and annual facts
+under the same tag. Without it a trailing-four-quarter sum silently double-counts.</p>
+</blockquote>
+<h3 id="step-6-build-the-ttm-panel-point-in-time">Step 6 — Build the TTM panel, point-in-time</h3>
+<p><code>fundamentals.ttm_panel(facts, dates)</code>. For each month-end <em>d</em>:</p>
+<ol>
+<li><code>visible = facts[facts.filed &lt;= d]</code> — <strong>the single most important line in the codebase.</strong></li>
+<li><code>groupby(ticker, item, end).last()</code> on filing order — restatements resolve to the most
+   recently filed value <em>as known at d</em>.</li>
+<li>Take the last <strong>4</strong> quarter-ends by <code>end</code> and sum.</li>
+<li><strong>Skip</strong> any ticker-item with fewer than 4 filed quarters — no partial year is annualised.</li>
+</ol>
+<h3 id="step-7-score">Step 7 — Score</h3>
+<p><code>fundamentals.capex_intensity(panel)</code> → wide date × ticker frame of
+<strong>TTM capex ÷ TTM revenue</strong>, with revenue ≤ 0 mapped to NaN.</p>
+<blockquote>
+<p><strong>Trap:</strong> <code>pivot_table</code> drops all-NaN columns by default, so a name with unusable revenue
+would vanish silently instead of being excluded explicitly. <code>dropna=False</code> keeps it as a
+visible NaN column.</p>
+</blockquote>
+<h3 id="step-8-eligibility-mask">Step 8 — Eligibility mask</h3>
+<p><code>universe.membership()</code> = liquidity mask <strong>AND</strong> lexicon effective-date mask. Structural (SIC)
+members always pass the lexicon leg; lexicon members pass only from their first qualifying year.</p>
+<h3 id="step-9-target-weights">Step 9 — Target weights</h3>
+<p><code>backtest.target_weights(score, mask, quantile=0.25, short_weight=0.5)</code>:</p>
+<div class="highlight"><pre><span></span><code>eligible = score.where(mask)
+ranks    = eligible.rank(axis=1, method=&quot;first&quot;)
+n        = eligible.notna().sum(axis=1)
+n_pick   = max(1, round(n * 0.25))   if n &gt;= 2 else 0
+longs    = ranks &lt;= n_pick
+shorts   = ranks &gt;  n - n_pick
+weights  = longs/‖longs‖ − shorts/‖shorts‖ × 0.5
+</code></pre></div>
+
+<blockquote>
+<p><strong>Trap — this one is load-bearing.</strong> Selecting by <em>percentile</em> (<code>rank(pct=True)</code>) with the
+default <code>average</code> tie handling <strong>can empty a leg entirely</strong>: eight tied names in a 13-name
+pool all land at pct 0.35 and none clear a 0.25 cut, while the short bucket fills normally.
+Counting with <code>method="first"</code> guarantees both legs are populated and raised realised
+breadth from ~15/16 to <strong>22/22 names</strong>.</p>
+</blockquote>
+<p>Long leg is fully invested; short leg is scaled to 0.5×. <strong>The book is net long by design.</strong></p>
+<h3 id="step-10-returns-costs-volatility-target">Step 10 — Returns, costs, volatility target</h3>
+<p><code>backtest.run(weights, returns)</code>:</p>
+<ol>
+<li>Hold weights between rebalances, apply with a <strong>one-day lag</strong> (<code>held.shift(1)</code>).</li>
+<li>Charge <code>|Δweight| × 10bp</code>.</li>
+<li>Scale by <code>min(20% / trailing-42-day realised vol, 1.5)</code>, lagged one day.</li>
+<li>Charge the leverage change itself — <strong>vol targeting is not free.</strong></li>
+</ol>
+<blockquote>
+<p><strong>API note:</strong> <code>cost</code> and <code>vol_target</code> take <code>None</code> to mean <em>use the config default</em>. Pass
+<strong><code>0</code></strong> to disable. <code>vol_target=None</code> silently <em>enables</em> 20% targeting — this cost a
+confusing debugging session and now has a regression test.</p>
+</blockquote>
+<h3 id="step-11-reporting">Step 11 — Reporting</h3>
+<p><code>backtest.summarise()</code> uses the repo-standard <code>grid_equipment_basket.backtest.compute_metrics</code>
+at <strong>RF = 4%</strong>, so every figure is comparable with the shipped book.
+<code>backtest.diagnostics()</code> reports average long/short breadth and annualised turnover.</p>
+<hr />
+<h2 id="11-implementation-map">11. Implementation map</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>module</th>
+<th>responsibility</th>
+<th>network?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config.py</code></td>
+<td>every frozen parameter; never revised from results</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>edgar.py</code></td>
+<td><code>ticker_to_cik</code> · <code>sic_population</code> · <code>full_text_ciks</code> · <code>company_facts</code> · <code>fetch_facts</code></td>
+<td><strong>yes — the only one</strong></td>
+</tr>
+<tr>
+<td><code>fundamentals.py</code></td>
+<td><code>load_facts</code> · <code>ttm_panel</code> · <code>capex_intensity</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>universe.py</code></td>
+<td><code>load_sic_codes</code> · <code>liquidity_mask</code> · <code>lexicon_mask</code> · <code>membership</code> · <code>discover_lexicon_members</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>backtest.py</code></td>
+<td><code>target_weights</code> · <code>run</code> · <code>diagnostics</code> · <code>summarise</code> · <code>format_summary</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>plots.py</code></td>
+<td>comparison figures, light and dark validated palettes</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>pipeline.py</code></td>
+<td>end-to-end build, returns every intermediate</td>
+<td>via <code>edgar</code></td>
+</tr>
+<tr>
+<td><code>__main__.py</code></td>
+<td>CLI</td>
+<td>via <code>pipeline</code></td>
+</tr>
+<tr>
+<td><code>data/sic_codes.csv</code></td>
+<td>the only seed data</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>All logic is pure; <code>edgar.py</code> is the sole network boundary, which is why the 18 tests run
+offline against synthetic filings.</p>
+<h3 id="caches-written-to-datacache">Caches written to <code>data/cache/</code></h3>
+<p><code>ticker_cik.json</code> · <code>candidates.parquet</code> · <code>lexicon_members.json</code> · <code>prices.parquet</code> ·
+<code>dollar_volume.parquet</code> · <code>edgar_facts.parquet</code>. Delete any to force a refetch, or pass
+<code>--refresh</code>.</p>
+<h3 id="running-it">Running it</h3>
+<div class="highlight"><pre><span></span><code>python -m capex_intensity_strategy                    # cached
+python -m capex_intensity_strategy --plot             # + comparison charts
+python -m capex_intensity_strategy --short-weight 0   # long only
+python -m capex_intensity_strategy --refresh          # re-fetch (20-40 min)
+</code></pre></div>
+
+<p>Outputs <code>summary.csv</code>, <code>daily_returns.csv</code>, <code>weights.csv</code>, <code>diagnostics.csv</code>.</p>
+<h3 id="test-coverage-testscapex_intensity_strategy-18-tests-offline">Test coverage (<code>tests/capex_intensity_strategy/</code>, 18 tests, offline)</h3>
+<p>Point-in-time filing visibility · four-quarter requirement · light-vs-heavy separation ·
+NaN on non-positive revenue · liquidity exclusion · lexicon effective-dating · lexicon
+look-back window closing before the universe year · long/short side correctness · leg sizing ·
+long-only mode · cost and vol-target behaviour · <strong>no-lookahead</strong> · breadth diagnostics ·
+SIC-table exclusions.</p>
+<h3 id="rebuilding-this-document">Rebuilding this document</h3>
+<div class="highlight"><pre><span></span><code>python utils/render_md.py output_html/capex-intensity-research_details.md \
+    --out output_html --theme dark
+python utils/render_md.py output_html/capex-intensity-proposal.md \
+    --out output_html --theme prospectus
+</code></pre></div>
+
+<h2 id="12-reproduction">12. Reproduction</h2>
+<div class="highlight"><pre><span></span><code>python -m capex_intensity_strategy --plot
+python -m capex_intensity_strategy --short-weight 0     # long only
+python -m capex_intensity_strategy --refresh            # re-fetch EDGAR + prices
+</code></pre></div>
+
+<p>Tests: <code>tests/capex_intensity_strategy/</code> (18, offline).
+Evidence: <code>docs/capex-intensity-rule-results.md</code>,
+<code>docs/algorithmic-long-short-books-results.md</code> §6, <code>docs/RESEARCH-LOG.md</code>.</p>
+</div>
+</body>
+</html>

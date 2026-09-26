@@ -1,9 +1,14 @@
 # Handoff — stress-beta decile/non-linear follow-up (not started)
 
 **Date:** 2026-09-15
-**Status:** SCOPED, NOT RUN — deliberately deferred to a future session, not part of the
-Screened Electrification SOW execution plan
-(`docs/superpowers/plans/2026-09-15-screened-electrification-sow-execution.md`).
+**Status:** RUN, FAILED (2026-09-15, same session) — pre-registered per the rules below
+(`docs/electrification-stress-beta-decile-preregistration.md`), then run
+(`electrification_stress_beta/decile_gate_test.py`). 10th-minus-1st decile primary t=0.318
+(n=67) vs the tercile test's t=0.144 — still far below the |t|≥2.0 gate, and the pre-2021
+context t-stat *shrank* toward zero (−1.042 → −0.564) rather than sharpening, which argues
+against a threshold effect rather than just failing to detect one. Full results:
+`docs/electrification-stress-beta-decile-gate-results.md`. The scoping notes below are kept
+as the record of what was decided and why before running.
 
 ## Where this comes from
 

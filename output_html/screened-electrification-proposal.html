@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposal: Screened Electrification Equipment (the shipped book)</title>
+<style>
+:root{
+  --bg:#fbfbfa; --surface:#fff; --surface-2:#f2f4f6; --ink:#1a1d21; --muted:#5b6672;
+  --border:#e2e6ea; --rule:#cfd6dd; --accent:#2f6690; --accent-soft:#eaf1f6;
+  --code-bg:#f5f7f9; --del:#96a0aa;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151a; --surface:#181d23; --surface-2:#1f262e; --ink:#e6ebf0; --muted:#95a1ad;
+    --border:#28313a; --rule:#37424d; --accent:#7fb2d8; --accent-soft:#17242e;
+    --code-bg:#161c22; --del:#6d7883;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151a; --surface:#181d23; --surface-2:#1f262e; --ink:#e6ebf0; --muted:#95a1ad;
+  --border:#28313a; --rule:#37424d; --accent:#7fb2d8; --accent-soft:#17242e;
+  --code-bg:#161c22; --del:#6d7883;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.page{max-width:none;width:min(1180px,100% - 3rem);margin:0 auto;padding:3rem 0 5rem}
+h1,h2,h3,h4{line-height:1.25;text-wrap:balance;margin:2.2rem 0 .7rem;font-weight:650}
+h1{font-size:2rem;margin-top:0;letter-spacing:-.015em}
+h2{font-size:1.4rem;border-bottom:1px solid var(--rule);padding-bottom:.35rem;margin-top:2.6rem}
+h3{font-size:1.12rem}
+h4{font-size:1rem;color:var(--muted)}
+p,li{max-width:80ch}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:currentColor}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+del{color:var(--del)}
+strong{font-weight:650}
+blockquote{margin:1.3rem 0;padding:.6rem 0 .6rem 1.1rem;border-left:3px solid var(--accent);
+  background:var(--accent-soft);color:var(--ink)}
+blockquote p{margin:.35rem 0}
+code{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  font-size:.875em;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:3px;padding:.08em .34em}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;
+  padding:.9rem 1.1rem;overflow-x:auto;line-height:1.5}
+pre code{background:none;border:0;padding:0;font-size:.85rem}
+.table-wrap{overflow-x:auto;margin:1.3rem 0;border:1px solid var(--border);
+  border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.55rem .75rem;border-bottom:1px solid var(--border);
+  text-align:left;vertical-align:top}
+td{max-width:64ch}
+th{background:var(--surface-2);font-weight:650;font-size:.78rem;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td code{white-space:nowrap}
+img{max-width:100%;height:auto;display:block;margin:1.5rem 0;
+  border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+figure{margin:1.5rem 0}
+ul,ol{padding-left:1.3rem}
+li{margin:.3rem 0}
+.docmeta{color:var(--muted);font-size:.82rem;margin:0 0 2rem;padding-bottom:1rem;
+  border-bottom:2px solid var(--rule);display:flex;gap:1.2rem;flex-wrap:wrap}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:1rem 1.2rem;margin:0 0 2rem}
+.toc-title{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);font-weight:650;margin-bottom:.5rem}
+.toc ul{padding-left:1.1rem;margin:.2rem 0}
+.toc>ul{padding-left:0;list-style:none}
+.toc>ul>li{margin:.25rem 0}
+.toc a{color:var(--ink)}
+.idx{list-style:none;padding:0;display:grid;gap:.15rem}
+.idx li{margin:0}
+.idx a{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .75rem;
+  border-radius:5px;border-bottom:0}
+.idx a:hover{background:var(--surface-2)}
+.idx .sz{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+@media print{body{background:#fff}.toc{break-inside:avoid}}
+
+.highlight pre{margin:0}
+.highlight .c,.highlight .c1,.highlight .cm{color:#6b7783;font-style:italic}
+.highlight .k,.highlight .kn,.highlight .kd{color:#a4459b;font-weight:600}
+.highlight .s,.highlight .s1,.highlight .s2{color:#2f7d4f}
+.highlight .n{color:inherit}
+.highlight .nb{color:#2f6690}
+.highlight .nf{color:#2f6690;font-weight:600}
+.highlight .mi,.highlight .mf{color:#b5651d}
+.highlight .o,.highlight .p{color:var(--muted)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .highlight .c,
+  :root:not([data-theme="light"]) .highlight .c1{color:#7d8894}
+  :root:not([data-theme="light"]) .highlight .k,
+  :root:not([data-theme="light"]) .highlight .kn{color:#d79bd0}
+  :root:not([data-theme="light"]) .highlight .s,
+  :root:not([data-theme="light"]) .highlight .s1,
+  :root:not([data-theme="light"]) .highlight .s2{color:#83c99e}
+  :root:not([data-theme="light"]) .highlight .nb,
+  :root:not([data-theme="light"]) .highlight .nf{color:#7fb2d8}
+  :root:not([data-theme="light"]) .highlight .mi,
+  :root:not([data-theme="light"]) .highlight .mf{color:#e0a264}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="docmeta"><span>screened-electrification-proposal.md</span><span>1,354 words</span><span>161 lines</span></div><nav class="toc"><div class="toc-title">Contents</div><div class="toc">
+<ul>
+<li><a href="#1-the-proposal">1. The proposal</a></li>
+<li><a href="#2-the-rule">2. The rule</a></li>
+<li><a href="#3-performance">3. Performance</a></li>
+<li><a href="#head-to-head-the-two-windows-that-matter">Head-to-head: the two windows that matter</a><ul>
+<li><a href="#2023-2026">2023-2026</a></li>
+<li><a href="#2025-2026">2025-2026</a></li>
+</ul>
+</li>
+<li><a href="#4-why-the-short-leg-is-there">4. Why the short leg is there</a></li>
+<li><a href="#5-what-it-is-honestly">5. What it is honestly</a></li>
+<li><a href="#6-the-main-weakness-the-seed-list">6. The main weakness: the seed list</a></li>
+<li><a href="#7-other-risks">7. Other risks</a></li>
+</ul>
+</div>
+</nav><h1 id="proposal-screened-electrification-equipment-the-shipped-book">Proposal: Screened Electrification Equipment (the shipped book)</h1>
+<p><strong>Date:</strong> 2026-09-22
+<strong>Status:</strong> <strong>shipped</strong> — <code>electrification_strategy/</code>, 66 tests
+<strong>Companion:</strong> <code>docs/capex-intensity-proposal.md</code> (the mechanical alternative)
+<strong>Evidence:</strong> <code>docs/electrification-strategy-v1-results.md</code>, <code>docs/RESEARCH-LOG.md</code> §1</p>
+<hr />
+<h2 id="1-the-proposal">1. The proposal</h2>
+<p>Own roughly 27 companies that <strong>sell equipment and construction services into the
+electricity buildout</strong>, equal-weighted with a gold-and-bonds cushion, and short two
+data-centre landlords when real interest rates are rising.</p>
+<blockquote>
+<p><strong>Buy the suppliers to the grid buildout. Don't buy the grid itself.</strong></p>
+</blockquote>
+<p>The distinction is the whole thesis. Utilities own the assets and earn a regulated
+return on them; the companies that <em>sell them</em> switchgear, transformers, cabling and
+construction labour capture the same capital cycle without the rate base, the
+regulator, or the balance sheet.</p>
+<h2 id="2-the-rule">2. The rule</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>step</th>
+<th>definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Universe</strong></td>
+<td>a 33-name seed list of electrification suppliers, tagged by sub-industry</td>
+</tr>
+<tr>
+<td><strong>Screen</strong></td>
+<td><code>customer_institutional</code> <strong>AND</strong> (<code>earnings_valued</code> <strong>OR</strong> <code>low_policy_dependence</code>)</td>
+</tr>
+<tr>
+<td><strong>Weighting</strong></td>
+<td>equal weight, 25% single-name cap, quarterly reconstitution with a 42-day reporting lag, 252-day listing gate</td>
+</tr>
+<tr>
+<td><strong>Overlays</strong></td>
+<td>20% volatility target · graduated valuation de-lever · 15% GLD/IEF sleeve</td>
+</tr>
+<tr>
+<td><strong>Short</strong></td>
+<td>DLR + EQIX at fixed small notional, gated on rising 10-year real yields</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>customer_institutional</code> means the firm sells B2B to utilities, hyperscalers,
+government or large industrial customers — not to households. That one criterion does
+almost all the work (see §6).</p>
+<h2 id="3-performance">3. Performance</h2>
+<p>Production path (<code>backtest.run_comparison</code>), RF = 4%. Common window with the
+alternatives, Jan 2019 – Sep 2026:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>CAGR</th>
+<th>Vol</th>
+<th>Sharpe</th>
+<th>MaxDD</th>
+<th>Calmar</th>
+<th>fee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Screened Electrification <code>+short</code></strong></td>
+<td><strong>24.0%</strong></td>
+<td><strong>15.5%</strong></td>
+<td><strong>1.21</strong></td>
+<td><strong>−22.4%</strong></td>
+<td><strong>1.07</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>GRID — smart-grid ETF</td>
+<td>25.9%</td>
+<td>24.4%</td>
+<td>0.90</td>
+<td>−40.6%</td>
+<td>0.64</td>
+<td>0.57%</td>
+</tr>
+<tr>
+<td>PAVE — US infrastructure ETF</td>
+<td>25.1%</td>
+<td>25.8%</td>
+<td>0.84</td>
+<td>−43.8%</td>
+<td>0.57</td>
+<td>0.47%</td>
+</tr>
+<tr>
+<td>SPY — S&amp;P 500</td>
+<td>19.5%</td>
+<td>19.4%</td>
+<td>0.81</td>
+<td>−33.7%</td>
+<td>0.58</td>
+<td>0.09%</td>
+</tr>
+<tr>
+<td>XLI — industrials sector</td>
+<td>18.4%</td>
+<td>21.5%</td>
+<td>0.71</td>
+<td>−42.0%</td>
+<td>0.44</td>
+<td>0.08%</td>
+</tr>
+<tr>
+<td>XLU — utilities sector</td>
+<td>11.8%</td>
+<td>20.8%</td>
+<td>0.45</td>
+<td>−36.1%</td>
+<td>0.33</td>
+<td>0.08%</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>It wins on every risk measure simultaneously</strong> — highest Sharpe, lowest volatility,
+shallowest drawdown, best Calmar — while giving up about 2pp of raw CAGR to GRID and
+PAVE. That is the trade: slightly less return for materially less pain.</p>
+<p>By sub-window:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>window</th>
+<th><code>+val+sleeve</code> Sh / Cal</th>
+<th><code>+val+sleeve+short</code> Sh / Cal / MaxDD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2023-2026</strong></td>
+<td>1.56 / 1.82</td>
+<td><strong>1.54 / 2.31 / −12.3%</strong></td>
+</tr>
+<tr>
+<td><strong>2025-2026</strong></td>
+<td>1.30 / 1.57</td>
+<td><strong>1.46 / 2.32 / −11.9%</strong></td>
+</tr>
+<tr>
+<td>full 2017-06 → 2026</td>
+<td>0.69 / 0.60</td>
+<td>0.65 / 0.57</td>
+</tr>
+</tbody>
+</table></div>
+<p>Note the full-sample figure honestly: <strong>2017-2018 was poor</strong>, and the strong numbers are
+concentrated in the post-2022 buildout. This is a thematic book, and the theme has a date.</p>
+<p><img alt="Growth, time under water and worst drawdown against the cheaper alternatives" src="img/screened_growth.png" /></p>
+<p><img alt="Risk against return" src="img/screened_risk.png" /></p>
+<h2 id="head-to-head-the-two-windows-that-matter">Head-to-head: the two windows that matter</h2>
+<p>Both books and every alternative on one basis — production <code>compute_metrics</code>, RF = 4%,
+same price data, same run. <strong>Bold marks the best value in each column.</strong></p>
+<h3 id="2023-2026">2023-2026</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>CAGR</th>
+<th>Vol</th>
+<th><strong>Sharpe</strong></th>
+<th><strong>MaxDD</strong></th>
+<th><strong>Calmar</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Screened Electrification +short</strong></td>
+<td>28.3%</td>
+<td>14.3%</td>
+<td>1.54</td>
+<td><strong>-12.3%</strong></td>
+<td><strong>2.31</strong></td>
+</tr>
+<tr>
+<td><strong>Screened Electrification (no short)</strong></td>
+<td>31.0%</td>
+<td>15.5%</td>
+<td><strong>1.56</strong></td>
+<td>-17.0%</td>
+<td>1.82</td>
+</tr>
+<tr>
+<td><strong>Capex-intensity L/S 0.5x</strong></td>
+<td>31.8%</td>
+<td>21.1%</td>
+<td>1.23</td>
+<td>-22.7%</td>
+<td>1.40</td>
+</tr>
+<tr>
+<td>GRID (smart-grid ETF, 0.57%)</td>
+<td>25.4%</td>
+<td>20.4%</td>
+<td>1.02</td>
+<td>-22.2%</td>
+<td>1.15</td>
+</tr>
+<tr>
+<td>PAVE (infrastructure ETF, 0.47%)</td>
+<td>26.1%</td>
+<td>20.4%</td>
+<td>1.04</td>
+<td>-27.9%</td>
+<td>0.94</td>
+</tr>
+<tr>
+<td>SPY (S&amp;P 500, 0.09%)</td>
+<td>21.2%</td>
+<td>14.8%</td>
+<td>1.11</td>
+<td>-18.8%</td>
+<td>1.13</td>
+</tr>
+<tr>
+<td>XLI (industrials, 0.08%)</td>
+<td>20.1%</td>
+<td>16.4%</td>
+<td>0.95</td>
+<td>-20.2%</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>XLU (utilities, 0.08%)</td>
+<td>7.8%</td>
+<td>16.5%</td>
+<td>0.30</td>
+<td>-16.8%</td>
+<td>0.47</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="2025-2026">2025-2026</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>CAGR</th>
+<th>Vol</th>
+<th><strong>Sharpe</strong></th>
+<th><strong>MaxDD</strong></th>
+<th><strong>Calmar</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Screened Electrification +short</strong></td>
+<td>27.6%</td>
+<td>14.7%</td>
+<td><strong>1.46</strong></td>
+<td><strong>-11.9%</strong></td>
+<td><strong>2.32</strong></td>
+</tr>
+<tr>
+<td><strong>Screened Electrification (no short)</strong></td>
+<td>26.7%</td>
+<td>16.2%</td>
+<td>1.30</td>
+<td>-17.0%</td>
+<td>1.57</td>
+</tr>
+<tr>
+<td><strong>Capex-intensity L/S 0.5x</strong></td>
+<td>29.5%</td>
+<td>21.6%</td>
+<td>1.12</td>
+<td>-22.6%</td>
+<td>1.30</td>
+</tr>
+<tr>
+<td>GRID (smart-grid ETF, 0.57%)</td>
+<td>24.8%</td>
+<td>23.6%</td>
+<td>0.89</td>
+<td>-21.1%</td>
+<td>1.17</td>
+</tr>
+<tr>
+<td>PAVE (infrastructure ETF, 0.47%)</td>
+<td>15.2%</td>
+<td>22.2%</td>
+<td>0.57</td>
+<td>-23.7%</td>
+<td>0.64</td>
+</tr>
+<tr>
+<td>SPY (S&amp;P 500, 0.09%)</td>
+<td>17.4%</td>
+<td>16.9%</td>
+<td>0.80</td>
+<td>-18.8%</td>
+<td>0.93</td>
+</tr>
+<tr>
+<td>XLI (industrials, 0.08%)</td>
+<td>14.3%</td>
+<td>18.8%</td>
+<td>0.59</td>
+<td>-18.2%</td>
+<td>0.79</td>
+</tr>
+<tr>
+<td>XLU (utilities, 0.08%)</td>
+<td>6.5%</td>
+<td>16.2%</td>
+<td>0.22</td>
+<td>-12.6%</td>
+<td>0.51</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Reading it.</strong> The shipped <code>+short</code> book takes Sharpe and Calmar in both windows, and it
+does so at roughly <strong>two-thirds the volatility</strong> of the capex-intensity book and <strong>half
+the drawdown</strong>. Capex-intensity delivers the highest raw CAGR in 2023-2026 (31.8%) and
+2025-2026 (29.5%), but pays for it in vol (21%) and depth (−23%).</p>
+<p>Against the cheap alternatives: <strong>both books beat GRID, PAVE, SPY, XLI and XLU on Sharpe
+and Calmar in both windows</strong> — so this is not a case where the ETF quietly wins. XLU, the
+naive "buy power" trade, is the worst thing on the page in both windows, which is the
+thesis stated as a negative control.</p>
+<h2 id="4-why-the-short-leg-is-there">4. Why the short leg is there</h2>
+<p>The DLR/EQIX short is small, and its job is not return — it is drawdown. Turning it on
+costs a little CAGR and buys a lot of shape: 2025-2026 max drawdown improves
+<strong>−17.0% → −11.9%</strong> and Calmar <strong>1.57 → 2.32</strong>. Data-centre landlords are the
+rate-sensitive expression of the same theme, so shorting them when real yields rise
+hedges the book's single biggest macro exposure with names from its own universe.</p>
+<p>Nine other short candidates were tested and rejected (<code>docs/RESEARCH-LOG.md</code>,
+short-leg search, CLOSED). No thematic equity short improved the book; this one is
+insurance, not alpha.</p>
+<h2 id="5-what-it-is-honestly">5. What it is honestly</h2>
+<p><strong>Enhanced thematic beta, not alpha.</strong> Roughly all the return is the electrification
+theme. The claim is not that it finds mispriced securities — it is that it expresses a
+theme with better risk shape than the ETFs that express the same theme, by excluding the
+~43% of VOLT that is utilities, midstream and components, and by adding two overlays the
+ETFs do not have.</p>
+<p>Correlation to SPY is high; this book does not diversify an equity portfolio.</p>
+<h2 id="6-the-main-weakness-the-seed-list">6. The main weakness: the seed list</h2>
+<p>An ablation on 2026-09-22 established where the back-cast exposure actually sits:</p>
+<ul>
+<li><strong><code>profitable_2026</code> was fully redundant</strong> and has been removed. The screen produced the
+  identical 28-name pool with and without it, and byte-identical returns.</li>
+<li>Replacing the old test with <code>customer_institutional AND (earnings_valued OR
+  low_policy_dependence)</code> changes <strong>nothing</strong> — zero adds, zero drops.</li>
+<li><code>customer_institutional</code> <strong>alone</strong> is arguably better: 2025-2026 Sharpe 1.50,
+  Calmar 2.55, MaxDD −11.2%.</li>
+</ul>
+<p>So the quality tests are not the problem. <strong>The 33-name seed list is</strong> — 30 of 33 names
+pass the screen, which means the selection lives in who got onto the list in 2026, not in
+the filter applied to it. Everything else is point-in-time; this is not.</p>
+<p>That is the one material difference from the capex-intensity book, whose universe is
+derived mechanically from SEC industry codes. <strong>Pre-live gate: a point-in-time seed list.</strong></p>
+<h2 id="7-other-risks">7. Other risks</h2>
+<ol>
+<li><strong>Regime.</strong> The theme has a date. 2017-2018 Sharpe was poor; the book earns its
+   numbers in the post-2022 buildout.</li>
+<li><strong>Disclosed macro risk, unhedged.</strong> A sustained falling-rate, risk-on reversal in
+   which the washed-out clean-energy complex rallies and this theme de-rates. The
+   GLD/IEF sleeve and the DLR/EQIX short cover part of the rate channel, not this.</li>
+<li><strong>Concentration.</strong> 27 names, equal-weighted, one theme.</li>
+<li><strong>Survivorship.</strong> Prices come from yfinance, which serves no delisted names — as with
+   every backtest in this repo. Absolute levels read optimistic.</li>
+</ol>
+</div>
+</body>
+</html>

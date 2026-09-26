@@ -1,0 +1,112 @@
+[
+ {
+  "sleeve":"-- shipped 15% GLD\/IEF --",
+  "wt":0.15,
+  "Sharpe":1.05,
+  "Calmar":1.118,
+  "CAGR":"22.4%",
+  "MaxDD":"-20.0%",
+  "beta":0.62,
+  "PASS":"Y"
+ },
+ {
+  "sleeve":"1. Power-constrained (CEG, VST)",
+  "wt":0.15,
+  "Sharpe":1.077,
+  "Calmar":0.968,
+  "CAGR":"26.4%",
+  "MaxDD":"-27.2%",
+  "beta":0.74,
+  "PASS":""
+ },
+ {
+  "sleeve":"1. Power-constrained (CEG, VST)",
+  "wt":0.25,
+  "Sharpe":1.083,
+  "Calmar":0.916,
+  "CAGR":"27.5%",
+  "MaxDD":"-30.0%",
+  "beta":0.75,
+  "PASS":""
+ },
+ {
+  "sleeve":"2. Architectural \/ edge AI (AAPL, QCOM, ARM)",
+  "wt":0.15,
+  "Sharpe":1.063,
+  "Calmar":1.022,
+  "CAGR":"25.5%",
+  "MaxDD":"-25.0%",
+  "beta":0.78,
+  "PASS":""
+ },
+ {
+  "sleeve":"2. Architectural \/ edge AI (AAPL, QCOM, ARM)",
+  "wt":0.25,
+  "Sharpe":1.074,
+  "Calmar":1.001,
+  "CAGR":"26.2%",
+  "MaxDD":"-26.1%",
+  "beta":0.82,
+  "PASS":""
+ },
+ {
+  "sleeve":"3. Capex fatigue (GOOGL, MSFT)",
+  "wt":0.15,
+  "Sharpe":1.082,
+  "Calmar":1.09,
+  "CAGR":"25.4%",
+  "MaxDD":"-23.3%",
+  "beta":0.79,
+  "PASS":""
+ },
+ {
+  "sleeve":"3. Capex fatigue (GOOGL, MSFT)",
+  "wt":0.25,
+  "Sharpe":1.107,
+  "Calmar":1.091,
+  "CAGR":"26.0%",
+  "MaxDD":"-23.8%",
+  "beta":0.83,
+  "PASS":""
+ },
+ {
+  "sleeve":"all three combined",
+  "wt":0.15,
+  "Sharpe":1.085,
+  "Calmar":1.037,
+  "CAGR":"25.8%",
+  "MaxDD":"-24.9%",
+  "beta":0.77,
+  "PASS":""
+ },
+ {
+  "sleeve":"all three combined",
+  "wt":0.25,
+  "Sharpe":1.121,
+  "Calmar":1.026,
+  "CAGR":"26.7%",
+  "MaxDD":"-26.0%",
+  "beta":0.8,
+  "PASS":""
+ },
+ {
+  "sleeve":"[reference] GLD\/BTAL 50\/50",
+  "wt":0.15,
+  "Sharpe":1.08,
+  "Calmar":1.148,
+  "CAGR":"22.1%",
+  "MaxDD":"-19.2%",
+  "beta":0.59,
+  "PASS":"Y"
+ },
+ {
+  "sleeve":"[reference] GLD\/BTAL 50\/50",
+  "wt":0.25,
+  "Sharpe":1.134,
+  "Calmar":1.218,
+  "CAGR":"20.4%",
+  "MaxDD":"-16.7%",
+  "beta":0.49,
+  "PASS":"Y"
+ }
+]

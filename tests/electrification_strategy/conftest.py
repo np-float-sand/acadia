@@ -8,6 +8,7 @@ _TICKERS = [
     "WCC", "TT", "CARR", "JCI", "SPXC", "MOD", "IESC", "APG", "ENS", "THR",
     "GLD", "IEF", "DLR", "EQIX", "SPY", "XLI", "PAVE", "GRID", "VOLT", "TAN",
     "IRM", "AMT",
+    "ENPH", "SEDG", "CHPT", "RUN", "BLNK", "STEM",
 ]
 
 

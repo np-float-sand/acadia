@@ -1,0 +1,35 @@
+# SEC filer SIC codes defining the power / electrification candidate pool.
+# group: ELEC = equipment, components, electrical construction & instruments
+#        POWER = generation, transmission, distribution, fuel
+# Deliberately EXCLUDED: 3674 (semiconductors - pulls in AMD/AVGO/ARM),
+# 1311 (crude oil & gas, ~900 filers) and 1040 (metal mining, mostly gold).
+# Uranium names are recovered by the fuel-cycle lexicon instead, not by SIC.
+sic,group,description
+1731,ELEC,Electrical Work
+3470,ELEC,Coating Engraving & Allied Services
+3490,ELEC,Miscellaneous Fabricated Metal Products
+3510,ELEC,Engines & Turbines
+3550,ELEC,Special Industry Machinery
+3561,ELEC,Pumps & Pumping Equipment
+3569,ELEC,General Industrial Machinery & Equipment
+3585,ELEC,Air-Cond & Warm Air Heating Equipment
+3590,ELEC,Misc Industrial & Commercial Machinery
+3600,ELEC,Electronic & Other Electrical Equipment
+3612,ELEC,Power Distribution & Specialty Transformers
+3613,ELEC,Switchgear & Switchboard Apparatus
+3620,ELEC,Electrical Industrial Apparatus
+3621,ELEC,Motors & Generators
+3670,ELEC,Electronic Components & Accessories
+3679,ELEC,Electronic Components NEC
+3690,ELEC,Miscellaneous Electrical Machinery & Equipment
+3823,ELEC,Industrial Instruments For Measurement
+3829,ELEC,Measuring & Controlling Devices NEC
+5063,ELEC,Wholesale-Electrical Apparatus & Equipment
+1623,POWER,Water Sewer Pipeline Comm & Power Line Construction
+1221,POWER,Bituminous Coal & Lignite Surface Mining
+4911,POWER,Electric Services
+4922,POWER,Natural Gas Transmission
+4923,POWER,Natural Gas Transmission & Distribution
+4924,POWER,Natural Gas Distribution
+4931,POWER,Electric & Other Services Combined
+4991,POWER,Cogeneration Services & Small Power Producers

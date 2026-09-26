@@ -65,7 +65,7 @@ def test_run_comparison_grid_shape(synthetic_prices, synthetic_dfii10):
     res = backtest.run_comparison("2018-01-01", "2024-12-31", synthetic_prices, synthetic_dfii10)
     assert set(res["cells"]) == {
         (con, lab) for con in ("marquee", "frozen", "thematic", "screen", "screen_reit")
-        for lab in ("plain", "+val", "+val+sleeve", "+val+sleeve+short")
+        for lab in ("plain", "+val", "+val+sleeve", "+val+sleeve+short", "+val+sleeve+solar")
     }
     for cell in res["cells"].values():
         assert set(cell) >= {"metrics", "beta", "corr_volt", "episode_dd", "feared_pnl",
@@ -75,6 +75,23 @@ def test_run_comparison_grid_shape(synthetic_prices, synthetic_dfii10):
     assert res["eff_n"]["screen"] > res["eff_n"]["marquee"]   # supplier screen is deeper
     assert len(res["plateau"]) == len(config.VAL_PLATEAU_SCALES)
     assert {"SPY", "XLI", "PAVE", "GRID", "VOLT"} <= set(res["benchmarks"])
+
+
+def test_solar_stack_differs_from_sleeve_only_when_mask_fires(synthetic_prices, synthetic_dfii10):
+    """`+val+sleeve+solar` should diverge from `+val+sleeve` (the sinusoidal synthetic
+    DFII10 fixture crosses zero repeatedly, so the falling-real-yield trigger fires on
+    a real subset of days) but collapse back to it exactly on days the mask is off."""
+    res = backtest.run_comparison("2018-01-01", "2024-12-31", synthetic_prices, synthetic_dfii10,
+                                   constructions=("screen",))
+    sleeve_r = res["cells"][("screen", "+val+sleeve")]["returns"]
+    solar_r = res["cells"][("screen", "+val+sleeve+solar")]["returns"]
+    assert not sleeve_r.equals(solar_r)
+
+    from electrification_strategy import hedge_overlay
+    mask = hedge_overlay.real_yield_falling_mask(synthetic_dfii10, sleeve_r.index)
+    assert mask.mean() > 0.05  # trigger actually fires on a non-trivial fraction of days
+    off_days = ~mask.reindex(sleeve_r.index).fillna(False)
+    pd.testing.assert_series_equal(sleeve_r[off_days], solar_r[off_days])
 
 
 def test_pick_winner_returns_a_cell_or_none(synthetic_prices, synthetic_dfii10):

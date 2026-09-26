@@ -1,0 +1,712 @@
+<title>Screened Electrification Equipment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ground:#f6f6f3; --surface:#ffffff; --surface-2:#efefe9;
+    --ink:#1b1f24; --ink-soft:#5b636d; --ink-faint:#8a929c;
+    --line:#e2e2db; --line-soft:#ecebe4;
+    --accent:#1f5fa8; --accent-soft:#e7eef7; --accent-ink:#17497f;
+    --pos:#2f7d5d; --pos-soft:#e6f0ea;
+    --neg:#a5403a; --neg-soft:#f4e7e5;
+    --warn:#8f6412; --warn-soft:#f3ecdd;
+    --shadow:0 1px 2px rgba(20,24,30,.06),0 8px 28px rgba(20,24,30,.05);
+    --prose:44rem; --wide:62rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+      --ink:#e7e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+      --line:#2c313a; --line-soft:#242932;
+      --accent:#5c9bd6; --accent-soft:#1e2b3a; --accent-ink:#9cc4e8;
+      --pos:#5cae8a; --pos-soft:#182a22;
+      --neg:#d98a83; --neg-soft:#2e211f;
+      --warn:#cf9a4e; --warn-soft:#2a2416;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+    --ink:#e7e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+    --line:#2c313a; --line-soft:#242932;
+    --accent:#5c9bd6; --accent-soft:#1e2b3a; --accent-ink:#9cc4e8;
+    --pos:#5cae8a; --pos-soft:#182a22;
+    --neg:#d98a83; --neg-soft:#2e211f;
+    --warn:#cf9a4e; --warn-soft:#2a2416;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-size:17px; line-height:1.62; letter-spacing:-.003em;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:var(--wide); margin:0 auto; padding:0 clamp(1.1rem,4vw,2.75rem)}
+  .col{max-width:var(--prose); margin-left:auto; margin-right:auto}
+  .bleed{max-width:var(--wide); margin-left:auto; margin-right:auto}
+
+  h1,h2,h3,h4{font-family:"Newsreader",Georgia,serif; font-weight:500; line-height:1.18;
+    text-wrap:balance; letter-spacing:-.01em}
+  h1{font-size:clamp(2.1rem,5.4vw,3rem); margin:.2em 0 .3em}
+  h2{font-size:clamp(1.5rem,3.4vw,1.95rem); margin:2.9rem 0 .1rem}
+  h3{font-size:1.24rem; font-weight:600; margin:2rem 0 .4rem}
+  p{margin:.75em 0}
+  a{color:var(--accent); text-underline-offset:2px}
+  strong{font-weight:600}
+  small{font-size:.82em; color:var(--ink-soft)}
+  em{font-style:italic}
+
+  .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:.74rem;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--accent-ink); font-weight:500}
+  .sectno{font-family:"IBM Plex Mono",monospace; color:var(--ink-faint);
+    font-size:.95rem; font-weight:500; margin-right:.5em}
+  .lede{font-size:1.24rem; line-height:1.5; max-width:38rem}
+  .dek{color:var(--ink-soft); max-width:40rem}
+  .kv{font-family:"IBM Plex Mono",monospace}
+
+  header.masthead{border-bottom:1px solid var(--line); padding:2.4rem 0 2rem; margin-bottom:2.6rem}
+  .runner{display:flex; justify-content:space-between; align-items:baseline; gap:1rem;
+    flex-wrap:wrap; font-family:"IBM Plex Mono",monospace; font-size:.74rem;
+    letter-spacing:.06em; color:var(--ink-faint); text-transform:uppercase; margin-bottom:2rem}
+
+  figure{margin:1.9rem auto}
+  .fig-card{background:#ffffff; border:1px solid var(--line); border-radius:10px;
+    padding:14px 14px 8px; box-shadow:var(--shadow); overflow-x:auto}
+  .fig-card img{display:block; width:100%; height:auto; min-width:520px}
+  figcaption{font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--ink-soft);
+    margin-top:.7rem; line-height:1.55; max-width:46rem}
+
+  .tbl-scroll{overflow-x:auto; margin:1.6rem auto; border:1px solid var(--line);
+    border-radius:10px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:.86rem}
+  th,td{text-align:right; padding:.6rem .8rem; border-bottom:1px solid var(--line-soft);
+    font-variant-numeric:tabular-nums; white-space:nowrap}
+  th{font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:.71rem;
+    letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft);
+    border-bottom:1px solid var(--line); background:var(--surface-2)}
+  td:first-child,th:first-child{text-align:left; white-space:normal; min-width:14rem}
+  td:has(ul.u),th.wcol{text-align:left; white-space:normal}
+  tbody tr:last-child td{border-bottom:none}
+  tr.is-book td{background:var(--accent-soft)}
+  tr.is-book td:first-child{font-weight:600}
+  tr.grp td{background:var(--surface-2); font-family:"IBM Plex Mono",monospace;
+    font-size:.69rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);
+    padding-top:.45rem; padding-bottom:.45rem}
+  /* the 8-column two-year table: tighter, must fit an A4 page in print */
+  table.two-year{font-size:.8rem}
+  table.two-year th,table.two-year td{padding:.5rem .55rem}
+  table.two-year td:first-child,table.two-year th:first-child{min-width:9rem}
+  table.two-year td:has(ul.u){min-width:12rem; max-width:19rem}
+  table.two-year ul.u li{font-size:.86em; line-height:1.36; margin:.12em 0}
+  /* the risk table: 3 columns, both prose columns wrap left */
+  table.risk td,table.risk th{white-space:normal; vertical-align:top; text-align:left}
+  table.risk td:first-child,table.risk th:first-child{min-width:9rem; max-width:12rem}
+  table.risk td:nth-child(2),table.risk th:nth-child(2){min-width:6rem; width:6rem; text-align:left}
+  table.risk td:nth-child(3){min-width:16rem}
+  ul.u{list-style:none; margin:0; padding:0}
+  ul.u li{position:relative; padding-left:.95em; margin:.16em 0; font-size:.92em;
+    line-height:1.42; white-space:normal}
+  ul.u li::before{content:"–"; position:absolute; left:0; color:var(--ink-faint)}
+  .n-pos{color:var(--pos); font-weight:500}
+  .n-neg{color:var(--neg); font-weight:500}
+
+  .pill{display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:.67rem;
+    letter-spacing:.03em; text-transform:uppercase; padding:.18em .5em; border-radius:5px;
+    font-weight:500; white-space:nowrap}
+  .pill.mit{background:var(--pos-soft); color:var(--pos)}
+  .pill.part{background:var(--warn-soft); color:var(--warn)}
+  .pill.no{background:var(--neg-soft); color:var(--neg)}
+  .pill.na{background:var(--surface-2); color:var(--ink-faint)}
+
+  .note{border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:.9rem 1.15rem; border-radius:0 8px 8px 0; margin:1.5rem auto; font-size:.95rem}
+  .note.warn{border-left-color:var(--warn); background:var(--warn-soft)}
+
+  .pc{display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.1rem 0}
+  @media(max-width:640px){.pc{grid-template-columns:1fr}}
+  .pc>div{border:1px solid var(--line); border-radius:9px; padding:.85rem 1rem; background:var(--surface)}
+  .pc h4{margin:0 0 .45rem; font-family:"IBM Plex Mono",monospace; font-size:.71rem;
+    letter-spacing:.06em; text-transform:uppercase; font-weight:500}
+  .pc .pro h4{color:var(--pos)} .pc .con h4{color:var(--neg)}
+  .pc ul{margin:0; padding-left:1.05em} .pc li{margin:.3em 0; font-size:.92rem; line-height:1.46}
+
+  .cand{border:1px solid var(--line); border-radius:11px; background:var(--surface);
+    padding:1.2rem 1.35rem; margin:1.4rem auto; box-shadow:var(--shadow)}
+  .cand h3{margin:.15rem 0}
+  .cand .tag{font-family:"IBM Plex Mono",monospace; font-size:.71rem; color:var(--ink-faint);
+    letter-spacing:.05em; text-transform:uppercase}
+  .stripe{display:flex; flex-wrap:wrap; gap:.5rem 1.6rem; margin:.75rem 0 .15rem;
+    padding:.65rem .1rem; border-top:1px solid var(--line-soft);
+    border-bottom:1px solid var(--line-soft); font-family:"IBM Plex Mono",monospace; font-size:.8rem}
+  .stripe b{color:var(--ink-faint); font-weight:500; text-transform:uppercase; font-size:.66rem;
+    letter-spacing:.04em; display:block; margin-bottom:.05rem}
+  .stripe span{font-variant-numeric:tabular-nums}
+
+  ul.clean{padding-left:1.15em} ul.clean li{margin:.42em 0}
+  .foot{border-top:1px solid var(--line); margin-top:3.5rem; padding:1.8rem 0 3rem;
+    font-size:.82rem; color:var(--ink-soft)}
+  .foot h3{font-size:.85rem; text-transform:uppercase; letter-spacing:.05em;
+    font-family:"IBM Plex Mono",monospace; color:var(--ink); margin:1.4rem 0 .3rem; font-weight:500}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="col">
+      <div class="runner">
+        <span>Addenda Capital &nbsp;&middot;&nbsp; Systematic Equity</span>
+        <span>Proposal v3 &nbsp;&middot;&nbsp; 2026-09-07</span>
+      </div>
+      <div class="eyebrow">Long-only strategy proposal</div>
+      <h1>Screened Electrification Equipment</h1>
+      <p class="lede">A rules-built long book of the profitable equipment and engineering
+      suppliers to the electricity build-out &mdash; the picks-and-shovels of
+      electrification, with the theme&rsquo;s ballast stripped out and three risk controls
+      layered on.</p>
+      <p class="dek">Full backtest Jan 2019 &ndash; Aug 2026: <strong>+348%</strong> total
+      return, <strong>0.61</strong> market beta, <strong>&minus;23%</strong> max drawdown,
+      Sharpe <strong>1.05</strong>. This note also documents an exhaustive search for a
+      short offset &mdash; nine candidates &mdash; and concludes that none of them improves
+      the book.</p>
+    </div>
+  </header>
+
+  <div class="col">
+    <h2><span class="sectno">1</span>What the book holds</h2>
+
+    <p>The book is long roughly <strong>27 companies that sell into the electricity
+    build-out</strong>: power equipment (transformers, switchgear, power electronics),
+    grid-scale storage, and electrical engineering &amp; construction. It holds
+    <em>suppliers</em> &mdash; not utilities, not power generators. Representative names:
+    Eaton, GE Vernova, Quanta Services, Vertiv, Hubbell, nVent, Fluence, Primoris.</p>
+
+    <h3>The selection rule</h3>
+    <p>A company enters the book only if it (a)&nbsp;sells to institutional buyers &mdash;
+    utilities, hyperscalers, industrial customers, not consumers &mdash; and (b)&nbsp;meets
+    at least two of three fundamental tests: <strong>profitable today</strong>,
+    <strong>valued on earnings</strong> rather than on story, and <strong>low dependence
+    on subsidies or policy</strong>. Names are held in <strong>equal weight</strong>,
+    capped at 25% each. There is no cap-weighting, so the book does not concentrate in a
+    few mega-caps the way a thematic index does.</p>
+
+    <h3>Three risk controls</h3>
+    <ul class="clean">
+      <li><strong>Volatility scaling.</strong> The book automatically reduces its invested
+      percentage when markets turn choppy and restores it when they calm, aiming to keep
+      annual volatility near 20%.</li>
+      <li><strong>Valuation trim.</strong> After the book has run up well ahead of its own
+      long-run trend and the broad market, it steps exposure down in stages &mdash; to
+      about 80%, then 60% &mdash; taking risk off into euphoria.</li>
+      <li><strong>A 15% reserve sleeve.</strong> One-seventh of the portfolio is
+      permanently held in gold and short-term US Treasuries instead of equities, as a
+      shock absorber: a growth or credit scare pushes Treasuries up; a currency or
+      geopolitical shock pushes gold up.</li>
+    </ul>
+
+    <h3>Is this just VOLT? In what way is it smarter?</h3>
+    <p>It is the same theme. The book runs about <strong>0.86 correlated</strong> with
+    VOLT, the electrification-theme ETF, and essentially all of its return is the theme.
+    It is &ldquo;picks and shovels.&rdquo; It is smarter than buying the ETF in four
+    concrete ways:</p>
+    <ul class="clean">
+      <li><strong>It strips the ballast.</strong> No regulated utilities (~30% of VOLT),
+      no pipelines or midstream (~10%), no commodity components (~13%). Pure equipment
+      and EPC.</li>
+      <li><strong>It screens on fundamentals.</strong> Only profitable, earnings-valued,
+      low-policy-dependence names &mdash; so it drops the pre-revenue, subsidy-reliant and
+      story-stock exposure a thematic index sweeps in.</li>
+      <li><strong>Equal weight, 25% cap</strong> instead of cap weight &mdash; materially
+      less single-name concentration.</li>
+      <li><strong>Risk controls the ETF has none of</strong> &mdash; the three above.</li>
+    </ul>
+    <p>Over the only fair comparison window &mdash; January 2025 to August 2026,
+    VOLT&rsquo;s live history &mdash; the book returns <strong>Sharpe 1.49 vs
+    VOLT&rsquo;s 1.05</strong>, a <strong>&minus;17% max drawdown vs &minus;23%</strong>,
+    at <strong>63% of VOLT&rsquo;s volatility</strong>, for slightly less raw return
+    (CAGR 27.7% vs 30.5%). Over the full 2019&ndash;2026 backtest it earns Sharpe 1.05 at
+    <strong>0.61 market beta</strong>: it captures the theme with roughly half the market
+    sensitivity of the infrastructure ETFs.</p>
+
+    <h2><span class="sectno">2</span>Performance</h2>
+  </div>
+
+  <figure class="bleed">
+    <div class="fig-card"><img alt="Growth of $1, Jan 2025 to Aug 2026: the book, VOLT, GRID and SPY. The book tracks the electrification ETFs but with visibly smaller swings, ending near VOLT and GRID and well above SPY." src="__IMG_growth_fair__"></div>
+    <figcaption>Fair-comparison window. The book keeps pace with the electrification ETFs
+    through mid-2026 with a much smoother path &mdash; it does not spike to VOLT&rsquo;s
+    1.8&times; in May&ndash;July 2026, and it does not give it back.</figcaption>
+  </figure>
+
+  <figure class="bleed">
+    <div class="fig-card"><img alt="Growth of $1 on a log scale, Jan 2019 to Aug 2026: the book, PAVE and SPY. The book lags 2019 to 2023, then catches PAVE and ends slightly above it and well above SPY." src="__IMG_growth_full__"></div>
+    <figcaption>Full backtest. The book trails through 2019&ndash;2022, then compounds
+    through the electrification up-leg to finish level with the infrastructure ETF and
+    ahead of the market &mdash; at lower volatility and a shallower worst drawdown than
+    either.</figcaption>
+  </figure>
+
+  <figure class="bleed">
+    <div class="fig-card"><img alt="Drawdown from prior peak. The book's drawdowns are generally shallower than SPY's in 2020 and 2022." src="__IMG_drawdown__"></div>
+    <figcaption>Drawdown from prior peak. COVID: book &minus;22% vs SPY &minus;34%. 2022
+    rate shock: &minus;20% vs &minus;24%. The book&rsquo;s worst point in the backtest is
+    &minus;23%.</figcaption>
+  </figure>
+
+  <figure class="bleed">
+    <div class="fig-card"><img alt="Rolling 12-month Sharpe ratio of the book versus SPY. The book is generally above SPY, particularly 2023 to 2026." src="__IMG_rollsharpe__"></div>
+    <figcaption>Rolling 12-month Sharpe. Both go negative in 2022; the book leads the
+    market for most of the record and through the 2023&ndash;2026 up-leg.</figcaption>
+  </figure>
+
+  <div class="col"><h3>Headline statistics</h3></div>
+  <div class="tbl-scroll bleed">
+  <table>
+    <thead><tr>
+      <th>Strategy</th>
+      <th>Total ret</th><th>CAGR</th><th>Ann vol</th><th>Sharpe</th><th>Max DD</th><th>SPY &beta;</th>
+      <th>Fair Sharpe</th><th>Fair DD</th>
+    </tr></thead>
+    <tbody>
+      <tr class="is-book"><td>Screened Electrification Equipment &nbsp;<em>(the book)</em></td>
+        <td>+348%</td><td>+20.8%</td><td>16.3%</td><td>1.05</td><td>&minus;23%</td><td>0.61</td>
+        <td>1.49</td><td>&minus;17%</td></tr>
+      <tr><td>VOLT &mdash; electrification ETF</td>
+        <td class="kv">&mdash;<sup>1</sup></td><td>&mdash;</td><td>25.5%</td><td>&mdash;</td><td>&mdash;</td><td>1.01</td>
+        <td>1.05</td><td>&minus;23%</td></tr>
+      <tr><td>GRID &mdash; grid-infrastructure ETF</td>
+        <td>+397%</td><td>+23.3%</td><td>24.2%</td><td>0.81</td><td>&minus;41%</td><td>1.07</td>
+        <td>1.06</td><td>&minus;20%</td></tr>
+      <tr><td>PAVE &mdash; US infrastructure ETF</td>
+        <td>+327%</td><td>+20.9%</td><td>25.7%</td><td>0.67</td><td>&minus;44%</td><td>1.12</td>
+        <td>0.77</td><td>&minus;23%</td></tr>
+      <tr><td>SPY &mdash; S&amp;P 500</td>
+        <td>+243%</td><td>+17.5%</td><td>19.3%</td><td>0.71</td><td>&minus;34%</td><td>1.00</td>
+        <td>0.88</td><td>&minus;19%</td></tr>
+      <tr><td>XLI &mdash; S&amp;P industrials</td>
+        <td>+207%</td><td>+15.8%</td><td>21.5%</td><td>0.56</td><td>&minus;42%</td><td>0.97</td>
+        <td>0.87</td><td>&minus;18%</td></tr>
+      <tr><td>SPY + 15% GLD/IEF sleeve</td>
+        <td>+222%</td><td>+15.9%</td><td>16.3%</td><td>0.75</td><td>&minus;29%</td><td>0.86</td>
+        <td>1.01</td><td>&minus;16%</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="col">
+    <p><small>Full backtest Jan 2019 &ndash; Aug 2026 unless noted. Fair window = Jan 2025
+    &ndash; Aug 2026 (VOLT&rsquo;s live history). Sharpe = (CAGR &minus; 3.76%) /
+    annualised volatility. <sup>1</sup>&nbsp;VOLT listed in 2024, so its full-window
+    statistics are not meaningful.</small></p>
+
+    <h3>Behaviour in named stress episodes</h3>
+  </div>
+  <div class="tbl-scroll col" style="max-width:34rem">
+  <table>
+    <thead><tr><th>Episode</th><th>Book</th><th>SPY</th><th>VOLT</th></tr></thead>
+    <tbody>
+      <tr class="is-book"><td>COVID crash &nbsp;<small>Feb&ndash;Apr 2020</small></td><td>&minus;22%</td><td>&minus;34%</td><td class="kv">&mdash;</td></tr>
+      <tr><td>Rate shock &nbsp;<small>2022</small></td><td>&minus;20%</td><td>&minus;24%</td><td class="kv">&mdash;</td></tr>
+      <tr><td>DeepSeek selloff &nbsp;<small>Jan&ndash;Apr 2025</small></td><td>&minus;17%</td><td>&minus;19%</td><td>&minus;23%</td></tr>
+      <tr><td>Tariff shock &nbsp;<small>Apr 2025</small></td><td>&minus;8%</td><td>&minus;12%</td><td>&minus;10%</td></tr>
+      <tr><td>2026 selloff &nbsp;<small>YTD</small></td><td>&minus;6%</td><td>&minus;9%</td><td>&minus;17%</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="col">
+    <h2><span class="sectno">3</span>Two-year split</h2>
+    <p>Sharpe / total return / worst drawdown, computed separately for the 2023&ndash;2024
+    and 2025&ndash;2026 sub-periods. The <em>Why / what it is</em> column explains why each
+    row is on the table.</p>
+  </div>
+
+  <div class="tbl-scroll bleed">
+  <table class="two-year">
+    <thead><tr>
+      <th>Row</th><th class="wcol">Why / what it is</th>
+      <th>Sh 23&ndash;24</th><th>Ret 23&ndash;24</th><th>DD 23&ndash;24</th>
+      <th>Sh 25&ndash;26</th><th>Ret 25&ndash;26</th><th>DD 25&ndash;26</th>
+    </tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="8">The book &amp; its variants</td></tr>
+      <tr class="is-book">
+        <td>Screened Electrification Equipment <em>(the book)</em></td>
+        <td><ul class="u">
+          <li>Profitable equipment &amp; engineering suppliers to the grid build-out, equal-weighted</li>
+          <li>Automatically shrinks exposure when markets get volatile or prices outrun their trend</li>
+          <li>Permanently holds 15% in gold and short-term Treasuries as a shock absorber</li>
+        </ul></td>
+        <td>2.08</td><td>+86%</td><td>&minus;10%</td><td>1.49</td><td>+52%</td><td>&minus;17%</td>
+      </tr>
+      <tr>
+        <td>&middot; raw book, no overlays</td>
+        <td><ul class="u">
+          <li>The same names in equal weight, with none of the risk controls</li>
+          <li>Shown to isolate what the overlays cost in return and save in drawdown</li>
+        </ul></td>
+        <td>1.87</td><td class="n-pos">+114%</td><td>&minus;16%</td><td>1.27</td><td>+62%</td><td>&minus;22%</td>
+      </tr>
+      <tr>
+        <td>&middot; + built-in insurance short</td>
+        <td><ul class="u">
+          <li>Adds a small conditional short in data-centre landlords (Digital Realty, Equinix)</li>
+          <li>Engages only while the 10-year real yield is rising; carried as paid tail insurance</li>
+        </ul></td>
+        <td>1.81</td><td>+69%</td><td>&minus;8%</td><td>1.66</td><td>+53%</td><td>&minus;12%</td>
+      </tr>
+      <tr>
+        <td>&middot; thematic universe + controls</td>
+        <td><ul class="u">
+          <li>Same risk controls, but names chosen by &ldquo;held by &ge;2 electrification ETFs&rdquo;</li>
+          <li>Broader, more index-like &mdash; drops the profitability screen</li>
+        </ul></td>
+        <td>1.29</td><td>+61%</td><td>&minus;14%</td><td>1.29</td><td>+49%</td><td>&minus;19%</td>
+      </tr>
+
+      <tr class="grp"><td colspan="8">Book + a short offset</td></tr>
+      <tr>
+        <td>book + short &middot; XLI 0.25&times;</td>
+        <td><ul class="u">
+          <li>Hold the book, short industrials at ~&frac14; of book size</li>
+          <li>Aim: cancel the book&rsquo;s general market and cyclical swings, keep the stock picks</li>
+        </ul></td>
+        <td>2.13</td><td>+72%</td><td class="n-pos">&minus;7%</td><td>1.43</td><td>+41%</td><td>&minus;13%</td>
+      </tr>
+      <tr>
+        <td>book + short &middot; China FXI 0.15&times;</td>
+        <td><ul class="u">
+          <li>Hold the book, short Chinese large-caps at ~15%</li>
+          <li>A cyclical exposure that historically moves least in step with the book</li>
+        </ul></td>
+        <td>1.97</td><td>+80%</td><td>&minus;9%</td><td>1.42</td><td>+47%</td><td>&minus;18%</td>
+      </tr>
+      <tr>
+        <td>book + short &middot; TAN solar 0.15&times;</td>
+        <td><ul class="u">
+          <li>Hold the book, short solar and distributed-energy stocks at ~15%</li>
+          <li>The theorised natural offset &mdash; names that should gain from high power prices and green policy</li>
+        </ul></td>
+        <td class="n-pos">2.81</td><td>+105%</td><td>&minus;7%</td><td>1.35</td><td>+42%</td><td>&minus;15%</td>
+      </tr>
+      <tr>
+        <td>book + short &middot; merchant gen 0.15&times;</td>
+        <td><ul class="u">
+          <li>Hold the book, short Vistra / NRG / Constellation / Talen at ~15%</li>
+          <li>The listed names most directly long the wholesale electricity price</li>
+        </ul></td>
+        <td class="n-neg">1.32</td><td>+49%</td><td>&minus;10%</td><td>1.58</td><td>+42%</td><td>&minus;12%</td>
+      </tr>
+
+      <tr class="grp"><td colspan="8">Benchmarks</td></tr>
+      <tr>
+        <td>VOLT</td>
+        <td><ul class="u"><li>Electrification-theme ETF, the closest off-the-shelf comparable</li>
+          <li>~40% of it is utilities, pipelines and commodity components</li></ul></td>
+        <td class="kv">&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>1.02</td><td>+55%</td><td>&minus;23%</td>
+      </tr>
+      <tr>
+        <td>GRID</td>
+        <td><ul class="u"><li>Grid-infrastructure ETF &mdash; T&amp;D equipment plus utilities, weighted by size</li></ul></td>
+        <td>0.83</td><td>+40%</td><td>&minus;21%</td><td>1.04</td><td>+52%</td><td>&minus;20%</td>
+      </tr>
+      <tr>
+        <td>PAVE</td>
+        <td><ul class="u"><li>Broad US infrastructure ETF (construction, materials, machinery)</li>
+          <li>The &ldquo;just buy infrastructure&rdquo; alternative</li></ul></td>
+        <td>1.05</td><td>+54%</td><td>&minus;13%</td><td>0.75</td><td>+37%</td><td>&minus;23%</td>
+      </tr>
+      <tr>
+        <td>SPY</td>
+        <td><ul class="u"><li>The S&amp;P 500 &mdash; the overall US stock market</li></ul></td>
+        <td class="n-pos">1.65</td><td>+58%</td><td>&minus;10%</td><td>0.85</td><td>+33%</td><td>&minus;19%</td>
+      </tr>
+      <tr>
+        <td>XLI</td>
+        <td><ul class="u"><li>The S&amp;P industrials sector &mdash; the book&rsquo;s parent sector</li></ul></td>
+        <td>0.95</td><td>+39%</td><td>&minus;13%</td><td>0.85</td><td>+35%</td><td>&minus;18%</td>
+      </tr>
+      <tr>
+        <td>SPY + 15% GLD/IEF sleeve</td>
+        <td><ul class="u"><li>The market with the book&rsquo;s exact reserve sleeve bolted on</li>
+          <li>Isolates the sleeve from the stock selection</li></ul></td>
+        <td>1.70</td><td>+52%</td><td>&minus;9%</td><td>1.01</td><td>+34%</td><td>&minus;16%</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="col">
+    <p><small>Sharpe = (CAGR &minus; 3.76%) / annualised vol, same risk-free rate both
+    periods. Max DD is the worst peak-to-trough <em>within</em> each period. VOLT has no
+    2023&ndash;24 history.</small></p>
+
+    <div class="note">
+      <strong>Read the shorts row-by-row.</strong> XLI and FXI look strong in
+      2023&ndash;24 (Sharpe 2.1&ndash;2.0) &mdash; but that is the window the book beat its
+      own sector by 2&times;, so shorting the laggard flatters the ratio. In 2025&ndash;26
+      every short cuts return and most cut Sharpe. TAN solar&rsquo;s 2.81 in 2023&ndash;24
+      is the solar crash, not a hedge: it adds nothing in 2025&ndash;26 and is an
+      anti-hedge in the scenario the book most fears (see &sect;6).
+    </div>
+
+    <h2><span class="sectno">4</span>Systematic risks &amp; macro bets</h2>
+    <p>What the book is implicitly betting on, and how &mdash; or whether &mdash; the three
+    overlays address each one.</p>
+  </div>
+
+  <div class="tbl-scroll bleed">
+  <table class="risk">
+    <thead><tr><th>Risk / macro bet</th><th>Treatment</th><th>What it is, and how the strategy handles it</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Electrification theme de-rating</td>
+        <td><span class="pill part">Partial</span></td>
+        <td>AI-capex decelerates, data-centre moratoria spread, or grid capex plateaus and the whole theme re-prices down. Volatility scaling de-grosses on the way down and the valuation trim lowers exposure after run-ups; the sleeve is unaffected. Not eliminated &mdash; this is the primary disclosed risk.</td>
+      </tr>
+      <tr>
+        <td>Falling-rate, risk-on reversal</td>
+        <td><span class="pill no">Not hedged</span></td>
+        <td>Rates fall, the washed-out clean-energy complex rallies, and the theme de-rates in relative terms. By design there is no hedge: the Treasury leg of the sleeve gains as rates fall and gold is roughly neutral, but a solar short would <em>worsen</em> this &mdash; which is why there is none.</td>
+      </tr>
+      <tr>
+        <td>Broad equity drawdown</td>
+        <td><span class="pill mit">Cushioned</span></td>
+        <td>A market-wide selloff; the book carries 0.61 market beta. The 15% sleeve and volatility scaling both reduce the hit &mdash; the book fell &minus;22% in COVID vs the market&rsquo;s &minus;34%.</td>
+      </tr>
+      <tr>
+        <td>Rate shock / duration</td>
+        <td><span class="pill part">Mixed</span></td>
+        <td>Yields spike fast (2022-style) and long-duration growth multiples compress. The Treasury leg of the sleeve <em>loses</em> in a rate spike; volatility scaling helps; the book still drew &minus;20% in 2022 (vs the market&rsquo;s &minus;24%).</td>
+      </tr>
+      <tr>
+        <td>Industrial / cyclical recession</td>
+        <td><span class="pill part">Limited</span></td>
+        <td>Construction and capital-equipment orders slow. Grid capex is backlog-driven and partly regulated &mdash; more defensive than broad industrials &mdash; but not immune. No explicit hedge.</td>
+      </tr>
+      <tr>
+        <td>Policy / subsidy reversal</td>
+        <td><span class="pill mit">Mitigated</span></td>
+        <td>IRA rollback or investment-tax-credit repeal. Mitigated by construction &mdash; the screen&rsquo;s &ldquo;low policy dependence&rdquo; test deliberately excludes the subsidy-reliant names.</td>
+      </tr>
+      <tr>
+        <td>Single-name concentration</td>
+        <td><span class="pill part">Bounded</span></td>
+        <td>27 names, 25% cap; a blow-up in a top holding. Equal weight caps any one name near 4&ndash;8% of risk. It is not a 200-stock book &mdash; the concentration is deliberate and disclosed.</td>
+      </tr>
+      <tr>
+        <td>Input-cost inflation<br><small>copper &middot; electrical steel &middot; labour</small></td>
+        <td><span class="pill na">Not a risk</span></td>
+        <td>The book&rsquo;s real cost inputs spike. Tested directly: the book&rsquo;s beta to all three is ~0 &mdash; these suppliers pass costs through and had pricing power, and the book <em>outperformed</em> in the biggest cost-shock months.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="col">
+    <h2><span class="sectno">5</span>When it can fail</h2>
+    <ul class="clean">
+      <li><strong>A sustained rates-down, risk-on reversal.</strong> The washed-out
+      clean-energy complex rallies and the whole electrification theme de-rates. The
+      overlays soften the path; they do not stop a fundamental repricing. This is the
+      single biggest risk and it is not hedged.</li>
+      <li><strong>A data-centre / AI-capex air pocket.</strong> Hyperscaler capex
+      decelerates, or local moratoria (Loudoun, Prince William, Central Ohio, North Texas)
+      spread. Equipment backlogs cushion the first few quarters; a multi-year slowdown
+      would not be cushioned.</li>
+      <li><strong>The book is the theme.</strong> ~0.86 correlated with VOLT, and
+      essentially all of the return is thematic beta &mdash; enhanced beta, not alpha. If
+      the theme is wrong, the book is wrong.</li>
+      <li><strong>A 2022-style rate shock hurts twice</strong> &mdash; growth multiples
+      compress and the Treasury leg of the sleeve loses. The book still drew &minus;20%
+      then.</li>
+      <li><strong>One macro cycle of evidence.</strong> The backtest is 2019&ndash;2026,
+      dominated by a single long electrification up-leg (2023&ndash;26). Regime diversity
+      is limited.</li>
+      <li><strong>Point-in-time universe not yet locked.</strong> The screen&rsquo;s
+      judgment columns carry some hindsight until a strict as-of-date version is built
+      &mdash; a pre-live gate.</li>
+    </ul>
+
+    <h2><span class="sectno">6</span>Short offsets: considered, not adopted</h2>
+
+    <p>We tested <strong>nine</strong> short candidates as overlays on the book.
+    <strong>None improves risk-adjusted return.</strong> The three most worth discussing
+    are below; the rest are summarised after.</p>
+
+    <h3>First, the book on its own</h3>
+    <div class="pc">
+      <div class="pro"><h4>For</h4><ul>
+        <li>Captures the electrification theme at ~0.6 market beta</li>
+        <li>Best drawdown of any option here &mdash; &minus;23% full, vs &minus;34% to &minus;44% for the ETFs and the market</li>
+        <li>All the risk control is portable and cheap: no shorting, no borrow, &le;100% gross</li>
+        <li>Beats every benchmark on Sharpe <em>and</em> drawdown in both sub-periods</li>
+      </ul></div>
+      <div class="con"><h4>Against</h4><ul>
+        <li>Still ~0.86 correlated with the theme &mdash; no explicit hedge for a theme de-rating</li>
+        <li>Concentrated: 27 names, deliberately</li>
+        <li>One-cycle backtest; point-in-time universe not yet locked</li>
+        <li>The reserve sleeve&rsquo;s Treasury leg loses in a rate spike</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="bleed">
+
+    <div class="cand">
+      <span class="tag">Broad-beta hedge</span>
+      <h3>Short industrials (XLI), 0.25&times;</h3>
+      <p><strong>Why we considered it.</strong> Of all the candidates it &ldquo;looked
+      good&rdquo;: it cuts the full-period max drawdown by ~7 points and, in
+      2023&ndash;24, lifted Sharpe to 2.1. The idea is to short a slice of the industrial
+      sector to cancel the book&rsquo;s general market and cyclical swings and leave the
+      stock selection.</p>
+      <div class="stripe">
+        <span><b>Sharpe</b>1.05 &nbsp;<small>(book 1.05)</small></span>
+        <span><b>Total return</b>+238% &nbsp;<small>(book +348%)</small></span>
+        <span><b>Max DD</b>&minus;16% &nbsp;<small>(book &minus;23%)</small></span>
+        <span><b>Feared scenario</b>+2.2% &nbsp;<small>(book +3.1%)</small></span>
+      </div>
+      <div class="pc">
+        <div class="pro"><h4>For</h4><ul>
+          <li>Real drawdown reduction: &minus;23% &rarr; &minus;16% over the full backtest</li>
+          <li>Sharpe is flat, not down &mdash; 1.05 either way</li>
+        </ul></div>
+        <div class="con"><h4>Against</h4><ul>
+          <li>Costs ~110 points of compound return (+348% &rarr; +238%)</li>
+          <li>The 2023&ndash;24 Sharpe of 2.1 is regime luck &mdash; that is the window the book beat its sector by 2&times;</li>
+          <li>A live bet that industrials keep lagging the book; ~125% gross, borrow cost, dividends paid on the short</li>
+          <li><strong>A 25% cash / T-bill weight gives the same return and drawdown at a <em>higher</em> Sharpe (1.06)</strong> &mdash; this is de-levering, not hedging</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="cand">
+      <span class="tag">Diversifier</span>
+      <h3>Short China large-cap (FXI), 0.15&times;</h3>
+      <p><strong>Why we considered it.</strong> It is the least-correlated
+      global-industrial cyclical available as one liquid instrument, and it is the only
+      candidate with a <em>positive</em> Sharpe delta (+0.02).</p>
+      <div class="stripe">
+        <span><b>Sharpe</b>1.06 &nbsp;<small>(book 1.05)</small></span>
+        <span><b>Total return</b>+326% &nbsp;<small>(book +348%)</small></span>
+        <span><b>Max DD</b>&minus;20% &nbsp;<small>(book &minus;23%)</small></span>
+        <span><b>Feared scenario</b>+2.5% &nbsp;<small>(book +3.1%)</small></span>
+      </div>
+      <div class="pc">
+        <div class="pro"><h4>For</h4><ul>
+          <li>Cheapest of the lot &mdash; only ~22 points of full-period return given up</li>
+          <li>Small drawdown help (~3 points); Sharpe nominally the best of any overlay</li>
+        </ul></div>
+        <div class="con"><h4>Against</h4><ul>
+          <li>+0.02 Sharpe is inside the noise &mdash; not a real improvement</li>
+          <li>Adds a China-decoupling tail: a fat left tail whenever China rallies hard</li>
+          <li>No exit rule; does not hedge the actual feared scenario (+2.5% vs the book&rsquo;s +3.1% in those months)</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="cand">
+      <span class="tag">Thematic mirror &mdash; the &ldquo;natural&rdquo; offset</span>
+      <h3>Short solar / DER (TAN), 0.15&times;</h3>
+      <p><strong>Why we considered it.</strong> It is the textbook offset: short the names
+      that should <em>benefit</em> from high power prices and green policy &mdash; the
+      economic mirror of the long book.</p>
+      <div class="stripe">
+        <span><b>Sharpe</b>0.96 &nbsp;<small>(book 1.05)</small></span>
+        <span><b>Total return</b>+259% &nbsp;<small>(book +348%)</small></span>
+        <span><b>Max DD</b>&minus;20% &nbsp;<small>(book &minus;23%)</small></span>
+        <span><b>Feared scenario</b>+0.3% &nbsp;<small>(book +3.1%)</small></span>
+      </div>
+      <div class="pc">
+        <div class="pro"><h4>For</h4><ul>
+          <li>In 2023&ndash;24 the combined Sharpe was 2.8 &mdash; superficially the best-looking result in the whole study</li>
+        </ul></div>
+        <div class="con"><h4>Against</h4><ul>
+          <li>That 2.8 <em>is</em> the 2023&ndash;24 solar crash, not a hedge &mdash; in 2025&ndash;26 it adds nothing (1.35 vs 1.49)</li>
+          <li><strong>It is an anti-hedge in the feared scenario</strong>: book +3.1% &rarr; +0.3% in those months, because &ldquo;theme de-rates while clean energy rallies&rdquo; is exactly when solar rips</li>
+          <li>Prior tests at larger size took the book&rsquo;s Sharpe from 0.69 to &minus;0.18 and its drawdown from &minus;24% to &minus;83%</li>
+        </ul></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="col">
+    <h3>The other six, briefly</h3>
+    <ul class="clean">
+      <li><strong>Short SPY 0.25&times;</strong> &mdash; the blunt beta hedge. Sharpe &minus;0.11; same de-levering point as XLI, with more tracking error.</li>
+      <li><strong>Short PAVE 0.25&times;</strong> &mdash; Sharpe &minus;0.05, drawdown &minus;7 points; a slightly worse XLI.</li>
+      <li><strong>Short GRID 0.25&times;</strong> &mdash; the purest theme-relative construction. Sharpe &minus;0.15; you are shorting your own thesis.</li>
+      <li><strong>Short the merchant generators (VST/NRG/CEG/TLN) 0.15&times;</strong> &mdash; the names literally long the power price. Sharpe &minus;0.22 <em>and</em> drawdown slightly <em>worse</em>: they run +0.6 correlated with the book, so this shorts the book&rsquo;s own beta.</li>
+      <li><strong>Short a crowded-adjacents basket 0.15&times;</strong> &mdash; Sharpe &minus;0.18; bleeds borrow and carry.</li>
+      <li><strong>Short data-centre REITs (DLR/EQIX) 0.10&times;</strong> &mdash; the runner-up &ldquo;insurance&rdquo; leg. Sharpe &minus;0.06, drawdown unchanged; as a <em>conditional</em> short (only while real yields rise) it is the one variant that helped in 2025&ndash;26, at a cost in 2023&ndash;24.</li>
+    </ul>
+  </div>
+
+  <figure class="bleed">
+    <div class="fig-card"><img alt="Two bar charts: change in Sharpe and change in max drawdown for each of the nine short candidates applied to the book. Every candidate reduces Sharpe (only China FXI is a hair positive); most reduce drawdown by 1 to 7 points, except merchant generators which make drawdown worse." src="__IMG_shorts_bars__"></div>
+    <figcaption>Every candidate, full backtest. Left: all but one <em>reduce</em> the
+    book&rsquo;s Sharpe. Right: most trim drawdown by 1&ndash;7 points &mdash; the
+    exception, shorting merchant generators, makes it worse.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3>Verdict &mdash; no short offset</h3>
+    <p>No equity short improves the book on a risk-adjusted basis. The candidates that
+    reduce drawdown do it by <strong>shrinking net exposure</strong> &mdash; and a cash or
+    T-bill weight does that more cheaply, at a higher Sharpe, with no borrow, no dividends
+    paid on a short, and half the gross exposure.</p>
+  </div>
+
+  <div class="tbl-scroll col" style="max-width:36rem">
+  <table>
+    <thead><tr><th>Full backtest</th><th>Sharpe</th><th>Total ret</th><th>Max DD</th></tr></thead>
+    <tbody>
+      <tr class="is-book"><td>Book, 100%</td><td>1.05</td><td>+348%</td><td>&minus;23%</td></tr>
+      <tr><td>Book + short XLI 0.25&times;</td><td>1.02</td><td>+238%</td><td>&minus;16%</td></tr>
+      <tr><td>75% book + 25% short-term Treasuries</td><td class="n-pos">1.06</td><td>+240%</td><td>&minus;18%</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="col">
+    <p>If the mandate requires a lower drawdown, the sanctioned dial is
+    <strong>75&ndash;85% book + short-term Treasuries</strong>, not a short. Otherwise
+    drawdown control lives in the three built-in overlays &mdash; volatility scaling, the
+    valuation trim, and the 15% reserve sleeve.</p>
+
+    <div class="foot">
+      <h3>Method &amp; caveats</h3>
+      <p><span class="kv">Window.</span> Backtest runs Jun 2017 &ndash; Aug 2026; all
+      headline statistics and figures use <span class="kv">Jan 2019</span> onward, before
+      which the screen holds fewer than eight listed names and the series is a near-empty
+      warm-up.</p>
+      <p><span class="kv">Sharpe.</span> (CAGR &minus; 3.76%) / annualised volatility;
+      3.76% &asymp; the mean 3-month US T-bill over the backtest. The same risk-free rate
+      is used in both sub-periods, which marginally flatters the 2023&ndash;24 figures.</p>
+      <p><span class="kv">Construction.</span> Book returns are the <span class="kv">screen
+      +val+sleeve</span> variant of the <span class="kv">electrification_strategy</span>
+      package. Overlays and the reserve sleeve are applied as daily-rebalanced constant
+      weights. Short overlays subtract <span class="kv">w &times;</span> the
+      instrument&rsquo;s daily return; broad-index candidates at
+      <span class="kv">w = 0.25</span>, thematic baskets at <span class="kv">w = 0.15</span>,
+      data-centre REITs at <span class="kv">w = 0.10</span>.</p>
+      <p><span class="kv">Feared scenario.</span> The 15 calendar months in which solar
+      (TAN) most outran the market &mdash; a proxy for &ldquo;the theme de-rates while
+      clean energy rallies.&rdquo;</p>
+      <p><span class="kv">Data.</span> Prices from Yahoo Finance adjusted close. VOLT
+      listed in 2024, so its full-window statistics are omitted and its fair window is
+      Jan 2025 &ndash; Aug 2026.</p>
+      <p style="margin-top:1.4rem; color:var(--ink-faint)">Simulated historical
+      performance. Past simulated results are not indicative of future performance. This
+      document is research, not investment advice.</p>
+    </div>
+  </div>
+
+</div>

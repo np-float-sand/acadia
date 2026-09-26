@@ -1,0 +1,18 @@
+,0
+n_months,112
+alpha_monthly,-6.913424433188463e-05
+alpha_annualized,-0.0008296109319826156
+t_alpha,-0.24854269022586295
+beta,-0.002897566855582825
+t_beta,-0.3243204548724196
+r2,0.0009553025012917216
+gate_a,False
+gate_b,False
+verdict,FAIL / NOT ADOPTED
+shipped_28name_sharpe,0.706
+shipped_28name_maxdd,-0.2391
+shipped_28name_cagr,0.1459
+shipped_28name_beta,0.5775553359618437
+n_lev,25
+n_fcf,25
+n_marg,24

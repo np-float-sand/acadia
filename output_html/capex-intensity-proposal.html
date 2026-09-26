@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capex-Intensity Long/Short</title>
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#f6f7f8; --ink:#14181d; --muted:#5a636d;
+  --border:#dcdfe3; --rule:#b9bfc6; --accent:#1f3d5c; --accent-soft:#f2f5f8;
+  --code-bg:#f6f7f8; --del:#9aa2ab;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16.5px/1.72 Charter,"Bitstream Charter","Iowan Old Style",Georgia,serif;
+  -webkit-font-smoothing:antialiased}
+.page{width:min(880px,100% - 3.5rem);margin:0 auto;padding:4rem 0 6rem}
+h1,h2,h3,h4{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  line-height:1.25;text-wrap:balance;font-weight:600;color:var(--ink)}
+h1{font-size:2.1rem;margin:0 0 .4rem;letter-spacing:-.018em;font-weight:650}
+h2{font-size:1.16rem;margin:2.8rem 0 .8rem;padding-bottom:.4rem;
+  border-bottom:1.5px solid var(--rule);letter-spacing:-.005em}
+h3{font-size:1rem;margin:1.9rem 0 .5rem;color:var(--accent)}
+h4{font-size:.94rem;margin:1.4rem 0 .4rem;color:var(--muted);font-weight:600}
+p,li{max-width:74ch}
+p{margin:0 0 1.05rem}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid #c9d3dd}
+a:hover{border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+hr{border:0;border-top:1px solid var(--rule);margin:2.8rem 0}
+del{color:var(--del)}
+strong{font-weight:700}
+em{font-style:italic}
+blockquote{margin:1.5rem 0;padding:1rem 1.3rem;border-left:3px solid var(--accent);
+  background:var(--accent-soft);font-size:1.02rem}
+blockquote p{margin:.3rem 0}
+code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:.84em;
+  background:var(--code-bg);border:1px solid var(--border);border-radius:2px;
+  padding:.06em .3em}
+pre{background:var(--code-bg);border:1px solid var(--border);padding:.9rem 1.1rem;
+  overflow-x:auto;line-height:1.5}
+pre code{background:none;border:0;padding:0;font-size:.82rem}
+.table-wrap{overflow-x:auto;margin:1.5rem 0;border-top:1.5px solid var(--rule);
+  border-bottom:1.5px solid var(--rule)}
+table{border-collapse:collapse;width:100%;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.86rem}
+th,td{padding:.6rem .8rem;text-align:left;vertical-align:top;
+  border-bottom:1px solid var(--border)}
+td{max-width:58ch;font-variant-numeric:tabular-nums}
+th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;border-bottom:1px solid var(--rule);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+img{max-width:100%;height:auto;display:block;margin:1.8rem 0;
+  border:1px solid var(--border)}
+ul,ol{padding-left:1.35rem;margin:0 0 1.05rem}
+li{margin:.32rem 0}
+.docmeta{display:none}
+.toc{border-top:1.5px solid var(--rule);border-bottom:1.5px solid var(--rule);
+  padding:1.1rem 0;margin:2rem 0 2.6rem}
+.toc-title{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.7rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-bottom:.6rem}
+.toc ul{padding-left:1.1rem;margin:.15rem 0}
+.toc>ul{padding-left:0;list-style:none;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:.88rem}
+.toc>ul>li{margin:.22rem 0}
+.toc a{color:var(--ink);border-bottom:0}
+.toc a:hover{color:var(--accent)}
+.idx{list-style:none;padding:0}
+.idx a{display:flex;justify-content:space-between;gap:1rem;padding:.5rem 0;
+  border-bottom:1px solid var(--border)}
+.idx .sz{color:var(--muted);font-size:.82rem}
+@media print{.toc{break-inside:avoid}h2{break-after:avoid}}
+
+.highlight pre{margin:0}
+.highlight .c,.highlight .c1,.highlight .cm{color:#6b7783;font-style:italic}
+.highlight .k,.highlight .kn,.highlight .kd{color:#a4459b;font-weight:600}
+.highlight .s,.highlight .s1,.highlight .s2{color:#2f7d4f}
+.highlight .n{color:inherit}
+.highlight .nb{color:#2f6690}
+.highlight .nf{color:#2f6690;font-weight:600}
+.highlight .mi,.highlight .mf{color:#b5651d}
+.highlight .o,.highlight .p{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="docmeta"><span>capex-intensity-proposal.md</span><span>1,006 words</span><span>132 lines</span></div><nav class="toc"><div class="toc-title">Contents</div><div class="toc">
+<ul>
+<li><a href="#1-investment-thesis">1. Investment thesis</a></li>
+<li><a href="#2-why-this-is-not-available-off-the-shelf">2. Why this is not available off the shelf</a></li>
+<li><a href="#3-performance">3. Performance</a></li>
+<li><a href="#4-comparison-with-available-alternatives">4. Comparison with available alternatives</a></li>
+<li><a href="#5-portfolio-characteristics">5. Portfolio characteristics</a></li>
+<li><a href="#6-risk-factors">6. Risk factors</a></li>
+<li><a href="#7-limitations-and-disclosures">7. Limitations and disclosures</a></li>
+</ul>
+</div>
+</nav><h1 id="capex-intensity-longshort">Capex-Intensity Long/Short</h1>
+<p><strong>Strategy summary — 22 September 2026</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Classification</strong></td>
+<td>Long/short equity, sector-focused (US power &amp; electrification)</td>
+</tr>
+<tr>
+<td><strong>Objective</strong></td>
+<td>Capture the electricity build-out through the firms that supply it, partly funded by shorting the firms that finance it</td>
+</tr>
+<tr>
+<td><strong>Universe</strong></td>
+<td>~150–190 US-listed issuers, defined mechanically from regulatory filings</td>
+</tr>
+<tr>
+<td><strong>Positions</strong></td>
+<td>~22 long / ~22 short</td>
+</tr>
+<tr>
+<td><strong>Turnover</strong></td>
+<td>~1.0× per annum</td>
+</tr>
+<tr>
+<td><strong>Risk control</strong></td>
+<td>20% annualised volatility target</td>
+</tr>
+<tr>
+<td><strong>Capacity constraint</strong></td>
+<td>Short book borrow (see §6)</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Implemented and tested. <strong>Not live; results are simulated.</strong></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="1-investment-thesis">1. Investment thesis</h2>
+<p>US electricity demand has inflected after two decades of flat consumption. Meeting it
+requires capital — generation, transmission, substations, switchgear, and the construction
+labour to install it.</p>
+<p>That capital is <strong>raised and spent by one set of companies, and earned by another.</strong></p>
+<blockquote>
+<p>Utilities, pipelines and miners <em>fund</em> the build-out and earn a regulated or commodity
+return on assets they must carry. Equipment manufacturers, electrical contractors and
+fuel-cycle suppliers <em>are paid by</em> the build-out and carry comparatively little of it on
+their own balance sheets.</p>
+<p>Both are exposed to the same activity. Only one converts it into revenue without
+simultaneously converting it into depreciation, rate-base risk and financing need.</p>
+</blockquote>
+<p>The strategy is long the second group and short the first. The separating measure is drawn
+from a single line item every issuer is required to file, and is computed strictly from
+information available on the day it was filed.</p>
+<h2 id="2-why-this-is-not-available-off-the-shelf">2. Why this is not available off the shelf</h2>
+<p>The universe is assembled from regulatory classification rather than an index provider's
+sector labels. Two consequences matter:</p>
+<ul>
+<li><strong>It reaches issuers that sector screens miss.</strong> A material part of the long book files
+  under classifications that bear no relation to energy, and no conventional sector filter
+  recovers them without admitting several hundred unrelated companies. Identifying and
+  correcting that gap is proprietary to this work.</li>
+<li><strong>It excludes issuers that sector screens wrongly include.</strong> Three large classification
+  groups that a naive energy screen would sweep in are deliberately removed.</li>
+</ul>
+<p>Both decisions are documented and reproducible internally, and are the principal reason the
+book differs from listed alternatives holding nominally similar names.</p>
+<h2 id="3-performance">3. Performance</h2>
+<p>Net of transaction costs. Risk-free rate 4%. The selection measure was identified using
+data through 2022; <strong>2023 onward is out-of-sample.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>period</th>
+<th>CAGR</th>
+<th>Volatility</th>
+<th>Sharpe</th>
+<th>Max drawdown</th>
+<th>Calmar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2019–2022 <em>(in-sample)</em></td>
+<td>11.0%</td>
+<td>21.1%</td>
+<td>0.41</td>
+<td>−29.1%</td>
+<td>0.38</td>
+</tr>
+<tr>
+<td><strong>2023–2026 <em>(out-of-sample)</em></strong></td>
+<td><strong>31.8%</strong></td>
+<td>21.1%</td>
+<td><strong>1.23</strong></td>
+<td>−22.7%</td>
+<td><strong>1.40</strong></td>
+</tr>
+<tr>
+<td><strong>2025–2026 <em>(out-of-sample)</em></strong></td>
+<td><strong>29.5%</strong></td>
+<td>21.6%</td>
+<td><strong>1.12</strong></td>
+<td>−22.6%</td>
+<td><strong>1.30</strong></td>
+</tr>
+<tr>
+<td>2019–2026</td>
+<td>20.6%</td>
+<td>21.1%</td>
+<td>0.80</td>
+<td>−29.1%</td>
+<td>0.71</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="Growth of $100, time under water, and worst drawdown against the available alternatives" src="img/capex_growth.png" /></p>
+<h2 id="4-comparison-with-available-alternatives">4. Comparison with available alternatives</h2>
+<p>Related exposure can be bought through listed funds. The relevant question is whether the
+strategy improves on them after their published fees.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>2023–26 Sharpe</th>
+<th>2023–26 Calmar</th>
+<th>2025–26 Sharpe</th>
+<th>2025–26 Calmar</th>
+<th>fee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Capex-intensity</strong></td>
+<td><strong>1.23</strong></td>
+<td><strong>1.40</strong></td>
+<td><strong>1.12</strong></td>
+<td><strong>1.30</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Smart-grid ETF</td>
+<td>1.02</td>
+<td>1.15</td>
+<td>0.88</td>
+<td>1.17</td>
+<td>0.57%</td>
+</tr>
+<tr>
+<td>Infrastructure ETF</td>
+<td>1.04</td>
+<td>0.94</td>
+<td>0.57</td>
+<td>0.64</td>
+<td>0.47%</td>
+</tr>
+<tr>
+<td>S&amp;P 500</td>
+<td>1.11</td>
+<td>1.13</td>
+<td>0.80</td>
+<td>0.93</td>
+<td>0.09%</td>
+</tr>
+<tr>
+<td>Industrials sector</td>
+<td>0.95</td>
+<td>0.99</td>
+<td>0.59</td>
+<td>0.79</td>
+<td>0.08%</td>
+</tr>
+<tr>
+<td>Utilities sector</td>
+<td>0.30</td>
+<td>0.47</td>
+<td>0.22</td>
+<td>0.51</td>
+<td>0.08%</td>
+</tr>
+</tbody>
+</table></div>
+<p>The strategy exceeds every listed alternative on both measures in both periods. The
+utilities sector — the most direct unmanaged expression of electricity exposure — is the
+weakest, consistent with the thesis, since utilities constitute the short book.</p>
+<h2 id="5-portfolio-characteristics">5. Portfolio characteristics</h2>
+<ul>
+<li><strong>Net long by construction.</strong> The short book is sized at a fraction of the long book. It
+  is a <strong>risk-management position, not a return driver</strong> — it is expected to lose money in
+  isolation and is held for its behaviour against the long book.</li>
+<li><strong>Low turnover.</strong> Approximately 1.0× per annum; the signal is a slow-moving balance-sheet
+  measure, not a trading signal.</li>
+<li><strong>No duration bet.</strong> Sensitivity to daily changes in 10-year real yields is statistically
+  indistinguishable from zero.</li>
+</ul>
+<h2 id="6-risk-factors">6. Risk factors</h2>
+<p><strong>6.1 Cycle dependence.</strong> Returns are earned while the capital cycle runs; in-sample Sharpe
+was 0.41. A formal exit condition is specified internally and monitored quarterly.</p>
+<p><strong>6.2 Rate environment.</strong> Although the book carries no measurable duration beta, it
+performs materially better when real yields are high or rising (Sharpe 0.95) than when they
+are low or falling (0.58). A sustained easing cycle is the adverse environment.</p>
+<p><strong>6.3 Short-side borrow.</strong> Several short-book constituents are small and may be
+unborrowable. The short book should be assumed partially unfillable, which caps capacity.</p>
+<p><strong>6.4 Concentration.</strong> Approximately 22 positions per side in a single sector.</p>
+<p><strong>6.5 Correlation to related mandates.</strong> Correlation to a long-only electrification book is
+approximately 0.78. This is not an independent allocation.</p>
+<h2 id="7-limitations-and-disclosures">7. Limitations and disclosures</h2>
+<p><strong>7.1 Survivorship.</strong> Price history is sourced from a provider that does not carry delisted
+securities. The long book is therefore flattered by the absence of failures and the short
+book understated. Resolution requires survivorship-free pricing, which is a stated
+pre-live condition.</p>
+<p><strong>7.2 Simulated.</strong> No capital has been allocated. All results are simulated and net of
+assumed costs.</p>
+<p><strong>7.3 Selection risk.</strong> The selection measure was chosen from a set of candidates evaluated
+against historical outcomes. The specification requires no such reference once stated, but
+forward observation is the only conclusive test.</p>
+<p><strong>7.4 Factor overlap.</strong> The measure is related to documented quality and capital-discipline
+factors. The strategy is a sector-specific application rather than an independent anomaly.</p>
+<hr />
+<p><em>Full specification, leg-level attribution, lexicon design study, cross-sector tests and
+the complete weakness register are held internally and available under agreement.</em></p>
+</div>
+</body>
+</html>

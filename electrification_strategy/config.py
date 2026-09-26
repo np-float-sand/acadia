@@ -53,6 +53,16 @@ HEDGE_SHORT_SIGNAL: str = "DFII10"
 HEDGE_SHORT_LOOKBACK_DAYS: int = 126
 HEDGE_SHORT_LAG_DAYS: int = 5
 
+# -- solar-rotation overlay (open item #17: 2026-09-06 probe, `screen +val+sleeve`
+# baseline; frozen from `scratchpad/utility_rotation.py` + `docs/electrification-
+# strategy-v1-results.md` "rotate INTO solar when rates fall" -- full Sharpe
+# 0.69->0.77, CAGR 14.4->16.8%, MaxDD -24%->-26.8%, +7% in the feared solar-squeeze
+# months). Opposite sign of the rejected DER-sleeve short. Reuses the same 6-month
+# real-yield-change / 5-day-lag signal as the hedge short above (HEDGE_SHORT_
+# LOOKBACK_DAYS / LAG_DAYS / SIGNAL), just triggered on FALLING rather than rising.
+SOLAR_ROTATION_TICKERS: tuple[str, ...] = ("ENPH", "SEDG", "CHPT", "RUN", "BLNK", "STEM")
+SOLAR_ROTATION_WEIGHT: float = 0.10
+
 # -- short interest diagnostic (spec 3.1) --------------------------------
 SHORT_INTEREST_CACHE_FILE: str = "short_interest_history.parquet"
 
@@ -82,3 +92,33 @@ WINNER_MAXDD_MAX: float = -0.27
 WINNER_SUBWINDOW_SHARPE_MIN: float = 0.4
 WINNER_FEARED_PNL_MIN: float = -0.02
 WINNER_DRAG_MAX: float = 0.06
+
+# -- mechanical `screen_auto` construction (2026-09-23) -------------------
+# Point-in-time replacements for the hand-recorded seed list and its three
+# judgment columns. Every term is an EXACT phrase -- unquoted, EDGAR full-text
+# search matches any word in the string.
+AUTO_LOOKBACK_YEARS: int = 2           # universe-year Y reads filings from [Y-2, Y-1]
+AUTO_MIN_HITS: int = 1                 # at least one filing in the window uses the term
+AUTO_POLICY_MIN_HITS: int = 1          # filings in the window that must flag policy
+AUTO_CAPEX_QUANTILE: float = 0.5       # "sells into the buildout" = light half
+AUTO_FORMS: str = "10-K"
+
+# Who the filer sells to, in its own words. Replaces `customer_institutional`.
+# These are NOT exclusive to suppliers -- a utility writes "data center" about its
+# customers -- which is why this filter only ever runs after the capex-light cut.
+AUTO_CUSTOMER_TERMS: tuple[str, ...] = (
+    '"data center"',
+    '"data centers"',
+    '"substation"',
+    '"switchgear"',
+    '"transmission and distribution"',
+    '"grid modernization"',
+    '"electric utilities"',
+)
+# Subsidy vocabulary. Replaces `low_policy_dependence` (a hit FLAGS the name).
+AUTO_POLICY_TERMS: tuple[str, ...] = (
+    '"investment tax credit"',
+    '"production tax credit"',
+    '"net energy metering"',
+    '"advanced manufacturing production credit"',
+)

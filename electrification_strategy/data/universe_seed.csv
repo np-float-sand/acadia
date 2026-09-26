@@ -1,41 +1,41 @@
 # customer_institutional : sells B2B to utilities / hyperscalers / gov / large industrial (vs residential / small-commercial)
 # earnings_valued        : trades on real trailing earnings (P/E), not pre-earnings EV/Sales
 # low_policy_dependence   : 10-K risk factors do NOT lean on ITC / 45X / PTC / NEM / NEVI
-# All four judgment columns are 2026-vintage documented calls, never revised from results (see README caveat).
-ticker,sub_industry,profitable_2026,customer_institutional,earnings_valued,low_policy_dependence
-ETN,electrical_equipment,true,true,true,true
-HUBB,electrical_equipment,true,true,true,true
-NVT,electrical_equipment,true,true,true,true
-EMR,electrical_equipment,true,true,true,true
-AME,electrical_equipment,true,true,true,true
-RRX,electrical_equipment,true,true,true,true
-POWL,electrical_equipment,true,true,true,true
-ATKR,electrical_equipment,true,true,true,true
-AEIS,electrical_equipment,true,true,true,true
-GNRC,electrical_equipment,true,false,true,true
-AYI,electrical_equipment,true,true,true,true
-ENS,electrical_equipment,true,true,true,true
-THR,electrical_equipment,true,true,true,true
-WCC,electrical_equipment,true,true,true,true
-GEV,heavy_electrical,true,true,true,false
-VRT,dc_thermal,true,true,true,true
-PWR,electrical_e&c,true,true,true,true
-MYRG,electrical_e&c,true,true,true,true
-PRIM,electrical_e&c,true,true,true,false
-EME,electrical_e&c,true,true,true,true
-FIX,electrical_e&c,true,true,true,true
-MTZ,electrical_e&c,true,true,true,false
-IESC,electrical_e&c,true,true,true,true
-APG,electrical_e&c,true,true,true,true
-TT,dc_thermal,true,true,true,true
-CARR,dc_thermal,true,true,true,true
-JCI,dc_thermal,true,true,true,true
-SPXC,dc_thermal,true,true,true,true
-MOD,dc_thermal,true,true,true,true
-FLNC,grid_scale_storage,false,true,false,false
-STEM,grid_scale_storage,false,true,false,false
+# All three judgment columns are 2026-vintage documented calls, never revised from results (see README caveat).
+ticker,sub_industry,customer_institutional,earnings_valued,low_policy_dependence
+ETN,electrical_equipment,true,true,true
+HUBB,electrical_equipment,true,true,true
+NVT,electrical_equipment,true,true,true
+EMR,electrical_equipment,true,true,true
+AME,electrical_equipment,true,true,true
+RRX,electrical_equipment,true,true,true
+POWL,electrical_equipment,true,true,true
+ATKR,electrical_equipment,true,true,true
+AEIS,electrical_equipment,true,true,true
+GNRC,electrical_equipment,false,true,true
+AYI,electrical_equipment,true,true,true
+ENS,electrical_equipment,true,true,true
+THR,electrical_equipment,true,true,true
+WCC,electrical_equipment,true,true,true
+GEV,heavy_electrical,true,true,false
+VRT,dc_thermal,true,true,true
+PWR,electrical_e&c,true,true,true
+MYRG,electrical_e&c,true,true,true
+PRIM,electrical_e&c,true,true,false
+EME,electrical_e&c,true,true,true
+FIX,electrical_e&c,true,true,true
+MTZ,electrical_e&c,true,true,false
+IESC,electrical_e&c,true,true,true
+APG,electrical_e&c,true,true,true
+TT,dc_thermal,true,true,true
+CARR,dc_thermal,true,true,true
+JCI,dc_thermal,true,true,true
+SPXC,dc_thermal,true,true,true
+MOD,dc_thermal,true,true,true
+FLNC,grid_scale_storage,true,false,false
+STEM,grid_scale_storage,true,false,false
 # data_center_reit rows (Task 7 probe): earnings_valued is interpreted as "trades on
 # trailing FFO/AFFO multiple, not a pre-cash-flow growth story" -- the REIT-appropriate
 # reading of the same underlying test, not literal trailing P/E.
-IRM,data_center_reit,true,true,true,true
-AMT,data_center_reit,true,true,false,true
+IRM,data_center_reit,true,true,true
+AMT,data_center_reit,true,false,true

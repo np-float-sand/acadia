@@ -16,6 +16,8 @@ output_grid_regime/
 # SDD (subagent-driven-development) scratch workspaces
 .superpowers/
 output_electrification/
+output_capex_intensity/
+output_html/
 
 # scratch / probe workspace (throwaway; findings live in docs/)
 scratchpad/
