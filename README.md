@@ -1,5 +1,24 @@
 # Grid Resilience Strategy
 
+> ## PRODUCTION STRATEGY (as of 2026-09-26)
+>
+> **Screened Electrification — one-score long/short.** Long the top half (65% hold buffer) of the
+> screened electrification suppliers and short the bottom fifth of the on-theme universe, both ranked
+> on one fourteen-signal score; vol target + stretch cut + 15% GLD/IEF sleeve on the long side; $0.25
+> short per $1 of the fund; step-aside rule; 10bp costs. Sharpe 1.34 full / 2.05 since 2023.
+>
+> | what | where |
+> |---|---|
+> | Code that generates it | `research/electrification_strategy_probes/build_onescore_proposal.py` (runs `build_tophalf_proposal.main()` + `investor_book.build` with the one-score ranking) |
+> | Charts, `stats.json`, `extras.json` | `output_html/img/tophalf_powerlong/` |
+> | Investor write-up | `output_html/screened_elec_selection_investor_edit_vpowerlong.md` (+ `.html`) |
+> | Rule book (exact rules; comparisons in its INTERNAL section) | `output_html/screened_elec_strategy_log_vpowerlong.md` |
+> | Decision record | `docs/RESEARCH-LOG.md` §1 and the 2026-09-26 ledger rows |
+>
+> **Superseded, kept for reference:** the two-signal ranking (capex-light + revenue acceleration) —
+> `build_tophalf_proposal.py` run directly, figures `output_html/img/tophalf/`, write-up
+> `output_html/screened_elec_selection_investor_edit.md`, rule book `output_html/screened_elec_strategy_log.md`.
+
 A quantitative long/short equity strategy that trades U.S. utility stocks based on their sensitivity to electricity grid stress events.
 
 > **Sibling strategy modules:** `grid_equipment_basket/` — a long-only thematic basket of grid / data-center equipment suppliers (see its own README and `docs/grid-equipment-basket-step1-results.md`).
@@ -10,6 +29,8 @@ A quantitative long/short equity strategy that trades U.S. utility stocks based 
 >
 > `transmission_rate_base/` — proposal B: rank ~34 US regulated electric utilities by FERC transmission-rate-base growth (FERC Form 1 via PUDL), long the fast compounders / short the flat ones. Pre-registered gate **FAILED** on all three hard conditions: the five signal quintiles all earned ~the utility-sector return (rank-IC −0.02, Q5−Q1 Sharpe −0.6, no residual alpha). Negative result, **no strategy module**. Run: `python -m transmission_rate_base --offline`. See `docs/transmission-rate-base-results.md`.
 
+- `capex_intensity_strategy/` -- rules-based long/short over the US power / electrification complex, **fully point-in-time**: universe from SEC filer SIC codes plus a fuel-cycle full-text lexicon, score is TTM capex/revenue keyed on each filing's `filed` date. Long asset-light suppliers, short capital-heavy owners. 2023-26 Sharpe 1.23 / Calmar 1.40; 2025-26 1.12 / 1.30. Proposal: docs/capex-intensity-proposal.md.
+- `utils/` -- standalone tools. `render_md.py` renders the docs to self-contained HTML (`python utils/render_md.py docs/ --out output_html --index`).
 - `backlog_factor/` -- breadth-first event study: does a quarterly backlog/RPO growth *surprise* drift into industry-adjusted returns across ~109 order-driven industrials? Pre-registered gate FAILED (non-monotone, ~1-week bump that reverses); negative result, no factor built. See docs/backlog-surprise-factor-results.md.
 
 ## Executive Summary

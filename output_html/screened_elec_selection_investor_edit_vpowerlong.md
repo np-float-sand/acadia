@@ -458,9 +458,9 @@ same regression was re-run with style factors added alongside GRID.
 | 2023 – Aug 2026, controlling for | alpha a year | t-statistic |
 |---|---|---|
 | GRID only (as above) | 21.7% | 3.9 |
-| Academic factors | 19.0% | 3.6 |
-| Academic factors + GRID | 18.9% | 3.8 |
-| ETF style factors + GRID | **23.0%** | **4.6** |
+| Academic factors | 18.7% | 3.6 |
+| Academic factors + GRID | 18.6% | 3.8 |
+| ETF style factors + GRID | **22.8%** | **4.6** |
 
 **Academic factors** (daily, Kenneth French data library): the five Fama-French factors (market,
 size, value, profitability and investment) plus Carhart momentum.
