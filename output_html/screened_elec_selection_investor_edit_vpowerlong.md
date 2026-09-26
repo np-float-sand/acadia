@@ -436,7 +436,7 @@ regained until June 2022.
 A regression of each book's daily return on GRID's (or the S&P's): whatever is left after accounting
 for exposure to the theme is alpha. A t-statistic above 2 means the result is unlikely to be luck.
 
-| 2023 – Aug 2026 | alpha a year | t-statistic |
+| 2023 – Aug 2026 | alpha per year | t-statistic |
 |---|---|---|
 | Long/short vs GRID | **21.7%** | **3.9** |
 | Long/short vs S&P 500 | 20.8% | 3.4 |
@@ -451,7 +451,7 @@ for exposure to the theme is alpha. A t-statistic above 2 means the result is un
 The strategy's daily return splits into the pieces below; each piece's alpha against GRID adds up
 exactly to the total.
 
-| 2023 – Aug 2026 | alpha vs GRID, a year | share |
+| 2023 – Aug 2026 | alpha per year, ex-GRID | share |
 |---|---|---|
 | *Long stock selection: the held names, at the book's average size (67% exposure)* | **11.8%** | 54% |
 | *Short stock selection: the shorted names doing worse than their theme exposure implies* | 2.0% | 9% |
@@ -479,12 +479,12 @@ exactly to the total.
 The alpha above could in principle be a disguised bet on well-known investment styles. To check, the
 same regression was re-run with style factors added alongside GRID.
 
-| 2023 – Aug 2026, controlling for | alpha a year | t-statistic |
+| 2023 – Aug 2026, net of | alpha per year | t-statistic |
 |---|---|---|
-| GRID only (as above) | 21.7% | 3.9 |
-| Academic factors | 18.7% | 3.6 |
-| Academic factors + GRID | 18.6% | 3.8 |
-| ETF style factors + GRID | **22.8%** | **4.6** |
+| ex-GRID *(as above)* | 21.7% | 3.9 |
+| ex-academic factors | 18.7% | 3.6 |
+| ex-academic factors and GRID | 18.6% | 3.8 |
+| ex-ETF style factors and GRID | **22.8%** | **4.6** |
 
 **Academic factors** (daily, Kenneth French data library): the five Fama-French factors (market,
 size, value, profitability and investment) plus Carhart momentum.
