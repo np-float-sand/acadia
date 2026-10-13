@@ -1,0 +1,79 @@
+# Old exchange tickers for dropouts whose last 10-K carries no machine-readable trading symbol.
+# Recorded from public memory; each is accepted only if Tiingo's endDate for it falls inside
+# [last_10k - 1y, last_10k + 2y] (guards against reused tickers). Unverified rows are dropped.
+name|ticker
+WILLIAMS PARTNERS L.P.|WPZ
+Energy Transfer, LP|ETP
+SCANA CORP|SCG
+ONEOK Partners LP|OKS
+CALPINE CORP|CPN
+WGL HOLDINGS INC|WGL
+TECO ENERGY INC|TE
+Avangrid, Inc.|AGR
+DYNEGY INC.|DYN
+ESTERLINE TECHNOLOGIES CORP|ESL
+Spectra Energy Partners, LP|SEP
+Spectra Energy Corp.|SE
+EnLink Midstream Partners, LP|ENLK
+Antero Midstream Partners LP|AM
+Dominion Energy Midstream Partners, LP|DM
+BRIGGS & STRATTON CORP|BGG
+Cheniere Energy Partners LP Holdings, LLC|CQH
+RUDOLPH TECHNOLOGIES INC|RTEC
+AVX Corp|AVX
+ABAXIS INC|ABAX
+CONTROL4 CORP|CTRL
+Alliance Holdings GP, L.P.|AHGP
+ROFIN SINAR TECHNOLOGIES INC|RSTI
+FREYR Battery|FREY
+Archrock Partners, L.P.|APLP
+8point3 Energy Partners LP|CAFD
+TERRAFORM GLOBAL, INC.|GLBL
+TerraForm Power NY Holdings, Inc.|TERP
+WESTMORELAND COAL Co|WLB
+SEQUENOM INC|SQNM
+LANDAUER INC|LDR
+PennTex Midstream Partners, LP|PTXP
+CLOUD PEAK ENERGY INC.|CLD
+Midcoast Energy Partners, L.P.|MEP
+MAXWELL TECHNOLOGIES INC|MXWL
+DELTA NATURAL GAS CO INC|DGAS
+DOMINION QUESTAR CORP|STR
+QualTek Services Inc.|QTEK
+Sunworks, Inc.|SUNW
+Sunnova Energy International Inc.|NOVA
+Houston Wire & Cable CO|HWCC
+ANIXTER INTERNATIONAL INC|AXE
+Altra Industrial Motion Corp.|AIMC
+KEMET CORP|KEM
+Aegion Corp|AEGN
+CIRCOR INTERNATIONAL INC|CIR
+BARNES GROUP INC|B
+CUBIC CORP /DE/|CUB
+Velodyne Lidar, Inc.|VLDR
+COVANTA HOLDING CORP|CVA
+Pattern Energy Group Inc.|PEGI
+EL PASO ELECTRIC CO /TX/|EE
+ALLETE INC|ALE
+SOUTH JERSEY INDUSTRIES INC|SJI
+GREAT PLAINS ENERGY INC|GXP
+FARO TECHNOLOGIES INC|FARO
+MTS SYSTEMS CORP|MTSC
+Crestwood Equity Partners LP|CEQP
+Enable Midstream Partners, LP|ENBL
+EQM Midstream Partners, LP|ETRN
+TC PIPELINES LP|TCP
+Summit Midstream Partners, LP|SMLP
+DCP Midstream, LP|DCP
+Tallgrass Energy, LP|TGE
+Tallgrass Energy Partners, LP|TEP
+CNX Midstream Partners LP|CNXM
+RATTLER MIDSTREAM LP|RTLR
+EQGP Holdings, LP|EQGP
+Rice Midstream Partners LP|RMP
+Columbia Pipeline Partners LP|CPPL
+Targa Resources Partners LP|NGLS
+Heliogen, Inc.|HLGN
+Hyzon Motors Inc.|HYZN
+GOLDFIELD CORP|GV
+EnSync, Inc.|ESNC

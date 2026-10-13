@@ -99,6 +99,13 @@ alternative, not the default.
   `screen_auto`, not snapshots: regenerate with
   `python -m electrification_strategy.build_auto_screen [--refresh]`. `--refresh` re-queries
   EDGAR full-text search (~30 min, one request per candidate filer per phrase).
+- `data/vocabulary_hits_dc_excluded.csv` -- **build artifact** (2026-10-12): the "data center(s)"
+  full-text hits that don't count, because the filing's Item 1 (Business) uses the term only for the
+  filer's own IT (cybersecurity boilerplate). Regenerate with
+  `python -m electrification_strategy.build_vocab_filter`. `auto_screen.load_vocabulary_hits()` drops
+  these hits and every hit of gas transmission/distribution filers (`config.RULE2_EXCLUDED_SICS` =
+  SIC 4922/4923/4924), so gas pipelines and distributors can't enter the rule-2 short pool. Pass
+  `clean=False` for the raw hits. See `../docs/survivorship-audit-results.md`.
 
 ## Caveats (carry into any pitch)
 

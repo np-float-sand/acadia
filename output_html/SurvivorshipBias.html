@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Survivorship bias check — one-score long/short</title>
+<script>
+try{var t=localStorage.getItem('md2html-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f6f6f3; --surface:#ffffff; --surface-2:#efefe9;
+  --ink:#1c2026; --ink-soft:#5a626d; --ink-faint:#8b929c;
+  --line:#e3e3dc; --line-soft:#ecebe4;
+  --accent:#1f5fa8; --accent-ink:#17497f; --accent-soft:#e7eef7;
+  --code-bg:#f2f1ec; --mark:#fbe7b0;
+  --sel:#cfe0f2;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+    --ink:#e6e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+    --line:#2c313a; --line-soft:#242a32;
+    --accent:#5c9bd6; --accent-ink:#9cc4e8; --accent-soft:#1e2b3a;
+    --code-bg:#1f242b; --mark:#5a4a12; --sel:#26374a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14171b; --surface:#1b1e23; --surface-2:#22262d;
+  --ink:#e6e9ec; --ink-soft:#9aa3ad; --ink-faint:#727a84;
+  --line:#2c313a; --line-soft:#242a32;
+  --accent:#5c9bd6; --accent-ink:#9cc4e8; --accent-soft:#1e2b3a;
+  --code-bg:#1f242b; --mark:#5a4a12; --sel:#26374a;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  font-size:17px; line-height:1.66; letter-spacing:-.003em;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--sel)}
+.doc{max-width:46rem; margin:0 auto; padding:clamp(2rem,5vw,4rem) clamp(1.1rem,4vw,2rem) 6rem}
+
+h1,h2,h3,h4,h5,h6{font-family:"Newsreader",Georgia,serif; font-weight:500;
+  line-height:1.2; text-wrap:balance; letter-spacing:-.012em; margin:2.4em 0 .5em}
+h1{font-size:clamp(2rem,5vw,2.7rem); margin:.1em 0 .5em}
+h2{font-size:clamp(1.45rem,3.4vw,1.85rem); padding-bottom:.24em; border-bottom:1px solid var(--line)}
+h3{font-size:1.28rem; font-weight:600}
+h4{font-size:1.08rem; font-weight:600; color:var(--ink-soft)}
+h5,h6{font-size:.95rem; font-weight:600; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.04em; font-family:"IBM Plex Mono",monospace}
+h1+p,h2+p,h3+p{margin-top:.2em}
+
+p{margin:1em 0}
+a{color:var(--accent); text-underline-offset:2px; text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+a:hover{text-decoration-color:currentColor}
+strong{font-weight:600}
+small{color:var(--ink-soft)}
+hr{border:none; border-top:1px solid var(--line); margin:2.8em 0}
+mark{background:var(--mark); color:inherit; padding:.05em .2em; border-radius:3px}
+
+ul,ol{margin:1em 0; padding-left:1.5em}
+li{margin:.35em 0}
+li>ul,li>ol{margin:.3em 0}
+dl{margin:1em 0}
+dt{font-weight:600; margin-top:.8em}
+dd{margin:.2em 0 .2em 1.4em; color:var(--ink-soft)}
+
+blockquote{margin:1.4em 0; padding:.4em 0 .4em 1.15em; border-left:3px solid var(--accent);
+  color:var(--ink-soft)}
+blockquote p{margin:.5em 0}
+
+code,kbd,samp{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.88em}
+:not(pre)>code{background:var(--code-bg); padding:.12em .38em; border-radius:4px;
+  border:1px solid var(--line-soft)}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:9px;
+  padding:1em 1.15em; overflow-x:auto; margin:1.3em 0; line-height:1.55}
+pre code{font-size:.85em; background:none; border:none; padding:0}
+
+.table-wrap{overflow-x:auto; margin:1.5em 0; border:1px solid var(--line);
+  border-radius:9px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:.9rem}
+th,td{text-align:left; padding:.55rem .8rem; border-bottom:1px solid var(--line-soft);
+  vertical-align:top}
+thead th{font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:.75rem;
+  text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft);
+  background:var(--surface-2); border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+td:has(+td),th:has(+th){white-space:normal}
+table td[align="right"],table th[align="right"]{text-align:right; font-variant-numeric:tabular-nums}
+table td[align="center"],table th[align="center"]{text-align:center}
+
+img{max-width:100%; height:auto; border-radius:6px}
+.footnote{font-size:.9rem; color:var(--ink-soft)}
+.footnote ol{padding-left:1.2em}
+.headerlink{margin-left:.35em; color:var(--ink-faint); text-decoration:none; opacity:0;
+  transition:opacity .12s}
+h1:hover .headerlink,h2:hover .headerlink,h3:hover .headerlink,
+h4:hover .headerlink{opacity:1}
+.toc{background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+  padding:.8em 1.1em; margin:1.6em 0; font-size:.92rem}
+.toc>ul{margin:.2em 0}
+.toc ul{list-style:none; padding-left:1em}
+.toc>ul{padding-left:0}
+.toc a{color:var(--ink-soft); text-decoration:none}
+.toc a:hover{color:var(--accent)}
+
+.theme-toggle{position:fixed; top:.9rem; right:.9rem; z-index:9;
+  font:500 .72rem/1 "IBM Plex Mono",monospace; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink-soft); background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:.5em .9em; cursor:pointer;
+  box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.theme-toggle:hover{color:var(--ink); border-color:var(--ink-faint)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+
+@media print{
+  :root,:root[data-theme="dark"]{
+    --ground:#fff; --surface:#fff; --surface-2:#f3f2ee;
+    --ink:#1c2026; --ink-soft:#4a525c; --ink-faint:#8b929c;
+    --line:#dcdcd4; --line-soft:#e8e7e0; --code-bg:#f4f3ee;
+  }
+  body{font-size:10.5pt}
+  .doc{max-width:none; padding:0}
+  .theme-toggle{display:none}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3,h4{break-after:avoid}
+  pre,blockquote,img,figure{break-inside:avoid}
+  .table-wrap{break-inside:auto}          /* long tables may span pages */
+  tr,li{break-inside:avoid}
+  thead{display:table-header-group}
+  h2{border-bottom-color:#d8d8d0}
+  table{font-size:.82rem}                 /* claw back width for many-column tables */
+  th,td{padding:.42rem .5rem}
+}
+@page{size:A4; margin:14mm 11mm;
+  @bottom-center{content:counter(page) " / " counter(pages); font:9pt Georgia,serif; color:#777}}
+</style>
+</head>
+<body>
+<button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle light or dark theme"></button>
+<main class="doc">
+<h1 id="survivorship-bias-check-one-score-longshort">Survivorship bias check — one-score long/short<a class="headerlink" href="#survivorship-bias-check-one-score-longshort" title="Permanent link">#</a></h1>
+<p><em>Tested 2026-10-02 · backtest window January 2019 – August 2026</em></p>
+<h2 id="the-question">The question<a class="headerlink" href="#the-question" title="Permanent link">#</a></h2>
+<p>The backtest draws its stocks from SEC filers in power and electrical-equipment industry codes, priced from a
+data source that only carries <strong>companies still listed today</strong>. Companies that went bankrupt, were taken over or
+delisted during the backtest are missing. If the strategy would have bought losers or shorted takeover targets
+among them, the reported results are too good.</p>
+<p>To test this we found the missing companies, priced them, put them back in the pool, and re-ran the strategy
+unchanged.</p>
+<h2 id="headline">Headline<a class="headerlink" href="#headline" title="Permanent link">#</a></h2>
+<p><strong>Putting the missing companies back barely changes the result.</strong> Sharpe moves by 0.07 or less in every
+period, with or without the step-aside rule.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>2023 – Aug 2026</th>
+<th>Reported (survivors only)</th>
+<th>With missing names added</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sharpe ratio</td>
+<td><strong>2.05</strong></td>
+<td><strong>2.00</strong></td>
+</tr>
+<tr>
+<td>Annual return</td>
+<td>36.8%</td>
+<td>35.8%</td>
+</tr>
+<tr>
+<td>Volatility</td>
+<td>13.8%</td>
+<td>13.8%</td>
+</tr>
+<tr>
+<td>Maximum drawdown</td>
+<td>−10.2%</td>
+<td>−10.4%</td>
+</tr>
+<tr>
+<td>Calmar ratio</td>
+<td>3.62</td>
+<td>3.46</td>
+</tr>
+<tr>
+<td>Sortino ratio</td>
+<td>2.92</td>
+<td>2.83</td>
+</tr>
+<tr>
+<td>Alpha vs GRID ETF</td>
+<td>21.7% a year (t 3.86)</td>
+<td>20.8% a year (t 3.72)</td>
+</tr>
+<tr>
+<td>Beta to S&amp;P 500</td>
+<td>0.54</td>
+<td>0.54</td>
+</tr>
+</tbody>
+</table></div>
+<p>The step-aside rule does not trigger after 2022, so these 2023+ figures are the same with and without it.</p>
+<h3 id="whole-period-and-201922">Whole period and 2019–22<a class="headerlink" href="#whole-period-and-201922" title="Permanent link">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Period</th>
+<th>Sharpe</th>
+<th>Annual return</th>
+<th>Max drawdown</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>With step-aside</strong> (the strategy)</td>
+<td>2019 – Aug 2026</td>
+<td>1.34 → 1.36</td>
+<td>20.8% → 20.5%</td>
+<td>−11.1% → −10.4%</td>
+</tr>
+<tr>
+<td></td>
+<td>2019 – 2022</td>
+<td>0.44 → 0.49</td>
+<td>7.9% → 8.1%</td>
+<td>−11.1% → −8.6%</td>
+</tr>
+<tr>
+<td><strong>Without step-aside</strong></td>
+<td>2019 – Aug 2026</td>
+<td>1.38 → 1.40</td>
+<td>25.1% → 25.2%</td>
+<td>−13.9% → −16.5%</td>
+</tr>
+<tr>
+<td></td>
+<td>2019 – 2022</td>
+<td>0.79 → 0.86</td>
+<td>15.4% → 16.2%</td>
+<td>−13.9% → −16.5%</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>Reported → with missing names added.</em> The one material difference is drawdown without the step-aside rule:
+the extra short positions hurt in 2020–22, the stretch the rule sits out. With the rule on, the drawdown is
+slightly smaller.</p>
+<h2 id="which-companies-were-missing">Which companies were missing<a class="headerlink" href="#which-companies-were-missing" title="Permanent link">#</a></h2>
+<p>Of 2,571 SEC filers in the strategy's industry codes, 2,196 have no stock ticker today. Most disappeared
+before 2016. <strong>229 dropped out during the backtest years</strong>; we could match and price <strong>57</strong> of them that were
+still trading after January 2019. Those 57 were added to the pool.</p>
+<h3 id="what-the-strategy-did-with-them">What the strategy did with them<a class="headerlink" href="#what-the-strategy-did-with-them" title="Permanent link">#</a></h3>
+<p>The added names pass through the same rules as every other stock — trading-volume floor, screen, fourteen-signal
+score — so most never qualified.</p>
+<ul>
+<li><strong>21 of 57</strong> passed the $10 million-a-day trading-volume floor at some point.</li>
+<li><strong>8 were actually traded</strong>: 2 on the long side, 7 on the short side (Barnes on both, at different times).</li>
+<li>Average names held moved from 9.9 to 10.3 (long) and 16.4 to 17.6 (short).</li>
+</ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Ticker</th>
+<th>Company</th>
+<th>How it left</th>
+<th>Long</th>
+<th>Short</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td>Barnes Group</td>
+<td>Taken private by Apollo, Jan 2025</td>
+<td>✅ ~2½ years</td>
+<td>✅ 7 quarters</td>
+</tr>
+<tr>
+<td>ESL</td>
+<td>Esterline Technologies</td>
+<td>Acquired, Mar 2019</td>
+<td>✅ ~3 months</td>
+<td></td>
+</tr>
+<tr>
+<td>ALE</td>
+<td>ALLETE</td>
+<td>Taken private, Dec 2025</td>
+<td></td>
+<td>✅ 10 quarters</td>
+</tr>
+<tr>
+<td>ARCH</td>
+<td>Arch Resources</td>
+<td>Merged into Core Natural Resources, Jan 2025</td>
+<td></td>
+<td>✅ 9 quarters</td>
+</tr>
+<tr>
+<td>AGR</td>
+<td>Avangrid</td>
+<td>Taken private by Iberdrola, Dec 2024</td>
+<td></td>
+<td>✅ 7 quarters</td>
+</tr>
+<tr>
+<td>DCP</td>
+<td>DCP Midstream</td>
+<td>Acquired, Jun 2023</td>
+<td></td>
+<td>✅ 5 quarters</td>
+</tr>
+<tr>
+<td>CEQP</td>
+<td>Crestwood Equity</td>
+<td>Acquired, Nov 2023</td>
+<td></td>
+<td>✅ 5 quarters</td>
+</tr>
+<tr>
+<td>SJI</td>
+<td>South Jersey Industries</td>
+<td>Taken private, Feb 2023</td>
+<td></td>
+<td>✅ 3 quarters</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Qualified but never picked (13):</strong> Equitrans Midstream, EQM Midstream, EnLink Midstream, EnLink Midstream
+Partners, TC PipeLines, Covanta, Pattern Energy, TerraForm Power, Calpine, Altra Industrial Motion, Anixter,
+Control4, Hyzon Motors.</p>
+<p><strong>Added but never qualified (36)</strong> — too thinly traded, or gone before 2019: Houston Wire &amp; Cable, Aegion,
+Briggs &amp; Stratton, FARO, MTS Systems, Rudolph Technologies, IntriCon, Maxwell, UQM, Goldfield, Velodyne,
+Berkshire Grey, Snap One, Enable Midstream, Summit Midstream, Rattler Midstream, CNX Midstream, Archrock
+Partners, Altus Power, Heliogen, Emeren, Just Energy, EnSync, Westmoreland Coal, Westmoreland Resource
+Partners, and eleven micro-caps and blank-check companies.</p>
+<h3 id="why-the-effect-is-small">Why the effect is small<a class="headerlink" href="#why-the-effect-is-small" title="Permanent link">#</a></h3>
+<p>Almost every missing company that qualified was a utility, pipeline or coal producer. They spend heavily on
+plant, so they fail the long book's capital-light screen and land in the short pool. Most of them later
+<strong>left through a takeover at a premium</strong>, which costs a short seller money. So survivorship here mainly removes
+takeover targets from the short book, not bankruptcies from the long book. The long book picked only Barnes,
+which made money.</p>
+<h2 id="companies-we-could-not-include">Companies we could not include<a class="headerlink" href="#companies-we-could-not-include" title="Permanent link">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Company</th>
+<th>How it left</th>
+<th>Would it have qualified?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sunnova Energy</strong></td>
+<td>Bankrupt, Jun 2025</td>
+<td><strong>Likely</strong> — heavily traded 2020–25; a probable short candidate</td>
+</tr>
+<tr>
+<td>QualTek Services</td>
+<td>Bankrupt, 2023</td>
+<td>Borderline, probably too thinly traded</td>
+</tr>
+<tr>
+<td>Sunworks</td>
+<td>Bankrupt, 2024</td>
+<td>Probably not — too thinly traded</td>
+</tr>
+<tr>
+<td>Cloud Peak Energy</td>
+<td>Bankrupt, 2019</td>
+<td>Probably not</td>
+</tr>
+<tr>
+<td>Southcross, Electriq Power, XT Energy, Arotech</td>
+<td>Acquired / delisted</td>
+<td>Probably not</td>
+</tr>
+</tbody>
+</table></div>
+<p>No free price history exists for these. <strong>Sunnova is the one that matters.</strong> If the strategy had shorted it,
+a rough estimate is +1% a year and +0.05 to +0.07 Sharpe for 2023+, which would put the result at roughly
+<strong>2.00–2.07 against the reported 2.05</strong>. This estimate is from approximate prices and was not run.</p>
+<h2 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">#</a></h2>
+<ul>
+<li><strong>Prices for delisted companies</strong> come from Tiingo. Each series is cut at the company's exit to avoid
+  ticker re-use (for example, "B" now belongs to Barrick Gold). Barnes's trading-volume figure looks inflated
+  by this, but Barnes qualifies either way.</li>
+<li><strong>Exits during 2026 were not checked.</strong> A company that filed its 2025 annual report and was then taken over
+  this year falls outside both lists.</li>
+<li><strong>Re-registered companies</strong> (a new holding company or a blank-check merger) can look alive under a new SEC
+  number while their old history is lost.</li>
+<li><strong>A full fix needs a survivorship-free database</strong> (CRSP or equivalent) that includes delisting returns.</li>
+</ul>
+<h2 id="how-it-was-done">How it was done<a class="headerlink" href="#how-it-was-done" title="Permanent link">#</a></h2>
+<ol>
+<li>Pulled every annual-report filer in the strategy's 28 industry codes from SEC EDGAR, and kept those with no
+   ticker today that filed an annual report in 2016 or later.</li>
+<li>Recovered each one's old ticker from its last annual report, checked against Tiingo's listing dates, and
+   downloaded daily prices and trading volume.</li>
+<li>Added them, with their SEC financial data and annual-report wording, to a separate copy of the data. The
+   production data was not changed.</li>
+<li>Re-ran the whole strategy unchanged on that copy, with and without the step-aside rule.</li>
+<li><strong>Control:</strong> the same re-run <em>without</em> the added companies reproduces the reported figures exactly
+   (Sharpe 1.341 / 0.436 / 2.053), so every difference above comes from the added companies.</li>
+</ol>
+<p><em>Detail: <code>docs/survivorship-audit-results.md</code> · code and data: <code>research/survivorship_audit/</code>.</em></p>
+</main>
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeToggle');
+  if(!btn)return;
+  function sys(){return matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
+  function cur(){return root.getAttribute('data-theme')||sys();}
+  function paint(){btn.textContent=(cur()==='dark'?'\u2600 Light':'\u263D Dark');}
+  paint();
+  btn.addEventListener('click',function(){
+    var next=cur()==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('md2html-theme',next);}catch(e){}
+    paint();
+  });
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',paint);
+})();
+</script>
+</body>
+</html>

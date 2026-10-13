@@ -1,0 +1,89 @@
+ticker,year,item1_files,item1_mentions,self_ref,market_mentions,keeps,example
+AEIS,2021,3,12,1,11,True,"Our products are primarily sold into the semiconductor equipment, industrial and medical, data center computing, and telecom networking markets. Our r"
+AEIS,2022,4,25,2,23,True,"Our products are primarily sold into the semiconductor equipment, industrial and medical, data center computing, and telecom networking markets. Our r"
+AEIS,2023,4,41,2,39,True,"Our products are primarily sold into the semiconductor equipment, industrial and medical, data center computing, and telecom networking markets. Our r"
+AEIS,2024,4,56,2,54,True,"Our products are primarily sold into the semiconductor equipment, industrial and medical, data center computing, and telecom networking markets. Our r"
+AEIS,2025,4,53,1,52,True,"mical and physical deposition, high and low voltage applications such as process control, data center computing, networking, telecommunication, analyt"
+AEIS,2026,4,47,0,47,True," and deposition, high and low voltage applications such as semiconductor process control, data center computing, networking, telecommunication, medica"
+AME,2020,2,1,0,1,True,s 3400 Series uninterruptible power supply system for power-critical applications such as data centers and medical imaging • Zygo Corporation introduc
+AME,2021,3,1,0,1,True,s 3400 Series uninterruptible power supply system for power-critical applications such as data centers and medical imaging • Zygo Corporation introduc
+ATKR,2020,3,3,0,3,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, which are typically "
+ATKR,2021,4,4,0,4,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, which are typically "
+ATKR,2022,4,4,0,4,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, which are typically "
+ATKR,2023,4,4,0,4,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, which are typically "
+ATKR,2024,4,4,0,4,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, which are typically "
+ATKR,2025,4,4,0,4,True,"&R and infrastructure, diversified industrials, alternative power generation, healthcare, data centers and government. End-users, who are typically el"
+CARR,2025,4,0,0,0,False,
+CARR,2026,4,2,0,2,True,"g in the residential, commercial, education, healthcare, technology, retail, hospitality, data center, and infrastructure markets, among others. Produ"
+EMR,2019,2,2,0,2,True,"ng, power reliability and environmental control products for telecommunications networks, data centers and other critical applications, and also provi"
+EMR,2020,3,2,0,2,True,"ng, power reliability and environmental control products for telecommunications networks, data centers and other critical applications, and also provi"
+EMR,2021,4,2,0,2,True,"ng, power reliability and environmental control products for telecommunications networks, data centers and other critical applications, and also provi"
+EMR,2025,4,0,0,0,False,
+EMR,2026,4,0,0,0,False,
+ENR,2022,4,1,0,1,True,"tainties by implementing additional security technologies, internal controls, network and data center resiliency, redundancy and recovery processes, u"
+ENR,2023,4,2,0,2,True,"tainties by implementing additional security technologies, internal controls, network and data center resiliency, redundancy and recovery processes, u"
+ENR,2024,4,3,0,3,True,"tainties by implementing additional security technologies, internal controls, network and data center resiliency, redundancy and recovery processes, u"
+ENR,2025,4,4,0,4,True,"tainties by implementing additional security technologies, internal controls, network and data center resiliency, redundancy and recovery processes, u"
+GNRC,2019,1,0,0,0,False,
+GNRC,2020,2,0,0,0,False,
+GNRC,2026,4,17,0,17,True,"that we serve including light commercial, retail, office, telecommunications, industrial, data centers, healthcare, construction, oil & gas and munici"
+IEX,2025,4,0,0,0,False,
+IEX,2026,4,0,0,0,False,
+JCI,2022,4,1,0,1,True,"hin the markets it serves, including healthcare, commercial offices/campus, education and data centers. Sustain a High-Performance, Customer-Centric C"
+JCI,2023,4,2,0,2,True,"hin the markets it serves, including healthcare, commercial offices/campus, education and data centers. Sustain a High-Performance, Customer-Centric C"
+JCI,2024,4,4,0,4,True,"hin the markets it serves, including healthcare, commercial offices/campus, education and data centers. Sustain a High-Performance, Customer-Centric C"
+JCI,2025,4,8,0,8,True,"hin the markets it serves, including healthcare, commercial offices/campus, education and data centers. Sustain a High-Performance, Customer-Centric C"
+JCI,2026,4,13,0,13,True,"hin the markets it serves, including healthcare, commercial offices/campus, education and data centers. 5 Sustain a High-Performance, Customer-Centric"
+KEYS,2024,4,28,0,28,True, 4G/5G radio access network (RAN) infrastructure that connects vehicles with the back-end data centers. With the acquisition of ScienLab in fiscal 201
+KEYS,2025,4,19,0,19,True," 4G/5G radio access network (RAN) infrastructure that connects vehicles with the back-end data centers. We also deliver application-optimized, custome"
+KEYS,2026,4,12,0,12,True," the 4G/5G radio access network (RAN) infrastructure that connects vehicles with back-end data centers. We also deliver application-optimized, custome"
+LFUS,2023,4,2,0,2,True,"ion, automotive electronics, electric vehicle and related infrastructure, power supplies, data centers and telecommunications, medical devices, altern"
+LFUS,2024,4,3,0,3,True,"ion, automotive electronics, electric vehicle and related infrastructure, power supplies, data centers and telecommunications, medical devices, altern"
+LFUS,2025,4,4,0,4,True,"ion, automotive electronics, electric vehicle and related infrastructure, power supplies, data centers and telecommunications, medical devices, altern"
+LFUS,2026,4,4,0,4,True,"ion, automotive electronics, electric vehicle and related infrastructure, power supplies, data centers and telecommunications, medical devices, altern"
+LII,2019,1,1,0,1,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2020,2,2,0,2,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2021,3,3,0,3,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2022,4,4,0,4,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2023,4,4,0,4,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2024,4,4,0,4,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2025,4,4,0,4,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+LII,2026,4,4,0,4,True,"addition, our products are used to cool a wide variety of industrial processes, including data centers, machine tooling, and other critical cooling ap"
+MIR,2026,4,1,0,1,True," due to the escalated energy needs created by cloud computing and artificial intelligence data centers. For example, during 2024, recommissioning of p"
+MKSI,2025,4,1,0,1,True,"strates and wafers used in smartphones, computers, other consumer electronics, server and data centers, automotive electronics, and the medical and in"
+MKSI,2026,4,2,0,2,True,"strates and wafers used in smartphones, computers, other consumer electronics, server and data centers, automotive electronics, and the medical and in"
+MOG-A,2023,4,0,0,0,False,
+MOG-A,2024,4,0,0,0,False,
+MOG-A,2025,4,0,0,0,False,
+MOG-A,2026,4,0,0,0,False,
+MWA,2022,4,0,0,0,False,
+MWA,2023,4,0,0,0,False,
+MWA,2024,4,0,0,0,False,
+MWA,2025,4,0,0,0,False,
+NVT,2020,1,1,0,1,True,"ntractual terms, and price. As many of our products sell through electrical distributors, data center contractors, original equipment manufacturers, g"
+NVT,2024,4,4,0,4,True,"ntractual terms, and price. As many of our products sell through electrical distributors, data center contractors, original equipment manufacturers, a"
+NVT,2025,4,3,0,3,True,"ontractual terms and price. As many of our products sell through electrical distributors, data center contractors, original equipment manufacturers an"
+NVT,2026,4,3,0,3,True,"ontractual terms and price. As many of our products sell through electrical distributors, data center contractors, original equipment manufacturers an"
+PNR,2019,1,1,0,1,True,"chem, Schroff and Tracer. Customers Electrical customers include electrical distributors, data center contractors, original equipment manufacturers, g"
+PNR,2020,2,1,0,1,True,"chem, Schroff and Tracer. Customers Electrical customers include electrical distributors, data center contractors, original equipment manufacturers, g"
+PNR,2021,3,1,0,1,True,"chem, Schroff and Tracer. Customers Electrical customers include electrical distributors, data center contractors, original equipment manufacturers, g"
+PNR,2022,4,1,0,1,True,"chem, Schroff and Tracer. Customers Electrical customers include electrical distributors, data center contractors, original equipment manufacturers, g"
+RRX,2019,1,1,0,1,True,"products and systems are used in applications including health care, cloud and enterprise data centers, oil and gas, marine, agriculture, transportati"
+RRX,2020,2,2,0,2,True,"products and systems are used in applications including health care, cloud and enterprise data centers, oil and gas, marine, agriculture, transportati"
+TDY,2023,4,4,0,4,True,"tructure, where PCI Express and related standards are required to enable high performance data centers that support cloud networks. Our 2016 acquisiti"
+TDY,2024,4,4,0,4,True," To extend our protocol test solution and products to the electronic storage industry and data centers: OakGate Technology, Inc., based in Loomis, Cal"
+TDY,2025,4,3,0,3,True,test tools for high-performance solid-state storage devices used in both enterprise-grade data centers and in consumer computing applications. We also
+TDY,2026,4,4,0,4,True,test tools for high-performance solid-state storage devices used in both enterprise-grade data centers and in consumer computing applications. We also
+TMO,2026,4,0,0,0,False,
+WTS,2023,4,0,0,0,False,
+WTS,2024,4,0,0,0,False,
+WTS,2025,4,2,1,1,True,"s by implementing internal controls, a cybersecurity risk management program, network and data center resiliency, and redundancy and recovery processe"
+WTS,2026,4,5,2,3,True,"s by implementing internal controls, a cybersecurity risk management program, network and data center resiliency, and redundancy and recovery processe"
+WWD,2020,3,0,0,0,False,
+WWD,2021,4,0,0,0,False,
+WWD,2022,4,0,0,0,False,
+WWD,2023,4,0,0,0,False,
+WWD,2024,4,0,0,0,False,
+WWD,2025,4,0,0,0,False,
+WWD,2026,4,0,0,0,False,
+XYL,2026,4,1,0,1,True,"dustrial facilities, such as chemical manufacturers, marine, food and beverage companies, data centers and car washes. In the Applied Water segment, e"

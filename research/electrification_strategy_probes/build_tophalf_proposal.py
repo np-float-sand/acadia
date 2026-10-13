@@ -423,8 +423,7 @@ def fig_short_leg(book: pd.Series, basket: pd.Series, pave: pd.Series, held: pd.
 def rule2_filter():
     """exclude-callable for `name_short_basket`: drop names without rule-2 wording that year."""
     from electrification_strategy import auto_screen
-    hits = pd.concat([pd.read_csv(os.path.join(config.DATA_DIR, f), comment="#") for f in SHORT_VOCAB_FILES],
-                     ignore_index=True)
+    hits = auto_screen.load_vocabulary_hits(SHORT_VOCAB_FILES)     # cleaned: DC boilerplate + gas T&D out
     vocab = auto_screen.vocabulary_years(hits, config.AUTO_CUSTOMER_TERMS, list(range(2017, 2027)),
                                          lookback=a1.LOOKBACK)
     by_year: dict[int, set] = {}

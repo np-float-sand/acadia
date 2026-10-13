@@ -22,6 +22,8 @@ matching `capex_intensity_strategy.universe.discover_lexicon_members`.
 """
 from __future__ import annotations
 
+import re
+
 import numpy as np
 import pandas as pd
 
@@ -29,14 +31,68 @@ from electrification_strategy import config
 
 MEMBERSHIP_FILE = "screen_auto_members.csv"
 VOCABULARY_FILE = "vocabulary_hits.csv"
+DC_EXCLUDED_FILE = "vocabulary_hits_dc_excluded.csv"
 
 
-def load_vocabulary_hits() -> pd.DataFrame:
-    """The cached EDGAR full-text hits behind the vocabulary filters."""
-    path = config.DATA_DIR / VOCABULARY_FILE
-    if not path.exists():
+def load_vocabulary_hits(files=(VOCABULARY_FILE,), clean: bool = True) -> pd.DataFrame:
+    """The cached EDGAR full-text hits behind the vocabulary filters.
+
+    `clean=True` (every production caller) applies `clean_hits`: spurious "data center(s)"
+    hits and gas transmission/distribution filers are removed. `clean=False` returns the raw
+    full-text hits.
+    """
+    frames = [pd.read_csv(config.DATA_DIR / f, comment="#") for f in files
+              if (config.DATA_DIR / f).exists()]
+    if not frames:
         return pd.DataFrame(columns=["ticker", "phrase", "file_date"])
-    return pd.read_csv(path, comment="#")
+    hits = pd.concat(frames, ignore_index=True).drop_duplicates()
+    if not clean:
+        return hits
+    return clean_hits(hits, excluded=load_dc_exclusions(), excluded_tickers=rule2_excluded_tickers())
+
+
+_DC_ANY = re.compile(r"data cent(?:er|re)s?", re.I)
+_DC_OWN = re.compile(
+    r"\b(?:our|its|the company's|third[- ]party|co-?located|cloud|own)\s+(?:\w+\s+)?data cent(?:er|re)s?"
+    r"|networks?\s+and\s+data cent(?:er|re)s?"
+    r"|data cent(?:er|re)s?\s+(?:resiliency|redundancy|and networks?)", re.I)
+
+
+def is_market_mention(text: str) -> bool:
+    """Does `text` (a filing's Item 1) use "data center(s)" for a market, not the filer's own IT?
+
+    True when at least one mention is NOT self-referential ("our/its/third-party/cloud ... data
+    centers", "network and data center resiliency" and the like).
+    """
+    return len(_DC_ANY.findall(text)) > len(_DC_OWN.findall(text))
+
+
+def load_dc_exclusions() -> pd.DataFrame | None:
+    """Spurious "data center(s)" hits (ticker, phrase, file_date), built by `build_vocab_filter`."""
+    path = config.DATA_DIR / DC_EXCLUDED_FILE
+    return pd.read_csv(path, comment="#") if path.exists() else None
+
+
+def rule2_excluded_tickers() -> set[str]:
+    """Tickers whose SEC SIC code is in `config.RULE2_EXCLUDED_SICS` (gas T&D)."""
+    from capex_intensity_strategy import config as cis_config
+    path = cis_config.CACHE_DIR / "candidates.parquet"
+    if not path.exists():
+        return set()
+    cand = pd.read_parquet(path)
+    return set(cand.loc[cand["sic"].isin(config.RULE2_EXCLUDED_SICS), "ticker"])
+
+
+def clean_hits(hits: pd.DataFrame, excluded: pd.DataFrame | None,
+               excluded_tickers: set[str]) -> pd.DataFrame:
+    """Drop the listed spurious data-center hits and every hit of `excluded_tickers`."""
+    out = hits[~hits["ticker"].isin(excluded_tickers)]
+    if excluded is not None and len(excluded):
+        key = ["ticker", "phrase", "file_date"]
+        ex = excluded[key].astype(str).drop_duplicates()
+        hit = out[key].astype(str).merge(ex.assign(_x=1), on=key, how="left")["_x"].notna().to_numpy()
+        out = out[~hit]
+    return out.reset_index(drop=True)
 
 
 def load_membership() -> pd.DataFrame:

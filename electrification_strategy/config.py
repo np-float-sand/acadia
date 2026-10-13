@@ -122,3 +122,14 @@ AUTO_POLICY_TERMS: tuple[str, ...] = (
     '"net energy metering"',
     '"advanced manufacturing production credit"',
 )
+
+# -- vocabulary clean-up (2026-10-12; docs/survivorship-audit-results.md) ----------------
+# "data center(s)" is kept as a customer term, but a full-text hit counts only when the
+# filing's Item 1 (Business) uses it for a market, not for the filer's own IT
+# ("our data centers", cybersecurity boilerplate). Spurious hits are listed in
+# data/vocabulary_hits_dc_excluded.csv, a build artifact of `build_vocab_filter`.
+AUTO_DC_TERMS: tuple[str, ...] = ('"data center"', '"data centers"')
+# Gas pipelines and gas distributors pass rule 2 on gas "transmission and distribution"
+# wording. Their hits are dropped, so they can't enter the short pool (the long book
+# already excludes the POWER group). Electric-and-gas combination utilities (4931) stay.
+RULE2_EXCLUDED_SICS: tuple[int, ...] = (4922, 4923, 4924)

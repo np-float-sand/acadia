@@ -215,3 +215,48 @@ def test_build_membership_honours_an_explicit_lookback():
 
 def test_config_policy_min_hits_defaults_to_the_shipped_behaviour():
     assert config.AUTO_POLICY_MIN_HITS == 1
+
+
+# -- vocabulary clean-up (2026-10-12) -------------------------------------------
+
+@pytest.mark.parametrize("text, market", [
+    ("Our products are sold into the data center computing and telecom markets.", True),
+    ("Electrical customers include distributors and data center contractors.", True),
+    ("We store personal information in our data centers and on our networks.", False),
+    ("We rely on third-party data centers to host our systems.", False),
+    ("We maintain network and data center resiliency and recovery processes.", False),
+    ("No mention at all.", False),
+])
+def test_is_market_mention_separates_customers_from_own_it(text, market):
+    assert auto_screen.is_market_mention(text) is market
+
+
+def test_is_market_mention_needs_one_market_use_among_boilerplate():
+    text = ("Information is stored in our data centers. "
+            "Our cooling products serve data centers and hospitals.")
+    assert auto_screen.is_market_mention(text) is True
+
+
+def _hits():
+    return pd.DataFrame({"ticker": ["B", "B", "ETN", "KMI", "KMI"],
+                         "phrase": ['"data centers"', '"substation"', '"data center"',
+                                    '"transmission and distribution"', '"electric utilities"'],
+                         "file_date": ["2024-02-26", "2024-02-26", "2024-02-20", "2024-02-10", "2024-02-10"]})
+
+
+def test_clean_hits_drops_listed_data_center_hits_only():
+    excluded = pd.DataFrame({"ticker": ["B"], "phrase": ['"data centers"'], "file_date": ["2024-02-26"]})
+    out = auto_screen.clean_hits(_hits(), excluded=excluded, excluded_tickers=set())
+    assert ("B", '"data centers"') not in set(zip(out.ticker, out.phrase))
+    assert ("B", '"substation"') in set(zip(out.ticker, out.phrase))   # other phrases untouched
+    assert ("ETN", '"data center"') in set(zip(out.ticker, out.phrase))
+
+
+def test_clean_hits_removes_every_hit_of_excluded_tickers():
+    out = auto_screen.clean_hits(_hits(), excluded=None, excluded_tickers={"KMI"})
+    assert "KMI" not in set(out.ticker)
+    assert len(out) == 3
+
+
+def test_rule2_excluded_sics_are_gas_transmission_and_distribution():
+    assert set(config.RULE2_EXCLUDED_SICS) == {4922, 4923, 4924}
