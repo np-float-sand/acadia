@@ -30,10 +30,10 @@ SWITCH_TRADE = 1.25    # capital traded when rule 11 switches (long 0.85 + sleev
 _CACHE: dict = {}      # expensive pieces (long book, short basket, 14-signal score), keyed by their settings
 
 
-def long_book(members, comp, px, hold=LONG_HOLD, rank=True):
+def long_book(members, comp, px, hold=LONG_HOLD, rank=True, top_frac=0.5):
     """Top half by composite with a hold buffer (rank=False: every name passing rules 1-5, equal
-    weight). Returns (daily returns, daily weights)."""
-    key = ("long", id(members), hold, rank)
+    weight; top_frac: share of the ranked list entered, 0.5 = top half). Returns (daily returns, daily weights)."""
+    key = ("long", id(members), hold, rank, top_frac)
     if key in _CACHE:
         return _CACHE[key]
     state = {"held": set()}
@@ -55,7 +55,7 @@ def long_book(members, comp, px, hold=LONG_HOLD, rank=True):
         up = comp.loc[:asof]
         zz = (up.iloc[-1] if not up.empty else pd.Series(dtype=float)).reindex(elig).fillna(0.0)
         order = list(zz.sort_values(ascending=False).index)
-        n = max(1, len(order) // 2)
+        n = max(1, int(len(order) * top_frac))
         keep = [x for x in order[: max(1, int(round(len(order) * hold)))] if x in state["held"]] if hold else []
         pick = keep + [x for x in order if x not in keep][: max(0, n - len(keep))]
         state["held"] = set(pick)
@@ -142,7 +142,7 @@ def short_basket(px, days, freq=SHORT_FREQ, long_weights=None, q=None, key=None)
 
 def build(members, comp, px, spy, dfii10, ry, cash, short="names", bp=10.0, fee=0.0, growth=None,
           band=BAND, long_hold=LONG_HOLD, rank=True, overlay=True, short_k=None, short_q=None,
-          short_freq=SHORT_FREQ, ry_thr=0.0, g_thr=0.0):
+          short_freq=SHORT_FREQ, ry_thr=0.0, g_thr=0.0, top_frac=0.5):
     """The strategy's daily returns net of `bp` trading costs, borrow and `fee` (a year), gated by
     rule 11. short="names" (the proposal), "PAVE" (the simple alternative) or None (long only).
     Rule 11 uses the real yield (> ry_thr) and, if `growth` is given, real supplier growth (> g_thr);
@@ -150,7 +150,7 @@ def build(members, comp, px, spy, dfii10, ry, cash, short="names", bp=10.0, fee=
     cost = bp / 1e4
     rf = config.RF / config.ANN
     k = t.FIXED_K if short_k is None else short_k
-    raw, W = long_book(members, comp, px, hold=long_hold, rank=rank)
+    raw, W = long_book(members, comp, px, hold=long_hold, rank=rank, top_frac=top_frac)
     days = raw.loc[t.START:t.END].index
     raw, W = raw.reindex(days).fillna(0.0), W.reindex(days).ffill().fillna(0.0)
     if overlay:
@@ -163,7 +163,7 @@ def build(members, comp, px, spy, dfii10, ry, cash, short="names", bp=10.0, fee=
     month_end = set(pd.Series(days, index=days).resample("ME").last().values)
     if short == "names":
         b, btrade, bn, blog = short_basket(px, days, freq=short_freq, long_weights=W, q=short_q,
-                                           key=(long_hold, rank))
+                                           key=(long_hold, rank, top_frac))
         borrow = t.NAME_BORROW
     elif short is None:
         k = 0.0

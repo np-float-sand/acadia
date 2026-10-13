@@ -2,6 +2,8 @@
 
     python research/survivorship_audit/run_compare.py base     # rebuild on production data (control)
     python research/survivorship_audit/run_compare.py shadow   # same rebuild + priced dropouts
+    python research/survivorship_audit/run_compare.py clean_base / clean   # the same pair on the cleaned
+                                                                           # screen (build_clean_shadow.py)
 
 Every stage is rebuilt from the shadow caches: SIC/liquidity universe, screen_auto membership,
 A1+A4 members, the fourteen-signal score (fundamental panel and power betas recomputed), the
@@ -12,7 +14,8 @@ after it has stopped trading. Held positions are still valued at the last price 
 import json, os, pathlib, pickle, sys
 MODE = sys.argv[1]
 D = pathlib.Path(__file__).resolve().parent; ROOT = D.parents[1]
-R = D/{"shadow": "_shadow", "base": "_shadow_base", "dcfix": "_shadow_dcfix", "gas": "_shadow_gas", "both": "_shadow_both"}[MODE]
+R = D/{"shadow": "_shadow", "base": "_shadow_base", "dcfix": "_shadow_dcfix", "gas": "_shadow_gas", "both": "_shadow_both",
+                     "clean_base": "_shadow_clean_base", "clean": "_shadow_clean"}[MODE]
 os.environ["ACADIA_DATA_ROOT"] = str(R)
 sys.path[:0] = [str(ROOT), str(ROOT/"research"/"electrification_strategy_probes")]
 import pandas as pd
@@ -62,7 +65,7 @@ for lab, b in (("with_step_aside", step), ("without_step_aside", always)):
     out["alpha_vs_GRID"][lab] = {w: t.alpha(r.loc[a:e], bench["GRID"].loc[a:e]) for w, (a, e) in wins.items()}
     out["stats"][lab]["short_basket_full"] = t.a1.stats(b["short_returns"].loc[t.START:t.END])
 # Which dropouts entered each stage, and what they earned while held
-drop = pd.read_csv(D/"dropout_universe_shadow.csv") if MODE == "shadow" else pd.DataFrame(columns=["col"])
+drop = pd.read_csv(D/"dropout_universe_shadow.csv") if MODE in ("shadow", "clean") else pd.DataFrame(columns=["col"])
 dcols = set(drop["col"])
 univ = data.universe()
 rets = px.pct_change(fill_method=None)

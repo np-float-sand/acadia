@@ -15,7 +15,8 @@ from capex_intensity_strategy import edgar, universe
 from electrification_strategy import config as es_config
 D = pathlib.Path(__file__).parent
 BASE = "--base" in sys.argv          # identical rebuild with NO dropouts (the like-for-like control)
-S = D/("_shadow_base" if BASE else "_shadow")
+# --dir NAME writes the shadow to research/survivorship_audit/NAME instead (e.g. a rebuild after a screen change)
+S = D/(sys.argv[sys.argv.index("--dir") + 1] if "--dir" in sys.argv else ("_shadow_base" if BASE else "_shadow"))
 CIS, ESD, XC = S/"capex_intensity_strategy"/"data"/"cache", S/"es_data", S/"xsec_cache"
 for p in (CIS, ESD, XC): p.parent.mkdir(parents=True, exist_ok=True)
 if CIS.exists(): shutil.rmtree(CIS)

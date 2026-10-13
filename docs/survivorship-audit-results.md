@@ -95,3 +95,50 @@ so the measured short-side effect is a lower bound on what failures would have a
 
 Code: `research/survivorship_audit/` (`map_tickers.py`, `finalize_map.py`, `fetch_prices.py`, `build_shadow.py`,
 `run_compare.py`; outputs `compare_base.json`, `compare_shadow.json`).
+
+---
+
+## Part 3 — rerun on the cleaned screen (2026-10-13)
+
+**Verdict: BUILT · 2023+ effect SMALL (2.277 → 2.231); 2019-22 effect LARGE and negative (0.391 → −0.338) — cause not yet decomposed.**
+
+### Method
+Same 57 priced dropouts, rebuilt from today's production caches, which carry both screen fixes (commit 4bb636f).
+`build_clean_shadow.py` writes `_shadow_clean_base/` (control, no dropouts) and `_shadow_clean/` (with dropouts).
+The production data-center exclusion list never saw the dropouts' own filings, so every dropout "data center(s)" hit
+was checked against that 10-K's Item 1 (`clean_dc_dropout_audit.csv`: 65 dropped, 17 kept, 1 kept for lack of
+Item 1). The 10-K fetch window was widened to 2012 for the dropouts only (production's `tenk.filings` starts at
+2017-06; Barnes's 2017 hit would otherwise have admitted it for 2019). All 13 Barnes hits now fail, so Barnes is out
+of both books. Gas T&D dropouts (DCP, Crestwood, South Jersey; SIC 4922-4924) fall out of the short pool via
+`RULE2_EXCLUDED_SICS`. Control reproduces production exactly (1.433 / 0.391 / 2.277).
+
+### Result (control → with dropouts)
+| book | window | Sharpe | CAGR | MaxDD | Calmar |
+|---|---|---|---|---|---|
+| with step-aside (production) | full | 1.433 → 1.139 | 21.3% → 16.3% | −12.1% → −11.7% | 1.76 → 1.40 |
+| | 2019-22 | 0.391 → −0.338 | 7.4% → 1.0% | −12.1% → −11.7% | 0.61 → 0.09 |
+| | 2023+ | 2.277 → 2.231 | 38.6% → 35.8% | −8.5% → −8.5% | 4.57 → 4.24 |
+| without step-aside | full | 1.450 → 1.191 | 25.8% → 20.7% | −17.1% → −17.6% | 1.51 → 1.18 |
+| | 2019-22 | 0.774 → 0.362 | 15.1% → 8.4% | −17.1% → −17.6% | 0.88 → 0.48 |
+| | 2023+ | 2.277 → 2.231 | 38.6% → 35.8% | −8.5% → −8.5% | 4.57 → 4.24 |
+
+Alpha vs GRID 2023+: 24.5%/yr (t 4.30) → 22.9%/yr (t 4.19). Shorted basket return (full) 4.1% → 2.3%/yr.
+Names held: long 8.5 → 8.5, short 13.3 → 13.9.
+
+### Which dropouts were picked
+- 21 of 57 eligible at some point. **Long:** only Esterline (63 days in 2019, ~0 contribution).
+- **Short:** Avangrid (7 quarters, 2019-22), ALLETE (8; 2018-20 and 2024), Arch (9; 2018-20 and 2023-24), Pattern
+  Energy (1, 2019-Q1).
+- Long-screen membership changes in only 9 cells (Esterline 2019, AZZ 2025), so the 2019-22 damage does not come from
+  the screen. Candidates: the dropouts change the cross-sectional 14-signal scores (re-ranking live names in both
+  books) and take short-basket slots in 2019-20. Not yet separated.
+
+### Comparison with Part 2
+The original-screen audit showed 2019-22 *up* (0.436 → 0.494). That gain leaned on names the clean screen removes:
+Barnes long (~+17% summed) and the gas-pipeline shorts (DCP, Crestwood, South Jersey). Without them the dropouts'
+net effect on 2019-22 is strongly negative. The 2023+ conclusion (small) holds on both screens.
+
+### Gaps (unchanged)
+Unpriced real bankruptcies: Sunnova, QualTek, Sunworks, Cloud Peak. All four carry grid-customer wording every
+relevant year (they pass rule 2), so each was short-eligible subject to liquidity; Sunnova (liquid 2020-25) most
+likely. Being short them only helps, so the short-side effect here is a lower bound.

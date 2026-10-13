@@ -1,0 +1,519 @@
+{
+ "mode": "clean",
+ "stats": {
+  "with_step_aside": {
+   "full": {
+    "cagr": 0.1634,
+    "vol": 0.1024,
+    "sharpe": 1.139,
+    "sortino": 1.305,
+    "maxdd": -0.1169,
+    "hit_rate": 0.706,
+    "calmar": 1.398,
+    "beta": 0.2,
+    "corr": 0.39,
+    "up_capture": 0.32,
+    "down_capture": 0.22
+   },
+   "2019-22": {
+    "cagr": 0.0104,
+    "vol": 0.0785,
+    "sharpe": -0.338,
+    "sortino": -0.296,
+    "maxdd": -0.1169,
+    "hit_rate": 0.801,
+    "calmar": 0.089,
+    "beta": 0.11,
+    "corr": 0.32,
+    "up_capture": 0.13,
+    "down_capture": 0.14
+   },
+   "2023+": {
+    "cagr": 0.3581,
+    "vol": 0.1227,
+    "sharpe": 2.231,
+    "sortino": 3.063,
+    "maxdd": -0.0845,
+    "hit_rate": 0.602,
+    "calmar": 4.238,
+    "beta": 0.44,
+    "corr": 0.53,
+    "up_capture": 0.6,
+    "down_capture": 0.35
+   },
+   "short_basket_full": {
+    "cagr": 0.0234,
+    "vol": 0.2724,
+    "sharpe": 0.075,
+    "sortino": 0.101,
+    "maxdd": -0.5051,
+    "hit_rate": 0.512,
+    "calmar": 0.046
+   }
+  },
+  "without_step_aside": {
+   "full": {
+    "cagr": 0.207,
+    "vol": 0.1317,
+    "sharpe": 1.191,
+    "sortino": 1.656,
+    "maxdd": -0.1761,
+    "hit_rate": 0.557,
+    "calmar": 1.175,
+    "beta": 0.36,
+    "corr": 0.53,
+    "up_capture": 0.52,
+    "down_capture": 0.41
+   },
+   "2019-22": {
+    "cagr": 0.084,
+    "vol": 0.1392,
+    "sharpe": 0.362,
+    "sortino": 0.513,
+    "maxdd": -0.1761,
+    "hit_rate": 0.516,
+    "calmar": 0.477,
+    "beta": 0.34,
+    "corr": 0.54,
+    "up_capture": 0.47,
+    "down_capture": 0.45
+   },
+   "2023+": {
+    "cagr": 0.3581,
+    "vol": 0.1227,
+    "sharpe": 2.231,
+    "sortino": 3.063,
+    "maxdd": -0.0845,
+    "hit_rate": 0.602,
+    "calmar": 4.238,
+    "beta": 0.44,
+    "corr": 0.53,
+    "up_capture": 0.6,
+    "down_capture": 0.35
+   },
+   "short_basket_full": {
+    "cagr": 0.0234,
+    "vol": 0.2724,
+    "sharpe": 0.075,
+    "sortino": 0.101,
+    "maxdd": -0.5051,
+    "hit_rate": 0.512,
+    "calmar": 0.046
+   }
+  }
+ },
+ "alpha_vs_GRID": {
+  "with_step_aside": {
+   "full": {
+    "alpha": 0.11218013544505304,
+    "beta": 0.1861662508240943,
+    "t": 3.1315645794231024
+   },
+   "2019-22": {
+    "alpha": -0.009580883044953104,
+    "beta": 0.09235931148796332,
+    "t": -0.2570892530385975
+   },
+   "2023+": {
+    "alpha": 0.228668598624664,
+    "beta": 0.3737661309717609,
+    "t": 4.187502982661858
+   }
+  },
+  "without_step_aside": {
+   "full": {
+    "alpha": 0.11964074935833265,
+    "beta": 0.3234824946304378,
+    "t": 3.057070654620126
+   },
+   "2019-22": {
+    "alpha": 0.01605601228871074,
+    "beta": 0.29841959866497475,
+    "t": 0.29893014458323564
+   },
+   "2023+": {
+    "alpha": 0.228668598624664,
+    "beta": 0.3737661309717609,
+    "t": 4.187502982661858
+   }
+  }
+ },
+ "dropouts": {
+  "AEGN": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "AGR": {
+   "eligible_months": 89,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": [
+    "2019-12-31",
+    "2020-03-31",
+    "2020-06-30",
+    "2020-09-30",
+    "2020-12-31",
+    "2021-09-30",
+    "2022-12-31"
+   ]
+  },
+  "AIMC": {
+   "eligible_months": 46,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ALE": {
+   "eligible_months": 112,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": [
+    "2018-12-31",
+    "2019-12-31",
+    "2020-03-31",
+    "2020-06-30",
+    "2020-09-30",
+    "2020-12-31",
+    "2024-06-30",
+    "2024-09-30"
+   ]
+  },
+  "AMPS": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "APLP": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "AQPW": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ARCH": {
+   "eligible_months": 80,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": [
+    "2018-12-31",
+    "2019-12-31",
+    "2020-03-31",
+    "2020-06-30",
+    "2020-09-30",
+    "2020-12-31",
+    "2023-06-30",
+    "2023-09-30",
+    "2024-03-31"
+   ]
+  },
+  "ASRE": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "AXE": {
+   "eligible_months": 19,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "BGG": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "BGRY": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "B_DL": {
+   "eligible_months": 102,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CEQP": {
+   "eligible_months": 45,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CHJI": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CNXM": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CPN": {
+   "eligible_months": 19,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CRKN": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CTRL": {
+   "eligible_months": 10,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "CVA": {
+   "eligible_months": 56,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "DCP": {
+   "eligible_months": 82,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ECOX": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ENBL": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ENLC": {
+   "eligible_months": 59,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ENLK": {
+   "eligible_months": 22,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "EQM": {
+   "eligible_months": 46,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ESL": {
+   "eligible_months": 31,
+   "screen_member_months": 8,
+   "long_days": 63,
+   "short_quarters": [],
+   "long_contrib": 0.0045
+  },
+  "ESNC": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "ETRN": {
+   "eligible_months": 49,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "FARO": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "GV": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "HLGN": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "HWCC": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "HYZN": {
+   "eligible_months": 2,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "IIN": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "IINX": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "JENGQ": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "MTSC": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "MXWL": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "NMGX": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "NVOS": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "PEGI": {
+   "eligible_months": 43,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": [
+    "2019-03-31"
+   ]
+  },
+  "RTEC": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "RTLR": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SCLE": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SJI": {
+   "eligible_months": 78,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SMIT": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SMLP": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SNPO": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SOL": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "SPECW": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "TCP": {
+   "eligible_months": 10,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "TERP": {
+   "eligible_months": 17,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "UQM": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "VLDRW": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "WLB": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  },
+  "WMLP": {
+   "eligible_months": 0,
+   "screen_member_months": 0,
+   "long_days": 0,
+   "short_quarters": []
+  }
+ },
+ "names": {
+  "long_mean": 8.5,
+  "short_mean": 13.9
+ }
+}
