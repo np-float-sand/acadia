@@ -407,7 +407,7 @@ def fig_short_leg(book: pd.Series, basket: pd.Series, pave: pd.Series, held: pd.
     ax.set_ylabel("growth of \\$1 (log)")
     ax.legend(loc="upper left", fontsize=8, labelcolor=a1.INK, frameon=False)
     h = held.loc[START:END]
-    bx.plot(h.index, h.values, color="#7b4fd6", lw=1.4)
+    bx.step(h.index, h.values, where="post", color="#7b4fd6", lw=1.4)
     bx.set_ylabel("names shorted")
     bx.xaxis.set_major_locator(mdates.YearLocator())
     bx.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
@@ -493,7 +493,7 @@ def _shade_cash(ax, w: pd.Series | None):
         if len(g) < 5:
             continue
         ax.axvspan(g.index[0], g.index[-1], color="#6b6b6b", alpha=0.13, lw=0, hatch="//",
-                   label="Strategy in T-bills (rule 11: regime not green)" if first else None)
+                   label="Strategy in T-bills (step-aside: regime not green)" if first else None)
         first = False
 
 
@@ -547,7 +547,7 @@ def fig_inv_sharpe(rows, lines, growth=None, ry=None, cash_w=None, regime=None, 
                 gap = rs.reindex(ra.index).isna()
                 gap = gap | gap.shift(1, fill_value=False) | gap.shift(-1, fill_value=False)
                 bx.plot(ra.index, ra.where(gap).values, color=c, lw=1.8, ls=(0, (5, 2.5)),
-                        label="Strategy if rule 11 had kept it invested (dashed)")
+                        label="Strategy without step-aside (dashed)")
         bx.plot(rs.index, rs.values, color=c, lw=lw, label=lab)
     _shade_cash(bx, cash_w)
     bx.set_ylim(-1.8, 3.8)
@@ -615,8 +615,8 @@ def _regime_strip(sx, regime):
 
 
 def fig_inv_growth(lines, growth=None, ry=None, cash_w=None, regime=None, always_on=None):
-    """Wide growth-of-$1 chart with the regime strip beneath and, dashed, the strategy's path had
-    rule 11 kept it invested (each T-bill spell starts from the strategy's level on the switch day)."""
+    """Wide growth-of-$1 chart with the regime strip beneath and, dashed, the same strategy with the
+    step-aside switched off (its own growth of $1 over the whole window)."""
     fig, (ax, sx) = plt.subplots(2, 1, figsize=(12.5, 6.5), sharex=True,
                                  gridspec_kw={"height_ratios": [1, 0.075], "hspace": 0.06})
     ends = []
@@ -628,26 +628,20 @@ def fig_inv_growth(lines, growth=None, ry=None, cash_w=None, regime=None, always
             cv = cv * float(base.loc[:cv.index[0]].iloc[-1])
         ax.plot(cv.index, cv.values, color=c, lw=lw, label=lab)
         if not late:                               # a rebased line's level is not a growth of $1
-            ends.append([float(cv.iloc[-1]), cv.index[-1], float(cv.iloc[-1])])
-        if k == 0 and always_on is not None and cash_w is not None:
-            off = cash_w.loc[START:END] == 0
-            first = True
-            for _, g in off[off].groupby((off != off.shift()).cumsum()[off]):
-                if len(g) < 5:
-                    continue
-                start = cv.loc[:g.index[0]].index[-2] if len(cv.loc[:g.index[0]]) > 1 else g.index[0]
-                seg = always_on.loc[g.index[0]:g.index[-1]]
-                path = float(cv.loc[start]) * (1 + seg).cumprod()
-                path = pd.concat([pd.Series([float(cv.loc[start])], index=[start]), path])
-                ax.plot(path.index, path.values, color=c, lw=1.8, ls=(0, (5, 2.5)),
-                        label="Strategy if rule 11 had kept it invested (dashed)" if first else None)
-                first = False
+            ends.append([float(cv.iloc[-1]), cv.index[-1], float(cv.iloc[-1]), c if k == 0 else a1.INK])
+        if k == 0 and always_on is not None:
+            # the same strategy with the step-aside switched off: its own growth of $1 over the whole
+            # window, drawn beneath the solid line so it shows wherever the two differ
+            aw = a1.curve(always_on.loc[START:END])
+            ax.plot(aw.index, aw.values, color=c, lw=1.8, ls=(0, (5, 2.5)), zorder=1.9,
+                    label="Strategy without step-aside (dashed)")
+            ends.append([float(aw.iloc[-1]), aw.index[-1], float(aw.iloc[-1]), c])
     ends.sort(key=lambda e: e[0])
     for i in range(1, len(ends)):
         if np.log10(ends[i][0]) - np.log10(ends[i - 1][0]) < 0.035:
             ends[i][0] = 10 ** (np.log10(ends[i - 1][0]) + 0.035)
-    for ypos, xend, val in ends:
-        ax.annotate(f"  {val:.2f}x", (xend, ypos), color=a1.INK, fontsize=10, va="center", weight="bold")
+    for ypos, xend, val, col in ends:              # the strategy's two end values in its blue
+        ax.annotate(f"  {val:.2f}x", (xend, ypos), color=col, fontsize=10, va="center", weight="bold")
     ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
     _shade_cash(ax, cash_w)
     ax.set_yscale("log")
@@ -699,7 +693,7 @@ def fig_inv_years(series, counterfactual=None):
                         continue
                     va = float((1 + alw.loc[f"{y}"].dropna()).prod() - 1) * 100
                     ax.bar(xi, va, wbar * 0.92, facecolor="none", edgecolor=c, hatch="////", lw=1.1, zorder=4,
-                           label="Long/short had rule 11 kept it invested (hatched)" if first else None)
+                           label="Long/short without step-aside (hatched)" if first else None)
                     first = False
                     top = max(va, vi)
                     ax.text(xi, (va if va >= 0 else va) + (1.4 if va >= 0 else -3.8) + (3.6 if abs(va - vi) < 4 else 0),
@@ -733,13 +727,16 @@ def fig_inv_drawdown(lines):
 
 def fig_inv_breadth(long_held, short_held):
     fig, ax = plt.subplots(figsize=(8.4, 2.8))
-    ax.step(long_held.index, long_held.values, where="post", color=C_LONG, lw=1.6, label="names held long")
+    # same colours, step style, x-range and 2023-on shading as the short-leg chart's names panel
+    ax.step(long_held.index, long_held.values, where="post", color=a1.C_BOOK, lw=1.6, label="names held long")
     sh = short_held.loc[START:END]
-    ax.step(sh.index, sh.values, where="post", color=a1.C_NEG, lw=1.4, label="names held short")
+    ax.step(sh.index, sh.values, where="post", color="#7b4fd6", lw=1.4, label="names held short")
     ax.set_ylabel("names")
     ax.set_ylim(0, None)
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.set_xlim(pd.Timestamp(START), pd.Timestamp(END) + pd.Timedelta(days=330))
+    ax.axvspan(pd.Timestamp("2023-01-01"), pd.Timestamp(END), color=a1.C_BOOK, alpha=0.06, lw=0)
     ax.legend(loc="upper left", fontsize=9, labelcolor=a1.INK, frameon=False, ncol=2)
     fig.tight_layout()
     fig.savefig(f"{OUT}/inv_breadth.png", bbox_inches="tight")
@@ -789,8 +786,10 @@ def proposed(top, top_w, px, bench, turn, members, comp, dfii10):
     pave = run(short="PAVE")["returns"]
     gross = run(bp=0.0)["returns"]
     always = ib.build(members, comp, px, spy, dfii10, ry.clip(lower=1.0), cash)["returns"]   # rule 11 never fires
+    always_gross = ib.build(members, comp, px, spy, dfii10, ry.clip(lower=1.0), cash, bp=0.0)["returns"]
     yield_only = ib.build(members, comp, px, spy, dfii10, ry, cash)["returns"]                # rule 11 on real yield alone
     books = {"long_short": ls, "long_short_gross": gross, "long_short_always_on": always,
+             "long_short_always_on_gross": always_gross,
              "long_short_yield_only": yield_only,
              "long_short_pave": pave, **bench}
     wins = {"full": (START, END), "2019-22": ("2019-01-01", "2022-12-31"), "2023+": ("2023-01-01", END)}

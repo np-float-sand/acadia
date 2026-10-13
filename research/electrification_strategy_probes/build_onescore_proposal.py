@@ -122,7 +122,7 @@ def extras(comp: pd.DataFrame) -> dict:
     def reg(y, cols):
         m = sm.OLS(y, sm.add_constant(D[cols])).fit()
         return {"alpha": round(m.params["const"] * 252, 4), "t": round(m.tvalues["const"], 2), "r2": round(m.rsquared, 2),
-                **{c + "_b": round(m.params[c], 2) for c in cols}}
+                **{c + "_b": round(m.params[c], 2) for c in cols}, **{c + "_t": round(m.tvalues[c], 1) for c in cols}}
     ff6 = ["MKT", "SMB", "HML", "RMW", "CMA", "MOM"]
     out["style"] = {"grid": reg(D.y, ["GRID"]), "spy": reg(D.y, ["SPYe"]), "ff6": reg(D.y - D.RF, ff6),
                     "ff6_grid": reg(D.y - D.RF, ff6 + ["GRIDx"]),

@@ -167,7 +167,8 @@ h4:hover .headerlink{opacity:1}
   table{font-size:.82rem}                 /* claw back width for many-column tables */
   th,td{padding:.42rem .5rem}
 }
-@page{size:A4; margin:14mm 11mm}
+@page{size:A4; margin:14mm 11mm;
+  @bottom-center{content:counter(page) " / " counter(pages); font:9pt Georgia,serif; color:#777}}
 """
 
 # --------------------------------------------------------------- toggle JS ----
